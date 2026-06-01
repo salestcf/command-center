@@ -417,7 +417,6 @@ select option { background: var(--s1); }
     <button class="nav-btn" onclick="showPage('calendar')">Calendar</button>
     <button class="nav-btn" onclick="showPage('contacts')">Contacts</button>
     <button class="nav-btn" onclick="showPage('files')">Files</button>
-    <button class="nav-btn" onclick="showPage('notes')">Notes</button>
     <button class="nav-btn" onclick="showPage('inventory')">Inventory</button>
     <button class="nav-btn" onclick="showPage('finance')">QuickBooks</button>
     <button class="nav-btn mint-tab" onclick="showPage('links')">External Links</button>
@@ -515,6 +514,32 @@ select option { background: var(--s1); }
       <thead><tr><th>Task</th><th>Project</th><th>Category</th><th>Status</th><th>Priority</th><th>Due Date</th><th>Notes</th></tr></thead>
       <tbody id="task-tbody"></tbody>
     </table>
+  </div>
+
+  <!-- ══ NOTES SECTION ══ -->
+  <div style="margin-top:18px">
+    <div class="card-head" style="margin-bottom:10px"><h3>Notes</h3></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
+      <input type="text" id="notes-search" placeholder="Search notes..." oninput="renderNotesList()" style="flex:1">
+      <select id="notes-cat-filter" onchange="renderNotesList()"><option value="">All Categories</option><option>Meeting Notes</option><option>SOPs</option><option>Research</option><option>Vendor Info</option><option>Process Log</option></select>
+      <button class="btn btn-pink" onclick="newNote()">+ New Note</button>
+    </div>
+    <div class="notes-layout">
+      <div class="notes-list" id="notes-list"></div>
+      <div class="note-editor" id="note-editor">
+        <div class="ne-head"><input type="text" id="ne-title" placeholder="Note title..."></div>
+        <div class="ne-meta">
+          <select id="ne-cat"><option>Meeting Notes</option><option>SOPs</option><option>Research</option><option>Vendor Info</option><option>Process Log</option></select>
+          <input type="date" id="ne-date">
+          <input type="url" id="ne-link" placeholder="Reference link">
+        </div>
+        <div class="ne-body"><textarea id="ne-body" placeholder="Write your note here..."></textarea></div>
+        <div class="ne-actions">
+          <button class="btn btn-sm" onclick="deleteCurrentNote()" style="margin-right:auto">Delete</button>
+          <button class="btn btn-sm btn-pink" onclick="saveNote()">Save Note</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 </div>
@@ -672,32 +697,6 @@ select option { background: var(--s1); }
 </div>
 
 <!-- ══ NOTES ══ -->
-<div class="page" id="page-notes">
-<div class="page-inner">
-  <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
-    <input type="text" id="notes-search" placeholder="Search notes..." oninput="renderNotesList()" style="flex:1">
-    <select id="notes-cat-filter" onchange="renderNotesList()"><option value="">All Categories</option><option>Meeting Notes</option><option>SOPs</option><option>Research</option><option>Vendor Info</option><option>Process Log</option></select>
-    <button class="btn btn-pink" onclick="newNote()">+ New Note</button>
-  </div>
-  <div class="notes-layout">
-    <div class="notes-list" id="notes-list"></div>
-    <div class="note-editor" id="note-editor">
-      <div class="ne-head"><input type="text" id="ne-title" placeholder="Note title..."></div>
-      <div class="ne-meta">
-        <select id="ne-cat"><option>Meeting Notes</option><option>SOPs</option><option>Research</option><option>Vendor Info</option><option>Process Log</option></select>
-        <input type="date" id="ne-date">
-        <input type="url" id="ne-link" placeholder="Reference link">
-      </div>
-      <div class="ne-body"><textarea id="ne-body" placeholder="Write your note here..."></textarea></div>
-      <div class="ne-actions">
-        <button class="btn btn-sm" onclick="deleteCurrentNote()" style="margin-right:auto">Delete</button>
-        <button class="btn btn-sm btn-pink" onclick="saveNote()">Save Note</button>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
-
 <!-- ══ INVENTORY ══ -->
 <div class="page" id="page-inventory">
 <div class="page-inner">
@@ -941,7 +940,7 @@ function globalSearch(q){
   const ql=q.toLowerCase(); const results=[];
   tasks.forEach(t=>{if((t.name+t.notes).toLowerCase().includes(ql)) results.push({label:t.name,meta:'Task — '+t.project,action:"showPage('tasks')"});});
   contacts.forEach(c=>{if((c.name+c.company).toLowerCase().includes(ql)) results.push({label:c.name,meta:'Contact — '+c.company,action:"showPage('contacts')"});});
-  notes.forEach(n=>{if((n.title+n.body).toLowerCase().includes(ql)) results.push({label:n.title,meta:'Note — '+n.cat,action:"openNote("+n.id+");showPage('notes')"});});
+  notes.forEach(n=>{if((n.title+n.body).toLowerCase().includes(ql)) results.push({label:n.title,meta:'Note — '+n.cat,action:"openNote("+n.id+");showPage('tasks')"});});
   driveFiles.forEach(f=>{if(f.name.toLowerCase().includes(ql)) results.push({label:f.name,meta:'File — '+f.type,action:"showPage('files')"});});
   externalLinks.forEach(l=>{if((l.title+l.user).toLowerCase().includes(ql)) results.push({label:l.title,meta:'Link — '+l.cat,action:"showPage('links')"});});
   box.innerHTML=results.slice(0,10).map(r=>`<div class="sr-item" onclick="${r.action};closeSearch()"><div class="sr-label">${escH(r.label)}</div><div class="sr-meta">${escH(r.meta)}</div></div>`).join('')||'<div class="sr-item"><div class="sr-meta">No results found</div></div>';
