@@ -1,0 +1,2225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Command Center — Rashell Klavinger</title>
+<style>
+:root {
+  --bg:       #070b0e;
+  --s1:       #0d1318;
+  --s2:       #111920;
+  --s3:       #161f28;
+  --border:   #1a2535;
+  --border2:  #223040;
+  --t1:       #cdd9e5;
+  --t2:       #6a8aa6;
+  --t3:       #344d63;
+  --teal:     #00b4a6;
+  --teal-d:   #008f84;
+  --teal-bg:  rgba(0,180,166,0.08);
+  --gold:     #c8982a;
+  --gold-d:   #a07820;
+  --gold-bg:  rgba(200,152,42,0.08);
+  --red:      #c05050;
+  --red-bg:   rgba(192,80,80,0.08);
+  --font:     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg); color: var(--t1); height: 100vh; display: flex; flex-direction: column; overflow: hidden; font-size: 13px; }
+
+/* HEADER */
+.hdr {
+  height: 48px; background: var(--s1); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 20px; gap: 0; flex-shrink: 0; z-index: 200;
+}
+.hdr-brand { display: flex; flex-direction: column; margin-right: 32px; }
+.hdr-brand span:first-child { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--teal); }
+.hdr-brand span:last-child { font-size: 10px; color: var(--t3); letter-spacing: 0.5px; margin-top: 1px; }
+.hdr-nav { display: flex; gap: 1px; flex: 1; }
+.nav-btn {
+  padding: 0 16px; height: 48px; background: none; border: none;
+  color: var(--t2); font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
+  text-transform: uppercase; cursor: pointer; position: relative;
+  border-bottom: 2px solid transparent; transition: color 0.15s;
+  font-family: var(--font);
+}
+.nav-btn:hover { color: var(--t1); }
+.nav-btn.active { color: var(--teal); border-bottom-color: var(--teal); }
+.hdr-right { display: flex; align-items: center; gap: 20px; }
+#hdr-clock { font-size: 12px; font-weight: 500; color: var(--t2); letter-spacing: 1px; }
+#hdr-date  { font-size: 10px; color: var(--t3); letter-spacing: 0.5px; }
+.hdr-badge { width: 28px; height: 28px; background: var(--s3); border: 1px solid var(--border2); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--teal); letter-spacing: 0.5px; }
+
+/* LAYOUT */
+.workspace { display: flex; flex: 1; overflow: hidden; }
+.page { flex: 1; overflow-y: auto; display: none; }
+.page.active { display: flex; flex-direction: column; }
+.page-inner { padding: 20px 24px; flex: 1; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--t3); }
+
+/* SECTION HEADERS */
+.sec-head {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 14px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.sec-head h2 { font-size: 10px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; color: var(--t2); }
+.sec-head .sh-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+/* PANELS */
+.panel { background: var(--s1); border: 1px solid var(--border); margin-bottom: 14px; }
+.panel-head {
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.panel-head h3 { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--t2); }
+.panel-head .ph-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.panel-body { padding: 14px; }
+
+/* GRID */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.g-left-wide { display: grid; grid-template-columns: 1fr 340px; gap: 14px; }
+
+/* SCORECARD */
+.scorecard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+.score-item {
+  background: var(--s1); border: 1px solid var(--border);
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 6px;
+}
+.score-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--t3); }
+.score-val { font-size: 26px; font-weight: 300; line-height: 1; }
+.score-val.teal { color: var(--teal); }
+.score-val.gold { color: var(--gold); }
+.score-val.red  { color: var(--red); }
+.score-sub { font-size: 10px; color: var(--t3); }
+
+/* BUTTONS */
+.btn {
+  padding: 6px 14px; background: none; border: 1px solid var(--border2);
+  color: var(--t2); font-size: 10px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; cursor: pointer; transition: all 0.15s;
+  font-family: var(--font);
+}
+.btn:hover { border-color: var(--teal); color: var(--teal); }
+.btn-teal { background: var(--teal-bg); border-color: var(--teal); color: var(--teal); }
+.btn-teal:hover { background: var(--teal); color: var(--bg); }
+.btn-gold { background: var(--gold-bg); border-color: var(--gold); color: var(--gold); }
+.btn-gold:hover { background: var(--gold); color: var(--bg); }
+.btn-sm { padding: 4px 10px; font-size: 9px; }
+
+/* INPUTS */
+input, select, textarea {
+  background: var(--s2); border: 1px solid var(--border2);
+  color: var(--t1); font-family: var(--font); font-size: 12px;
+  padding: 7px 10px; outline: none; transition: border 0.15s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--teal); }
+input::placeholder, textarea::placeholder { color: var(--t3); }
+select option { background: var(--s2); }
+
+/* TAGS / PILLS */
+.pill {
+  display: inline-block; padding: 2px 8px; font-size: 9px;
+  font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+}
+.pill-teal { background: var(--teal-bg); color: var(--teal); border: 1px solid rgba(0,180,166,0.2); }
+.pill-gold { background: var(--gold-bg); color: var(--gold); border: 1px solid rgba(200,152,42,0.2); }
+.pill-red  { background: var(--red-bg);  color: var(--red);  border: 1px solid rgba(192,80,80,0.2); }
+.pill-dim  { background: var(--s3);     color: var(--t2);   border: 1px solid var(--border2); }
+
+/* ══════════════════════════════════════════════
+   INBOX
+══════════════════════════════════════════════ */
+.thread-row {
+  display: grid; grid-template-columns: 180px 1fr 80px;
+  gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background 0.1s; align-items: start;
+}
+.thread-row:last-child { border-bottom: none; }
+.thread-row:hover { background: var(--s2); }
+.thread-row.unread .thread-sender { color: var(--t1); font-weight: 600; }
+.thread-row.unread .thread-subject { color: var(--t1); }
+.thread-sender { font-size: 12px; color: var(--t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.thread-mid {}
+.thread-subject { font-size: 12px; color: var(--t2); margin-bottom: 2px; }
+.thread-snip { font-size: 11px; color: var(--t3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.thread-time { font-size: 10px; color: var(--t3); text-align: right; white-space: nowrap; }
+.unread-dot { width: 5px; height: 5px; background: var(--teal); border-radius: 50%; display: inline-block; margin-right: 6px; flex-shrink: 0; vertical-align: middle; }
+
+/* Thread detail */
+.thread-detail {
+  position: fixed; top: 48px; right: 0; bottom: 0; width: 480px;
+  background: var(--s1); border-left: 1px solid var(--border);
+  z-index: 100; display: none; flex-direction: column;
+  overflow: hidden;
+}
+.thread-detail.open { display: flex; }
+.td-head { padding: 16px; border-bottom: 1px solid var(--border); }
+.td-subject { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.td-meta { font-size: 11px; color: var(--t2); display: flex; gap: 16px; flex-wrap: wrap; }
+.td-body { padding: 16px; overflow-y: auto; flex: 1; font-size: 12px; line-height: 1.7; color: var(--t2); }
+.td-close { background: none; border: none; color: var(--t3); font-size: 16px; cursor: pointer; padding: 0 4px; }
+.td-close:hover { color: var(--t1); }
+
+/* Pending replies table */
+.pr-table { width: 100%; border-collapse: collapse; }
+.pr-table th { font-size: 9px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--t3); padding: 8px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.pr-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--t2); vertical-align: middle; }
+.pr-table tr:last-child td { border-bottom: none; }
+.pr-table tr:hover td { background: var(--s2); }
+.pr-table td:first-child { color: var(--t1); font-weight: 500; }
+
+/* ══════════════════════════════════════════════
+   TASKS
+══════════════════════════════════════════════ */
+.task-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+.task-controls select { width: auto; min-width: 110px; }
+.task-table { width: 100%; border-collapse: collapse; }
+.task-table th {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--t3); padding: 9px 12px; border-bottom: 1px solid var(--border);
+  text-align: left; white-space: nowrap; background: var(--s1); position: sticky; top: 0; z-index: 10;
+}
+.task-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--t2); vertical-align: middle; }
+.task-table tr:last-child td { border-bottom: none; }
+.task-table tr:hover td { background: var(--s2); cursor: pointer; }
+.task-table td:first-child { color: var(--t1); }
+.task-name-cell { display: flex; align-items: center; gap: 8px; }
+.task-expand-row { background: var(--s2) !important; }
+.task-expand-row td { padding: 12px 14px 14px 38px; color: var(--t2); font-size: 12px; line-height: 1.6; }
+.pri-high { color: var(--red); font-weight: 600; font-size: 10px; letter-spacing: 0.5px; }
+.pri-med  { color: var(--gold); font-weight: 600; font-size: 10px; letter-spacing: 0.5px; }
+.pri-low  { color: var(--teal); font-weight: 600; font-size: 10px; letter-spacing: 0.5px; }
+
+/* ══════════════════════════════════════════════
+   CALENDAR
+══════════════════════════════════════════════ */
+.cal-top { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.cal-view-toggle { display: flex; gap: 1px; }
+.cal-view-btn {
+  padding: 5px 14px; background: var(--s2); border: 1px solid var(--border2);
+  color: var(--t3); font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; cursor: pointer; font-family: var(--font);
+}
+.cal-view-btn.active { background: var(--teal-bg); border-color: var(--teal); color: var(--teal); }
+.cal-nav { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.cal-month-lbl { font-size: 12px; font-weight: 600; letter-spacing: 0.5px; min-width: 140px; text-align: center; }
+.cal-nav-btn { padding: 4px 10px; background: none; border: 1px solid var(--border2); color: var(--t2); cursor: pointer; font-size: 12px; font-family: var(--font); }
+.cal-nav-btn:hover { border-color: var(--teal); color: var(--teal); }
+
+/* Calendar grid */
+.cal-grid-wrap { background: var(--s1); border: 1px solid var(--border); }
+.cal-day-headers { display: grid; grid-template-columns: repeat(7,1fr); border-bottom: 1px solid var(--border); }
+.cal-day-hdr { padding: 8px; font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--t3); text-align: center; }
+.cal-cells { display: grid; grid-template-columns: repeat(7,1fr); }
+.cal-cell {
+  min-height: 90px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  padding: 6px 7px; cursor: pointer; transition: background 0.1s; position: relative;
+}
+.cal-cell:nth-child(7n) { border-right: none; }
+.cal-cell:hover { background: var(--s2); }
+.cal-cell.today { background: rgba(0,180,166,0.04); }
+.cal-cell.other-month .cal-day-n { color: var(--t3); opacity: 0.4; }
+.cal-cell.selected { background: rgba(0,180,166,0.06); outline: 1px solid var(--teal); }
+.cal-day-n { font-size: 11px; font-weight: 500; color: var(--t2); margin-bottom: 4px; display: inline-block; }
+.cal-cell.today .cal-day-n {
+  background: var(--teal); color: var(--bg); width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;
+}
+.cal-ev {
+  font-size: 10px; padding: 2px 5px; margin-bottom: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+}
+.ev-meeting  { background: rgba(0,180,166,0.15); color: var(--teal); border-left: 2px solid var(--teal); }
+.ev-deadline { background: rgba(200,152,42,0.15); color: var(--gold); border-left: 2px solid var(--gold); }
+.ev-block    { background: rgba(205,217,229,0.07); color: var(--t2); border-left: 2px solid var(--t3); }
+
+/* List view */
+.list-day-group { margin-bottom: 18px; }
+.list-day-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--t3); padding: 6px 0; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.list-ev-row {
+  display: grid; grid-template-columns: 80px 140px 1fr 120px;
+  gap: 12px; padding: 9px 12px; border-bottom: 1px solid var(--border);
+  align-items: center; font-size: 12px;
+}
+.list-ev-row:last-child { border-bottom: none; }
+.list-ev-time { color: var(--t3); font-size: 11px; }
+.list-ev-type { }
+.list-ev-title { color: var(--t1); }
+.list-ev-link a { color: var(--teal); font-size: 11px; text-decoration: none; }
+.list-ev-link a:hover { text-decoration: underline; }
+
+/* Event panel */
+.ev-panel-head { font-size: 11px; color: var(--t2); margin-bottom: 12px; min-height: 16px; }
+.ev-item { display: flex; align-items: start; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.ev-item:last-child { border-bottom: none; }
+.ev-dot { width: 8px; height: 8px; flex-shrink: 0; margin-top: 4px; }
+.ev-info { flex: 1; }
+.ev-title { font-size: 12px; color: var(--t1); margin-bottom: 2px; }
+.ev-time-lbl { font-size: 10px; color: var(--t3); }
+.ev-del { background: none; border: none; color: var(--t3); cursor: pointer; font-size: 13px; padding: 0; }
+.ev-del:hover { color: var(--red); }
+
+.ev-add-form input { width: 100%; margin-bottom: 7px; display: block; }
+.ev-add-form select { width: 100%; margin-bottom: 7px; display: block; }
+.color-row { display: flex; gap: 6px; align-items: center; margin-bottom: 10px; }
+.c-opt { width: 16px; height: 16px; cursor: pointer; border: 2px solid transparent; }
+.c-opt.sel { outline: 2px solid var(--t1); outline-offset: 2px; }
+
+/* ══════════════════════════════════════════════
+   CONTACTS
+══════════════════════════════════════════════ */
+.contact-controls { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; }
+.contact-controls input { flex: 1; }
+.contact-table { width: 100%; border-collapse: collapse; }
+.contact-table th { font-size: 9px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--t3); padding: 9px 12px; border-bottom: 1px solid var(--border); text-align: left; background: var(--s1); position: sticky; top: 0; }
+.contact-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--t2); vertical-align: top; }
+.contact-table tr:last-child td { border-bottom: none; }
+.contact-table tr:hover td { background: var(--s2); cursor: pointer; }
+.contact-table td:first-child { color: var(--t1); font-weight: 500; }
+.contact-detail-panel {
+  position: fixed; top: 48px; right: 0; bottom: 0; width: 380px;
+  background: var(--s1); border-left: 1px solid var(--border);
+  z-index: 100; display: none; flex-direction: column; overflow: hidden;
+}
+.contact-detail-panel.open { display: flex; }
+.cdp-head { padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: start; justify-content: space-between; }
+.cdp-name { font-size: 14px; font-weight: 600; }
+.cdp-role { font-size: 11px; color: var(--t2); margin-top: 3px; }
+.cdp-body { padding: 16px; overflow-y: auto; flex: 1; }
+.cdp-field { margin-bottom: 14px; }
+.cdp-field-label { font-size: 9px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--t3); margin-bottom: 4px; }
+.cdp-field-val { font-size: 12px; color: var(--t2); }
+.int-log-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.int-log-item:last-child { border-bottom: none; }
+.int-date { font-size: 10px; color: var(--teal); margin-bottom: 3px; }
+.int-note { font-size: 12px; color: var(--t2); margin-bottom: 2px; }
+.int-followup { font-size: 11px; color: var(--gold); }
+
+/* ══════════════════════════════════════════════
+   FILES
+══════════════════════════════════════════════ */
+.drop-zone {
+  border: 1px dashed var(--border2); padding: 28px; text-align: center;
+  margin-bottom: 14px; cursor: pointer; transition: all 0.2s;
+}
+.drop-zone:hover, .drop-zone.drag-over { border-color: var(--teal); background: var(--teal-bg); }
+.drop-zone-title { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--t2); margin-bottom: 6px; }
+.drop-zone-sub { font-size: 10px; color: var(--t3); }
+.drop-zone input[type="file"] { display: none; }
+.file-controls { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; }
+.file-controls input { flex: 1; }
+.file-table { width: 100%; border-collapse: collapse; }
+.file-table th { font-size: 9px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--t3); padding: 9px 12px; border-bottom: 1px solid var(--border); text-align: left; background: var(--s1); position: sticky; top: 0; }
+.file-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--t2); vertical-align: middle; }
+.file-table tr:last-child td { border-bottom: none; }
+.file-table tr:hover td { background: var(--s2); }
+.file-table td:first-child a { color: var(--teal); text-decoration: none; font-weight: 500; }
+.file-table td:first-child a:hover { text-decoration: underline; }
+.file-type-icon { font-size: 13px; margin-right: 6px; }
+
+/* ══════════════════════════════════════════════
+   NOTES
+══════════════════════════════════════════════ */
+.notes-layout { display: grid; grid-template-columns: 260px 1fr; gap: 14px; min-height: 0; }
+.notes-list { background: var(--s1); border: 1px solid var(--border); overflow-y: auto; max-height: calc(100vh - 130px); }
+.note-list-item {
+  padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s;
+}
+.note-list-item:last-child { border-bottom: none; }
+.note-list-item:hover { background: var(--s2); }
+.note-list-item.active { background: var(--teal-bg); border-left: 2px solid var(--teal); }
+.nli-title { font-size: 12px; font-weight: 600; color: var(--t1); margin-bottom: 3px; }
+.nli-cat { font-size: 9px; color: var(--teal); letter-spacing: 0.8px; text-transform: uppercase; }
+.nli-date { font-size: 10px; color: var(--t3); margin-top: 2px; }
+.note-editor { background: var(--s1); border: 1px solid var(--border); display: flex; flex-direction: column; }
+.ne-head { padding: 14px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: center; }
+.ne-head input { flex: 1; font-size: 14px; font-weight: 600; background: none; border: none; color: var(--t1); }
+.ne-head input:focus { outline: none; border-bottom: 1px solid var(--teal); }
+.ne-meta { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: center; }
+.ne-meta select { width: auto; flex: 1; }
+.ne-meta input[type="date"] { flex: 1; }
+.ne-meta input[type="url"] { flex: 2; }
+.ne-body { padding: 14px; flex: 1; }
+.ne-body textarea { width: 100%; min-height: 320px; background: none; border: none; color: var(--t1); font-size: 13px; line-height: 1.7; resize: none; font-family: var(--font); }
+.ne-body textarea:focus { outline: none; }
+.ne-actions { padding: 10px 14px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+.notes-filter-bar { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+.notes-filter-bar input { flex: 1; }
+
+/* MODAL */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 900; display: none; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--s1); border: 1px solid var(--border2); width: 480px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+.modal-head { padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-head h3 { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--teal); }
+.modal-body { padding: 16px; }
+.form-row { margin-bottom: 12px; }
+.form-label { font-size: 9px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--t3); margin-bottom: 5px; display: block; }
+.form-row input, .form-row select, .form-row textarea { width: 100%; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-brand">
+    <span>Command Center</span>
+    <span>Rashell Klavinger &nbsp;·&nbsp; Executive Assistant &amp; Operations</span>
+  </div>
+  <nav class="hdr-nav">
+    <button class="nav-btn active" onclick="showPage('tasks')">Tasks</button>
+    <button class="nav-btn" onclick="showPage('inbox')">Inbox</button>
+    <button class="nav-btn" onclick="showPage('calendar')">Calendar</button>
+    <button class="nav-btn" onclick="showPage('contacts')">Contacts</button>
+    <button class="nav-btn" onclick="showPage('files')">Files</button>
+    <button class="nav-btn" onclick="showPage('notes')">Notes</button>
+    <button class="nav-btn" onclick="showPage('inventory')">Inventory</button>
+    <button class="nav-btn" onclick="showPage('finance')">QuickBooks</button>
+  </nav>
+  <div class="hdr-right">
+    <div style="text-align:right">
+      <div id="hdr-clock"></div>
+      <div id="hdr-date"></div>
+    </div>
+    <div class="hdr-badge">RK</div>
+  </div>
+</header>
+
+<div class="workspace">
+
+<!-- ══════════════════════════════════════════════
+     INBOX
+══════════════════════════════════════════════ -->
+<div class="page" id="page-inbox">
+<div class="page-inner">
+
+  <div class="scorecard">
+    <div class="score-item">
+      <div class="score-label">Unread</div>
+      <div class="score-val teal" id="sc-unread">1</div>
+      <div class="score-sub">in inbox</div>
+    </div>
+    <div class="score-item">
+      <div class="score-label">Flagged</div>
+      <div class="score-val gold" id="sc-flagged">3</div>
+      <div class="score-sub">need attention</div>
+    </div>
+    <div class="score-item">
+      <div class="score-label">Pending Replies</div>
+      <div class="score-val red" id="sc-pending">4</div>
+      <div class="score-sub">logged below</div>
+    </div>
+    <div class="score-item">
+      <div class="score-label">Follow-ups Due</div>
+      <div class="score-val gold" id="sc-due">2</div>
+      <div class="score-sub">today</div>
+    </div>
+  </div>
+
+  <div class="g-left-wide">
+    <div>
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Inbox — Recent Threads</h3>
+          <div class="ph-right">
+            <a href="https://mail.google.com" target="_blank" class="btn btn-sm">Open Gmail</a>
+          </div>
+        </div>
+        <div id="thread-list"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Pending Replies</h3>
+          <div class="ph-right">
+            <button class="btn btn-sm btn-teal" onclick="openModal('modal-pending')">+ Add</button>
+          </div>
+        </div>
+        <div class="panel-body" style="padding:0">
+          <table class="pr-table" id="pr-table">
+            <thead>
+              <tr>
+                <th>Recipient</th>
+                <th>Subject</th>
+                <th>Due</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="pr-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h3>Notion — Open Action Items</h3>
+          <div class="ph-right"><span class="pill pill-dim">Synced</span></div>
+        </div>
+        <div class="panel-body" id="notion-actions">
+          <div style="font-size:11px;color:var(--t3);line-height:1.8">
+            Connect your Notion workspace to surface open action items here.<br>
+            <a href="https://notion.so" target="_blank" style="color:var(--teal);text-decoration:none">Open Notion</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Thread detail panel -->
+<div class="thread-detail" id="thread-detail">
+  <div class="td-head">
+    <div style="display:flex;align-items:start;justify-content:space-between">
+      <div class="td-subject" id="td-subject"></div>
+      <button class="td-close" onclick="closeThread()">&#x2715;</button>
+    </div>
+    <div class="td-meta" id="td-meta"></div>
+  </div>
+  <div class="td-body" id="td-body"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     TASKS
+══════════════════════════════════════════════ -->
+<div class="page active" id="page-tasks">
+<div class="page-inner">
+  <div class="task-controls">
+    <select id="f-project" onchange="renderTasks()"><option value="">All Projects</option></select>
+    <select id="f-cat" onchange="renderTasks()">
+      <option value="">All Categories</option>
+      <option>Admin</option><option>Scheduling</option><option>Research</option>
+      <option>Procurement</option><option>Communications</option><option>Other</option>
+    </select>
+    <select id="f-status" onchange="renderTasks()">
+      <option value="">All Statuses</option>
+      <option>To Do</option><option>In Progress</option><option>Blocked</option>
+      <option>Done</option><option>Urgent</option>
+    </select>
+    <select id="f-priority" onchange="renderTasks()">
+      <option value="">All Priorities</option>
+      <option>High</option><option>Medium</option><option>Low</option>
+    </select>
+    <input type="text" id="f-search" placeholder="Search tasks..." style="width:160px" oninput="renderTasks()">
+    <button class="btn btn-teal" onclick="openModal('modal-task')">+ Add Task</button>
+    <button class="btn" onclick="exportTasksCSV()" style="margin-left:auto">Export CSV</button>
+  </div>
+  <div class="panel" style="overflow:auto">
+    <table class="task-table" id="task-table">
+      <thead>
+        <tr>
+          <th>Task</th>
+          <th>Project</th>
+          <th>Category</th>
+          <th>Status</th>
+          <th>Priority</th>
+          <th>Due Date</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody id="task-tbody"></tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     CALENDAR
+══════════════════════════════════════════════ -->
+<div class="page" id="page-calendar">
+<div class="page-inner">
+  <div class="cal-top">
+    <div class="cal-view-toggle">
+      <button class="cal-view-btn active" id="btn-cal-view" onclick="setCalView('grid')">Calendar</button>
+      <button class="cal-view-btn" id="btn-list-view" onclick="setCalView('list')">List</button>
+    </div>
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="calNav(-1)">&#8249;</button>
+      <div class="cal-month-lbl" id="cal-month-lbl"></div>
+      <button class="cal-nav-btn" onclick="calNav(1)">&#8250;</button>
+      <button class="btn btn-sm btn-teal" onclick="openEvModal()">+ Event</button>
+    </div>
+  </div>
+
+  <div class="g-left-wide" id="cal-main-wrap">
+    <div>
+      <!-- Grid view -->
+      <div id="cal-grid-view">
+        <div class="cal-grid-wrap">
+          <div class="cal-day-headers">
+            <div class="cal-day-hdr">Sun</div><div class="cal-day-hdr">Mon</div>
+            <div class="cal-day-hdr">Tue</div><div class="cal-day-hdr">Wed</div>
+            <div class="cal-day-hdr">Thu</div><div class="cal-day-hdr">Fri</div>
+            <div class="cal-day-hdr">Sat</div>
+          </div>
+          <div class="cal-cells" id="cal-cells"></div>
+        </div>
+      </div>
+      <!-- List view -->
+      <div id="cal-list-view" style="display:none">
+        <div class="panel">
+          <div class="panel-body" id="cal-list-body"></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <div class="panel-head">
+          <h3 id="ev-panel-lbl">Select a Day</h3>
+          <div class="ph-right"><button class="btn btn-sm btn-teal" onclick="openEvModal()">+ Event</button></div>
+        </div>
+        <div class="panel-body">
+          <div id="ev-list-wrap"><div style="font-size:11px;color:var(--t3)">Click a day to view events.</div></div>
+          <div style="height:14px"></div>
+          <div class="ev-add-form" id="ev-inline-form" style="display:none">
+            <input type="text" id="ev-title-in" placeholder="Event title" />
+            <input type="text" id="ev-time-in" placeholder="Time (e.g. 10:00 AM)" />
+            <input type="text" id="ev-link-in" placeholder="Link (optional)" />
+            <select id="ev-type-in">
+              <option value="meeting">Meeting</option>
+              <option value="deadline">Deadline</option>
+              <option value="block">Personal Block</option>
+            </select>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn btn-sm btn-teal" onclick="saveInlineEvent()" style="flex:1">Save</button>
+              <button class="btn btn-sm" onclick="document.getElementById('ev-inline-form').style.display='none'" style="flex:1">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h3>Reminders &amp; Standing Items</h3>
+          <div class="ph-right"><button class="btn btn-sm btn-teal" onclick="openModal('modal-reminder')">+ Add</button></div>
+        </div>
+        <div class="panel-body" style="padding:0">
+          <div id="reminder-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     CONTACTS
+══════════════════════════════════════════════ -->
+<div class="page" id="page-contacts">
+<div class="page-inner">
+  <div class="contact-controls">
+    <input type="text" id="contact-search" placeholder="Search by name, company, or role..." oninput="renderContacts()">
+    <select id="contact-filter-company" onchange="renderContacts()"><option value="">All Companies</option></select>
+    <select id="contact-filter-role" onchange="renderContacts()"><option value="">All Roles</option></select>
+    <button class="btn btn-teal" onclick="openModal('modal-contact')">+ Add Contact</button>
+    <button class="btn" onclick="exportContactsCSV()" style="margin-left:auto">Export CSV</button>
+  </div>
+  <div class="panel" style="overflow:auto">
+    <table class="contact-table">
+      <thead>
+        <tr>
+          <th>Name</th><th>Company</th><th>Role</th>
+          <th>Last Contact</th><th>Preferred Method</th><th>Notes</th>
+        </tr>
+      </thead>
+      <tbody id="contact-tbody"></tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<div class="contact-detail-panel" id="contact-detail-panel">
+  <div class="cdp-head">
+    <div>
+      <div class="cdp-name" id="cdp-name"></div>
+      <div class="cdp-role" id="cdp-role"></div>
+    </div>
+    <button class="td-close" onclick="closeContactPanel()">&#x2715;</button>
+  </div>
+  <div class="cdp-body">
+    <div class="cdp-field"><div class="cdp-field-label">Company</div><div class="cdp-field-val" id="cdp-company"></div></div>
+    <div class="cdp-field"><div class="cdp-field-label">Preferred Contact</div><div class="cdp-field-val" id="cdp-method"></div></div>
+    <div class="cdp-field"><div class="cdp-field-label">Notes</div><div class="cdp-field-val" id="cdp-notes"></div></div>
+    <div style="margin-top:16px">
+      <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">Interaction Log</div>
+      <div id="cdp-interactions"></div>
+      <div style="margin-top:12px">
+        <input type="text" id="int-note-input" placeholder="Log an interaction or follow-up..." style="width:100%;margin-bottom:7px">
+        <button class="btn btn-sm btn-teal" style="width:100%" onclick="logInteraction()">Log Entry</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     FILES
+══════════════════════════════════════════════ -->
+<div class="page" id="page-files">
+<div class="page-inner">
+  <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+    <input type="file" id="file-input" multiple onchange="handleFileSelect(event)">
+    <div class="drop-zone-title">Drop files here or click to upload</div>
+    <div class="drop-zone-sub">Files upload directly to Google Drive — tag on upload for instant organization</div>
+  </div>
+
+  <div id="upload-tag-form" style="display:none" class="panel">
+    <div class="panel-head"><h3>Tag &amp; Confirm Upload</h3></div>
+    <div class="panel-body">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <span id="upload-filename" style="font-size:12px;color:var(--t1);flex:1"></span>
+        <select id="upload-cat">
+          <option>Contract</option><option>Template</option><option>Reference</option>
+          <option>Report</option><option>Correspondence</option><option>Other</option>
+        </select>
+        <button class="btn btn-teal" onclick="confirmUpload()">Upload to Drive</button>
+        <button class="btn" onclick="cancelUpload()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="file-controls">
+    <input type="text" id="file-search" placeholder="Search by name or tag..." oninput="renderFiles()">
+    <select id="file-filter-cat" onchange="renderFiles()"><option value="">All Categories</option>
+      <option>Contract</option><option>Template</option><option>Reference</option>
+      <option>Report</option><option>Correspondence</option><option>Other</option>
+    </select>
+  </div>
+
+  <div class="panel" style="overflow:auto">
+    <table class="file-table">
+      <thead>
+        <tr><th>Name</th><th>Type</th><th>Category</th><th>Modified</th><th>Owner</th></tr>
+      </thead>
+      <tbody id="file-tbody"></tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     NOTES
+══════════════════════════════════════════════ -->
+<div class="page" id="page-notes">
+<div class="page-inner">
+  <div class="notes-filter-bar">
+    <input type="text" id="notes-search" placeholder="Search notes..." oninput="renderNotesList()">
+    <select id="notes-filter-cat" onchange="renderNotesList()">
+      <option value="">All Categories</option>
+      <option>Meeting Notes</option><option>SOPs</option><option>Research</option>
+      <option>Vendor Info</option><option>Process Log</option>
+    </select>
+    <button class="btn btn-teal" onclick="newNote()">+ New Note</button>
+  </div>
+  <div class="notes-layout">
+    <div class="notes-list" id="notes-list"></div>
+    <div class="note-editor" id="note-editor">
+      <div class="ne-head">
+        <input type="text" id="ne-title" placeholder="Note title...">
+      </div>
+      <div class="ne-meta">
+        <select id="ne-cat">
+          <option>Meeting Notes</option><option>SOPs</option><option>Research</option>
+          <option>Vendor Info</option><option>Process Log</option>
+        </select>
+        <input type="date" id="ne-date">
+        <input type="url" id="ne-link" placeholder="Reference link (optional)">
+      </div>
+      <div class="ne-body">
+        <textarea id="ne-body" placeholder="Write your note here..."></textarea>
+      </div>
+      <div class="ne-actions">
+        <button class="btn btn-sm" onclick="deleteCurrentNote()" style="margin-right:auto">Delete</button>
+        <button class="btn btn-sm btn-teal" onclick="saveNote()">Save Note</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     INVENTORY (InFlow)
+══════════════════════════════════════════════ -->
+<div class="page" id="page-inventory">
+<div class="page-inner">
+
+  <!-- API Setup Banner -->
+  <div id="inflow-setup-banner" class="panel" style="border-color:var(--gold);background:var(--gold-bg);margin-bottom:14px">
+    <div class="panel-body" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="flex:1">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:4px">InFlow Connection Required</div>
+        <div style="font-size:12px;color:var(--t2)">Enter your InFlow API key to sync live inventory, orders, and stock levels. Find it in InFlow Cloud under <strong style="color:var(--t1)">Settings &rarr; API Access</strong>.</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+        <input type="password" id="inflow-api-key-input" placeholder="InFlow API Key" style="width:260px">
+        <button class="btn btn-gold" onclick="connectInFlow()">Connect</button>
+        <a href="https://app.inflowinventory.com" target="_blank" class="btn btn-sm">Open InFlow</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connected status bar (hidden until connected) -->
+  <div id="inflow-connected-bar" style="display:none;margin-bottom:14px;display:none">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--teal-bg);border:1px solid rgba(0,180,166,0.25)">
+      <div style="width:7px;height:7px;border-radius:50%;background:var(--teal);flex-shrink:0"></div>
+      <span style="font-size:11px;color:var(--teal);font-weight:600;letter-spacing:0.8px;text-transform:uppercase">Connected to InFlow</span>
+      <span id="inflow-org-label" style="font-size:11px;color:var(--t2)"></span>
+      <span style="margin-left:auto;font-size:10px;color:var(--t3)" id="inflow-last-sync"></span>
+      <button class="btn btn-sm" onclick="syncInFlow()">Sync Now</button>
+      <button class="btn btn-sm" onclick="disconnectInFlow()" style="color:var(--t3)">Disconnect</button>
+    </div>
+  </div>
+
+  <!-- Scorecard row -->
+  <div class="scorecard" style="grid-template-columns:repeat(5,1fr)">
+    <div class="score-item">
+      <div class="score-label">Total Products</div>
+      <div class="score-val teal" id="inv-total">—</div>
+      <div class="score-sub">in catalog</div>
+    </div>
+    <div class="score-item">
+      <div class="score-label">Low Stock</div>
+      <div class="score-val gold" id="inv-low">—</div>
+      <div class="score-sub">below reorder point</div>
+    </div>
+    <div class="score-item">
+      <div class="score-label">Out of Stock</div>
+      <div class="score-val red" id="inv-out">—</div>
+      <div class="score-sub">zero quantity</div>
+    </div>
+    <div class="score-item">
+      <div class="score-label">Open Orders</div>
+      <div class="score-val teal" id="inv-orders">—</div>
+      <div class="score-sub">purchase + sales</div>
+    </div>
+    <div class="score-item">
+      <div class="score-label">Pending Receipt</div>
+      <div class="score-val gold" id="inv-pending">—</div>
+      <div class="score-sub">awaiting delivery</div>
+    </div>
+  </div>
+
+  <div class="g-left-wide">
+    <div>
+
+      <!-- Product catalog -->
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Product Catalog</h3>
+          <div class="ph-right" style="gap:8px">
+            <input type="text" id="inv-search" placeholder="Search products..." style="width:180px" oninput="filterInventory()">
+            <select id="inv-filter-cat" onchange="filterInventory()">
+              <option value="">All Categories</option>
+            </select>
+            <select id="inv-filter-status" onchange="filterInventory()">
+              <option value="">All Stock Status</option>
+              <option value="ok">In Stock</option>
+              <option value="low">Low Stock</option>
+              <option value="out">Out of Stock</option>
+            </select>
+            <button class="btn btn-sm" onclick="exportInventoryCSV()">Export CSV</button>
+          </div>
+        </div>
+        <div style="overflow:auto">
+          <table class="file-table" id="inv-table">
+            <thead>
+              <tr>
+                <th>Product Name</th>
+                <th>SKU</th>
+                <th>Category</th>
+                <th>On Hand</th>
+                <th>Reorder Point</th>
+                <th>Status</th>
+                <th>Unit Cost</th>
+                <th>Location</th>
+              </tr>
+            </thead>
+            <tbody id="inv-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <div>
+
+      <!-- Low stock alerts -->
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <h3>Low Stock Alerts</h3>
+          <div class="ph-right"><span class="pill pill-gold" id="low-stock-count">0 items</span></div>
+        </div>
+        <div class="panel-body" style="padding:0" id="low-stock-list">
+          <div style="padding:14px;font-size:11px;color:var(--t3)">No alerts. Connect InFlow or add inventory manually.</div>
+        </div>
+      </div>
+
+      <!-- Recent orders -->
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <h3>Recent Orders</h3>
+          <div class="ph-right">
+            <button class="btn btn-sm btn-teal" onclick="openModal('modal-order')">+ Log Order</button>
+          </div>
+        </div>
+        <div class="panel-body" style="padding:0" id="order-list"></div>
+      </div>
+
+      <!-- Manual product entry -->
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Add Product Manually</h3>
+        </div>
+        <div class="panel-body">
+          <div class="form-row"><label class="form-label">Product Name</label><input type="text" id="mp-name" style="width:100%"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="form-row"><label class="form-label">SKU</label><input type="text" id="mp-sku" style="width:100%"></div>
+            <div class="form-row"><label class="form-label">Category</label><input type="text" id="mp-cat" style="width:100%"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div class="form-row"><label class="form-label">On Hand</label><input type="number" id="mp-qty" style="width:100%" value="0"></div>
+            <div class="form-row"><label class="form-label">Reorder At</label><input type="number" id="mp-reorder" style="width:100%" value="0"></div>
+            <div class="form-row"><label class="form-label">Unit Cost</label><input type="text" id="mp-cost" style="width:100%" placeholder="$0.00"></div>
+          </div>
+          <div class="form-row"><label class="form-label">Location / Bin</label><input type="text" id="mp-location" style="width:100%"></div>
+          <button class="btn btn-teal" style="width:100%;margin-top:4px" onclick="addProductManually()">Add to Catalog</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     QUICKBOOKS
+══════════════════════════════════════════════ -->
+<div class="page" id="page-finance">
+<div class="page-inner">
+
+  <!-- Connection banner -->
+  <div id="qb-setup-banner" class="panel" style="border-color:var(--gold);background:var(--gold-bg);margin-bottom:14px">
+    <div class="panel-body" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="flex:1">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:4px">QuickBooks Connection</div>
+        <div style="font-size:12px;color:var(--t2)">Enter your QuickBooks API credentials to sync invoices, expenses, and vendor payments. Find these in <strong style="color:var(--t1)">QuickBooks &rarr; Settings &rarr; Developer &rarr; API Keys</strong>.</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+        <input type="text" id="qb-company-id" placeholder="Company ID" style="width:140px">
+        <input type="password" id="qb-api-key-input" placeholder="Client Secret / Token" style="width:200px">
+        <button class="btn btn-gold" onclick="connectQB()">Connect</button>
+        <a href="https://app.qbo.intuit.com" target="_blank" class="btn btn-sm">Open QuickBooks</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="qb-connected-bar" style="display:none;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--teal-bg);border:1px solid rgba(0,180,166,0.25)">
+      <div style="width:7px;height:7px;border-radius:50%;background:var(--teal);flex-shrink:0"></div>
+      <span style="font-size:11px;color:var(--teal);font-weight:600;letter-spacing:0.8px;text-transform:uppercase">Connected to QuickBooks</span>
+      <span id="qb-company-label" style="font-size:11px;color:var(--t2)"></span>
+      <span style="margin-left:auto;font-size:10px;color:var(--t3)" id="qb-last-sync"></span>
+      <button class="btn btn-sm" onclick="syncQB()">Sync Now</button>
+      <button class="btn btn-sm" onclick="disconnectQB()" style="color:var(--t3)">Disconnect</button>
+    </div>
+  </div>
+
+  <!-- Scorecard -->
+  <div class="scorecard" style="grid-template-columns:repeat(5,1fr);margin-bottom:14px">
+    <div class="score-item">
+      <div class="score-label">Open Invoices</div>
+      <div class="score-val teal" id="qb-open-inv">—</div>
+      <div class="score-sub">unpaid / due</div>
+    </div>
+    <div class="score-item">
+      <div class="score-label">Overdue</div>
+      <div class="score-val red" id="qb-overdue">—</div>
+      <div class="score-sub">past due date</div>
+    </div>
+    <div class="score-item">
+      <div class="score-label">Bills to Pay</div>
+      <div class="score-val gold" id="qb-bills">—</div>
+      <div class="score-sub">vendor bills open</div>
+    </div>
+    <div class="score-item">
+      <div class="score-label">MTD Expenses</div>
+      <div class="score-val teal" id="qb-expenses">—</div>
+      <div class="score-sub">month to date</div>
+    </div>
+    <div class="score-item">
+      <div class="score-label">MTD Revenue</div>
+      <div class="score-val teal" id="qb-revenue">—</div>
+      <div class="score-sub">month to date</div>
+    </div>
+  </div>
+
+  <div class="g-left-wide">
+    <div>
+
+      <!-- Invoices table -->
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <h3>Invoices</h3>
+          <div class="ph-right">
+            <select id="qb-inv-filter" onchange="renderQBInvoices()" style="width:auto">
+              <option value="">All</option>
+              <option value="Open">Open</option>
+              <option value="Overdue">Overdue</option>
+              <option value="Paid">Paid</option>
+            </select>
+            <button class="btn btn-sm btn-teal" onclick="openModal('modal-qb-invoice')">+ Add</button>
+          </div>
+        </div>
+        <div style="overflow:auto">
+          <table class="file-table">
+            <thead><tr>
+              <th>Invoice #</th><th>Client / Vendor</th><th>Amount</th>
+              <th>Issue Date</th><th>Due Date</th><th>Status</th>
+            </tr></thead>
+            <tbody id="qb-inv-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Expenses table -->
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Expenses</h3>
+          <div class="ph-right">
+            <select id="qb-exp-filter" onchange="renderQBExpenses()" style="width:auto">
+              <option value="">All Categories</option>
+              <option>Supplies</option><option>Shipping</option><option>Software</option>
+              <option>Raw Materials</option><option>Packaging</option><option>Other</option>
+            </select>
+            <button class="btn btn-sm btn-teal" onclick="openModal('modal-qb-expense')">+ Add</button>
+          </div>
+        </div>
+        <div style="overflow:auto">
+          <table class="file-table">
+            <thead><tr>
+              <th>Description</th><th>Vendor</th><th>Category</th>
+              <th>Amount</th><th>Date</th><th>Status</th>
+            </tr></thead>
+            <tbody id="qb-exp-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <div>
+
+      <!-- Bills to pay -->
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <h3>Bills to Pay</h3>
+          <div class="ph-right"><button class="btn btn-sm btn-gold" onclick="openModal('modal-qb-bill')">+ Add Bill</button></div>
+        </div>
+        <div style="padding:0" id="qb-bills-list"></div>
+      </div>
+
+      <!-- P&L snapshot -->
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-head">
+          <h3>P&amp;L Snapshot</h3>
+          <div class="ph-right"><span class="pill pill-dim" id="qb-pl-period">June 2026</span></div>
+        </div>
+        <div class="panel-body">
+          <div id="qb-pl-rows"></div>
+          <div style="height:1px;background:var(--border2);margin:12px 0"></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="font-weight:700;color:var(--t1);letter-spacing:0.5px">NET</span>
+            <span style="font-weight:700" id="qb-net">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vendor ledger -->
+      <div class="panel">
+        <div class="panel-head"><h3>Vendor Ledger</h3></div>
+        <div style="padding:0" id="qb-vendor-list"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</div>
+
+</div><!-- /workspace -->
+
+<!-- ══════════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════════ -->
+
+<!-- Pending Reply Modal -->
+<div class="modal-overlay" id="modal-pending">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Log Pending Reply</h3>
+      <button class="td-close" onclick="closeModal('modal-pending')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row"><label class="form-label">Recipient</label><input type="text" id="pr-recipient" placeholder="Name or email"></div>
+      <div class="form-row"><label class="form-label">Subject / Thread</label><input type="text" id="pr-subject"></div>
+      <div class="form-row"><label class="form-label">Due Date</label><input type="date" id="pr-due"></div>
+      <div class="form-row"><label class="form-label">Status</label>
+        <select id="pr-status"><option>Pending</option><option>In Progress</option><option>Sent</option><option>Blocked</option></select>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button class="btn" onclick="closeModal('modal-pending')">Cancel</button>
+        <button class="btn btn-teal" onclick="savePendingReply()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Task Modal -->
+<div class="modal-overlay" id="modal-task">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Add Task</h3>
+      <button class="td-close" onclick="closeModal('modal-task')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row"><label class="form-label">Task Name</label><input type="text" id="t-name"></div>
+      <div class="form-row"><label class="form-label">Project</label><input type="text" id="t-project" placeholder="Client or initiative name"></div>
+      <div class="form-row"><label class="form-label">Category</label>
+        <select id="t-cat"><option>Admin</option><option>Scheduling</option><option>Research</option><option>Procurement</option><option>Communications</option><option>Other</option></select>
+      </div>
+      <div class="form-row"><label class="form-label">Status</label>
+        <select id="t-status"><option>To Do</option><option>In Progress</option><option>Urgent</option><option>Blocked</option><option>Done</option></select>
+      </div>
+      <div class="form-row"><label class="form-label">Priority</label>
+        <select id="t-priority"><option>High</option><option>Medium</option><option>Low</option></select>
+      </div>
+      <div class="form-row"><label class="form-label">Due Date</label><input type="date" id="t-due"></div>
+      <div class="form-row"><label class="form-label">Notes</label><textarea id="t-notes" rows="3"></textarea></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button class="btn" onclick="closeModal('modal-task')">Cancel</button>
+        <button class="btn btn-teal" onclick="saveTask()">Save Task</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Contact Modal -->
+<div class="modal-overlay" id="modal-contact">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Add Contact</h3>
+      <button class="td-close" onclick="closeModal('modal-contact')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row"><label class="form-label">Full Name</label><input type="text" id="c-name"></div>
+      <div class="form-row"><label class="form-label">Company</label><input type="text" id="c-company"></div>
+      <div class="form-row"><label class="form-label">Role / Title</label><input type="text" id="c-role"></div>
+      <div class="form-row"><label class="form-label">Email</label><input type="email" id="c-email"></div>
+      <div class="form-row"><label class="form-label">Last Contact Date</label><input type="date" id="c-last"></div>
+      <div class="form-row"><label class="form-label">Preferred Method</label>
+        <select id="c-method"><option>Email</option><option>Phone</option><option>LinkedIn</option><option>In Person</option></select>
+      </div>
+      <div class="form-row"><label class="form-label">Notes</label><textarea id="c-notes" rows="2"></textarea></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button class="btn" onclick="closeModal('modal-contact')">Cancel</button>
+        <button class="btn btn-teal" onclick="saveContact()">Save Contact</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QB Invoice Modal -->
+<div class="modal-overlay" id="modal-qb-invoice">
+  <div class="modal">
+    <div class="modal-head"><h3>Add Invoice</h3><button class="td-close" onclick="closeModal('modal-qb-invoice')">&#x2715;</button></div>
+    <div class="modal-body">
+      <div class="form-row"><label class="form-label">Invoice #</label><input type="text" id="qbi-num" placeholder="e.g. INV-0041"></div>
+      <div class="form-row"><label class="form-label">Client / Vendor</label><input type="text" id="qbi-client"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="form-row"><label class="form-label">Amount</label><input type="text" id="qbi-amount" placeholder="$0.00"></div>
+        <div class="form-row"><label class="form-label">Status</label>
+          <select id="qbi-status"><option>Open</option><option>Paid</option><option>Overdue</option></select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="form-row"><label class="form-label">Issue Date</label><input type="date" id="qbi-issued"></div>
+        <div class="form-row"><label class="form-label">Due Date</label><input type="date" id="qbi-due"></div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button class="btn" onclick="closeModal('modal-qb-invoice')">Cancel</button>
+        <button class="btn btn-teal" onclick="saveQBInvoice()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QB Expense Modal -->
+<div class="modal-overlay" id="modal-qb-expense">
+  <div class="modal">
+    <div class="modal-head"><h3>Add Expense</h3><button class="td-close" onclick="closeModal('modal-qb-expense')">&#x2715;</button></div>
+    <div class="modal-body">
+      <div class="form-row"><label class="form-label">Description</label><input type="text" id="qbe-desc"></div>
+      <div class="form-row"><label class="form-label">Vendor</label><input type="text" id="qbe-vendor"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="form-row"><label class="form-label">Amount</label><input type="text" id="qbe-amount" placeholder="$0.00"></div>
+        <div class="form-row"><label class="form-label">Category</label>
+          <select id="qbe-cat"><option>Supplies</option><option>Shipping</option><option>Software</option><option>Raw Materials</option><option>Packaging</option><option>Other</option></select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="form-row"><label class="form-label">Date</label><input type="date" id="qbe-date"></div>
+        <div class="form-row"><label class="form-label">Status</label>
+          <select id="qbe-status"><option>Pending</option><option>Paid</option><option>Reimbursable</option></select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button class="btn" onclick="closeModal('modal-qb-expense')">Cancel</button>
+        <button class="btn btn-teal" onclick="saveQBExpense()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QB Bill Modal -->
+<div class="modal-overlay" id="modal-qb-bill">
+  <div class="modal">
+    <div class="modal-head"><h3>Add Bill</h3><button class="td-close" onclick="closeModal('modal-qb-bill')">&#x2715;</button></div>
+    <div class="modal-body">
+      <div class="form-row"><label class="form-label">Vendor</label><input type="text" id="qbb-vendor"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="form-row"><label class="form-label">Amount</label><input type="text" id="qbb-amount" placeholder="$0.00"></div>
+        <div class="form-row"><label class="form-label">Due Date</label><input type="date" id="qbb-due"></div>
+      </div>
+      <div class="form-row"><label class="form-label">Description</label><input type="text" id="qbb-desc"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button class="btn" onclick="closeModal('modal-qb-bill')">Cancel</button>
+        <button class="btn btn-gold" onclick="saveQBBill()">Save Bill</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Modal -->
+<div class="modal-overlay" id="modal-order">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Log Order</h3>
+      <button class="td-close" onclick="closeModal('modal-order')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row"><label class="form-label">Order Number</label><input type="text" id="o-num" placeholder="e.g. PO-0042"></div>
+      <div class="form-row"><label class="form-label">Type</label>
+        <select id="o-type"><option>Purchase Order</option><option>Sales Order</option><option>Transfer</option></select>
+      </div>
+      <div class="form-row"><label class="form-label">Vendor / Customer</label><input type="text" id="o-vendor"></div>
+      <div class="form-row"><label class="form-label">Item(s)</label><input type="text" id="o-items" placeholder="Product name(s)"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="form-row"><label class="form-label">Quantity</label><input type="number" id="o-qty"></div>
+        <div class="form-row"><label class="form-label">Order Date</label><input type="date" id="o-date"></div>
+      </div>
+      <div class="form-row"><label class="form-label">Status</label>
+        <select id="o-status"><option>Pending</option><option>Ordered</option><option>In Transit</option><option>Received</option><option>Cancelled</option></select>
+      </div>
+      <div class="form-row"><label class="form-label">Notes</label><textarea id="o-notes" rows="2"></textarea></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button class="btn" onclick="closeModal('modal-order')">Cancel</button>
+        <button class="btn btn-teal" onclick="saveOrder()">Save Order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reminder Modal -->
+<div class="modal-overlay" id="modal-reminder">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Add Reminder</h3>
+      <button class="td-close" onclick="closeModal('modal-reminder')">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row"><label class="form-label">Title</label><input type="text" id="r-title"></div>
+      <div class="form-row"><label class="form-label">Type</label>
+        <select id="r-type"><option>Upcoming Commitment</option><option>Travel</option><option>Recurring</option><option>Deadline</option></select>
+      </div>
+      <div class="form-row"><label class="form-label">Date</label><input type="date" id="r-date"></div>
+      <div class="form-row"><label class="form-label">Notes</label><input type="text" id="r-notes" placeholder="Optional"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button class="btn" onclick="closeModal('modal-reminder')">Cancel</button>
+        <button class="btn btn-teal" onclick="saveReminder()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// CLOCK
+// ════════════════════════════════════════
+function tick() {
+  const n = new Date();
+  document.getElementById('hdr-clock').textContent =
+    n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  document.getElementById('hdr-date').textContent =
+    n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}).toUpperCase();
+}
+tick(); setInterval(tick,1000);
+
+// ════════════════════════════════════════
+// NAV
+// ════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    if(b.textContent.trim().toLowerCase()===id) b.classList.add('active');
+  });
+  closeThread(); closeContactPanel();
+}
+
+// ════════════════════════════════════════
+// MODALS
+// ════════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m) m.classList.remove('open');});
+});
+
+// ════════════════════════════════════════
+// INBOX — REAL GMAIL DATA
+// ════════════════════════════════════════
+const threads = [
+  {id:'19e844a8678d9ef2', sender:'eBay',                       subject:'Clean: The New Scie… is available with no cost returns',           snip:'Need to return it? No problem with free returns.',                                                    time:'Today 5:45 PM',  unread:true,  labels:['UNREAD']},
+  {id:'19e8448a5825fc7b', sender:'Pauly Lieber',               subject:'prompt',                                                            snip:'No, it\'s not enough. That prompt builds her a task manager. You want her operating like a principal.',  time:'Today 5:43 PM',  unread:false, labels:['IMPORTANT']},
+  {id:'19e83f0c5cec2bed', sender:'formulary@thecosmeticformulary.com', subject:'new code',                                                  snip:'https://thecosmeticformularynm.github.io/sip-formulate-app/ — Anyone in the world can open that link.', time:'Today 4:07 PM',  unread:false, labels:['IMPORTANT']},
+  {id:'19e83da816458bc0', sender:'Pauly Lieber',               subject:'github',                                                            snip:'Search this computer for the most recently modified folder containing a web app.',                       time:'Today 3:43 PM',  unread:false, labels:['IMPORTANT']},
+  {id:'19dbbd7e8025bc90', sender:'Cecelia Munday — FSS',       subject:'Re: Certificate of Analysis — FSS Order 155575',                   snip:'Yes, this material is a 1:1 to Carbomer 940 — let me know if you need anything else.',                  time:'Today 2:33 PM',  unread:false, labels:['IMPORTANT']},
+  {id:'19e83959fa573f0e', sender:'Pauly Lieber',               subject:'new app interface',                                                 snip:'https://formulary-os.fly.dev — Login: tcf / gJD4z3NTs0CSXuPP',                                         time:'Today 2:27 PM',  unread:false, labels:['IMPORTANT']},
+  {id:'19e8377a07bbb028', sender:'Katherine Fox — Design',     subject:'FW: Office Move Out Coordination',                                 snip:'FWD from Pallas Stallsmith — details for the move out, review required.',                              time:'Today 1:55 PM',  unread:false, labels:['IMPORTANT']},
+  {id:'19e7a84dfdb4bdf0', sender:'Etsy Seller',                subject:'Follow up on Etsy order',                                          snip:'Your order link has already been shared — please proceed with checkout at your earliest convenience.',    time:'May 30',         unread:false, labels:['IMPORTANT']},
+  {id:'19e74e1b3ffe0876', sender:'Johnson — Satin Trade',      subject:'Re: Custom bottle + twist nozzle cap',                             snip:'Happy to invest a bottle mold for you to establish collaboration — long-term business with brands.',      time:'May 30',         unread:false, labels:['IMPORTANT']},
+  {id:'19e83b849e16c4ae', sender:'formulary@thecosmeticformulary.com', subject:'Sip & Formulate — elevated prompt brief',                  snip:'Significantly elevated version of the prompt — tighter, more specific, built around the experience.',   time:'Today 3:05 PM',  unread:false, labels:['IMPORTANT']},
+];
+
+function renderThreads() {
+  document.getElementById('thread-list').innerHTML = threads.map((t,i)=>`
+    <div class="thread-row ${t.unread?'unread':''}" onclick="openThread(${i})">
+      <div class="thread-sender">${t.unread?'<span class="unread-dot"></span>':''}${escH(t.sender)}</div>
+      <div class="thread-mid">
+        <div class="thread-subject">${escH(t.subject)}</div>
+        <div class="thread-snip">${escH(t.snip)}</div>
+      </div>
+      <div class="thread-time">${t.time}</div>
+    </div>`).join('');
+  document.getElementById('sc-unread').textContent = threads.filter(t=>t.unread).length;
+}
+
+function openThread(i) {
+  const t = threads[i];
+  document.getElementById('td-subject').textContent = t.subject;
+  document.getElementById('td-meta').innerHTML = `
+    <span>From: <strong>${escH(t.sender)}</strong></span>
+    <span>${t.time}</span>
+    <a href="https://mail.google.com/mail/u/0/#inbox/${t.id}" target="_blank" style="color:var(--teal);text-decoration:none">Open in Gmail &#8599;</a>`;
+  document.getElementById('td-body').innerHTML = `
+    <p style="margin-bottom:12px">${escH(t.snip)}</p>
+    <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--border)">
+      <a href="https://mail.google.com/mail/u/0/#inbox/${t.id}" target="_blank" style="color:var(--teal);font-size:11px;text-decoration:none">View full thread in Gmail &#8599;</a>
+    </div>`;
+  if(t.unread){threads[i].unread=false; renderThreads(); document.getElementById('sc-unread').textContent=threads.filter(x=>x.unread).length;}
+  document.getElementById('thread-detail').classList.add('open');
+}
+function closeThread(){document.getElementById('thread-detail').classList.remove('open');}
+renderThreads();
+
+// Pending replies
+let pendingReplies = JSON.parse(localStorage.getItem('cc-pending')||'null') || [
+  {recipient:'Hunter Hutchens — FSS',   subject:'Re: COA FSS Order 155575 — Carbomer clarification', due:'2026-06-03', status:'Pending'},
+  {recipient:'Mark Yang — Jiaxing',     subject:'Bottle MOQ quantity confirmation',                   due:'2026-06-04', status:'Pending'},
+  {recipient:'Umang Global Group',      subject:'Scalp scrub particle details',                       due:'2026-06-05', status:'Pending'},
+  {recipient:'G5 Chemical — Stella',    subject:'Intro follow-up — personal care chemicals',          due:'2026-06-06', status:'Pending'},
+];
+function savePendingReplies(){localStorage.setItem('cc-pending',JSON.stringify(pendingReplies));}
+
+function renderPendingReplies(){
+  const statusPill={Pending:'pill-gold',Sent:'pill-teal','In Progress':'pill-teal',Blocked:'pill-red'};
+  document.getElementById('pr-tbody').innerHTML = pendingReplies.map((r,i)=>`
+    <tr>
+      <td>${escH(r.recipient)}</td>
+      <td>${escH(r.subject)}</td>
+      <td style="color:var(--gold)">${r.due}</td>
+      <td><span class="pill ${statusPill[r.status]||'pill-dim'}">${r.status}</span></td>
+    </tr>`).join('');
+  document.getElementById('sc-pending').textContent=pendingReplies.filter(r=>r.status!=='Sent').length;
+  document.getElementById('sc-due').textContent=pendingReplies.filter(r=>r.due==='2026-06-01').length;
+}
+
+function savePendingReply(){
+  const r={
+    recipient:document.getElementById('pr-recipient').value.trim(),
+    subject:document.getElementById('pr-subject').value.trim(),
+    due:document.getElementById('pr-due').value,
+    status:document.getElementById('pr-status').value
+  };
+  if(!r.recipient||!r.subject) return;
+  pendingReplies.unshift(r); savePendingReplies(); renderPendingReplies(); closeModal('modal-pending');
+  ['pr-recipient','pr-subject','pr-due'].forEach(id=>document.getElementById(id).value='');
+}
+renderPendingReplies();
+
+// ════════════════════════════════════════
+// TASKS
+// ════════════════════════════════════════
+let tasks = JSON.parse(localStorage.getItem('cc-tasks')||'null') || [
+  {id:1, name:'Reply to Cecelia at FSS — Carbomer 940 thread close',         project:'Procurement',         cat:'Procurement',    status:'Urgent',      priority:'High',   due:'2026-06-02', notes:'Confirmed 1:1 Carbomer 940. Close the thread and file the COA.'},
+  {id:2, name:'Confirm bottle MOQ quantity with Jiaxing Group (Mark Yang)',   project:'Procurement',         cat:'Procurement',    status:'Urgent',      priority:'High',   due:'2026-06-03', notes:'MOQ is 10,000 pcs per size. Need qty back to move forward.'},
+  {id:3, name:'Reply to Umang Global — scalp scrub particle requirements',   project:'R&D / Formulation',   cat:'Communications', status:'To Do',        priority:'High',   due:'2026-06-04', notes:'Spraysphere SE — they need application details.'},
+  {id:4, name:'Share Sip & Formulate app link with all team members',        project:'Sip & Formulate',     cat:'Admin',          status:'To Do',        priority:'Medium', due:'2026-06-02', notes:'Public link: https://thecosmeticformularynm.github.io/sip-formulate-app/'},
+  {id:5, name:'Review Alibaba Supplier Tracker — shared by Katherine Fox',   project:'Procurement',         cat:'Research',       status:'In Progress',  priority:'Medium', due:'2026-06-03', notes:'Spreadsheet last updated June 1.'},
+  {id:6, name:'Follow up on Sophim MC30/MC300 sample arrival',               project:'R&D / Formulation',   cat:'Procurement',    status:'To Do',        priority:'Medium', due:'2026-06-05', notes:'Shipped May 21 via FedEx Ground from Essential Ingredients.'},
+  {id:7, name:'Review Paclantic Naturals brochure — Peter Toth',             project:'Procurement',         cat:'Research',       status:'To Do',        priority:'Low',    due:'2026-06-07', notes:'Oils, butters, waxes, solvents. Can provide samples or quotes.'},
+  {id:8, name:'Follow up with G5 Chemical Solutions — Stella intro',         project:'Procurement',         cat:'Communications', status:'To Do',        priority:'Low',    due:'2026-06-07', notes:'Intro via Pauly. Personal care chemicals.'},
+  {id:9, name:'Review JHD Corp catalog from Grace Gao',                      project:'R&D / Formulation',   cat:'Research',       status:'To Do',        priority:'Low',    due:'2026-06-09', notes:'Skincare materials with US stock.'},
+  {id:10,name:'Etsy sign order — follow up on checkout',                     project:'Operations',          cat:'Admin',          status:'To Do',        priority:'Low',    due:'2026-06-02', notes:'Order link already shared. Seller following up.'},
+];
+let nextTaskId = tasks.length ? Math.max(...tasks.map(t=>t.id))+1 : 1;
+function saveTasks(){localStorage.setItem('cc-tasks',JSON.stringify(tasks));}
+
+function renderTasks(){
+  const fp=document.getElementById('f-project').value;
+  const fc=document.getElementById('f-cat').value;
+  const fs=document.getElementById('f-status').value;
+  const fpr=document.getElementById('f-priority').value;
+  const fq=(document.getElementById('f-search').value||'').toLowerCase();
+  let list=tasks.filter(t=>
+    (!fp||t.project===fp)&&(!fc||t.cat===fc)&&(!fs||t.status===fs)&&
+    (!fpr||t.priority===fpr)&&(!fq||t.name.toLowerCase().includes(fq)||t.notes.toLowerCase().includes(fq))
+  );
+  const statusPill={'To Do':'pill-dim','In Progress':'pill-teal','Urgent':'pill-red','Blocked':'pill-red','Done':'pill-dim'};
+  const priClass={High:'pri-high',Medium:'pri-med',Low:'pri-low'};
+  document.getElementById('task-tbody').innerHTML = list.map(t=>`
+    <tr onclick="toggleTaskExpand(${t.id})" id="task-row-${t.id}">
+      <td><div class="task-name-cell"><span id="task-arrow-${t.id}" style="color:var(--t3);font-size:10px;margin-right:4px">&#9654;</span>${escH(t.name)}</div></td>
+      <td>${escH(t.project)}</td>
+      <td>${t.cat}</td>
+      <td><span class="pill ${statusPill[t.status]||'pill-dim'}">${t.status}</span></td>
+      <td><span class="${priClass[t.priority]||''}">${t.priority}</span></td>
+      <td style="color:var(--gold)">${t.due||'—'}</td>
+      <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--t3)">${escH(t.notes||'')}</td>
+    </tr>
+    <tr id="task-expand-${t.id}" style="display:none">
+      <td colspan="7" style="background:var(--s2);padding:12px 14px 14px 38px;color:var(--t2);font-size:12px;line-height:1.6;border-bottom:1px solid var(--border)">
+        <div style="margin-bottom:8px"><strong style="color:var(--t1)">${escH(t.name)}</strong></div>
+        <div>${escH(t.notes||'No additional notes.')}</div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button class="btn btn-sm btn-teal" onclick="event.stopPropagation();editTask(${t.id})">Edit</button>
+          <button class="btn btn-sm" onclick="event.stopPropagation();deleteTask(${t.id})">Delete</button>
+          <select class="btn btn-sm" style="padding:4px 8px" onchange="event.stopPropagation();changeStatus(${t.id},this.value)">
+            <option value="">Change Status</option>
+            <option>To Do</option><option>In Progress</option><option>Urgent</option><option>Blocked</option><option>Done</option>
+          </select>
+        </div>
+      </td>
+    </tr>`).join('');
+
+  // Populate project filter
+  const projects=[...new Set(tasks.map(t=>t.project))].sort();
+  const pSel=document.getElementById('f-project');
+  const cur=pSel.value;
+  pSel.innerHTML='<option value="">All Projects</option>'+projects.map(p=>`<option ${p===cur?'selected':''}>${escH(p)}</option>`).join('');
+}
+
+function toggleTaskExpand(id){
+  const row=document.getElementById('task-expand-'+id);
+  const arr=document.getElementById('task-arrow-'+id);
+  const open=row.style.display==='table-row';
+  row.style.display=open?'none':'table-row';
+  arr.textContent=open?'▶':'▼';
+}
+function changeStatus(id,val){if(!val)return; const t=tasks.find(x=>x.id===id); if(t){t.status=val;saveTasks();renderTasks();}}
+function deleteTask(id){tasks=tasks.filter(t=>t.id!==id);saveTasks();renderTasks();}
+function editTask(id){
+  const t=tasks.find(x=>x.id===id); if(!t) return;
+  document.getElementById('t-name').value=t.name;
+  document.getElementById('t-project').value=t.project;
+  document.getElementById('t-cat').value=t.cat;
+  document.getElementById('t-status').value=t.status;
+  document.getElementById('t-priority').value=t.priority;
+  document.getElementById('t-due').value=t.due;
+  document.getElementById('t-notes').value=t.notes;
+  tasks=tasks.filter(x=>x.id!==id); saveTasks();
+  openModal('modal-task');
+}
+function saveTask(){
+  const name=document.getElementById('t-name').value.trim(); if(!name) return;
+  tasks.unshift({id:nextTaskId++,name,project:document.getElementById('t-project').value,cat:document.getElementById('t-cat').value,
+    status:document.getElementById('t-status').value,priority:document.getElementById('t-priority').value,
+    due:document.getElementById('t-due').value,notes:document.getElementById('t-notes').value});
+  saveTasks(); renderTasks(); closeModal('modal-task');
+  ['t-name','t-project','t-due','t-notes'].forEach(id=>document.getElementById(id).value='');
+}
+function exportTasksCSV(){
+  const h=['Task','Project','Category','Status','Priority','Due Date','Notes'];
+  const rows=tasks.map(t=>[t.name,t.project,t.cat,t.status,t.priority,t.due,t.notes].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(','));
+  download('tasks.csv',[h.join(','),...rows].join('\n'),'text/csv');
+}
+renderTasks();
+
+// ════════════════════════════════════════
+// CALENDAR
+// ════════════════════════════════════════
+let calYear=2026, calMonth=5, selectedCalDate=null, calView='grid';
+let calEvents = JSON.parse(localStorage.getItem('cc-cal')||'null') || {
+  '2026-06-01':[{id:1,title:'Sip & Formulate App Launch Prep',time:'All Day',type:'deadline',link:'https://thecosmeticformularynm.github.io/sip-formulate-app/'}],
+  '2026-06-03':[{id:2,title:'Check Sophim MC30/MC300 Sample Arrival',time:'9:00 AM',type:'deadline',link:''}],
+  '2026-06-05':[{id:3,title:'Jiaxing Group — Bottle MOQ Follow-up',time:'10:00 AM',type:'meeting',link:''}],
+  '2026-06-10':[{id:4,title:'Client Review: Molly Smith Formulas',time:'2:00 PM',type:'meeting',link:''}],
+  '2026-06-15':[{id:5,title:'Sip & Formulate Class',time:'All Day',type:'block',link:''}],
+  '2026-06-20':[{id:6,title:'Supplier Review — Procurement Status',time:'11:00 AM',type:'meeting',link:''}],
+};
+let nextEvId=100;
+function saveCal(){localStorage.setItem('cc-cal',JSON.stringify(calEvents));}
+
+function calDK(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
+
+function renderCal(){
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-month-lbl').textContent=`${months[calMonth]} ${calYear}`;
+  const today=new Date(); const firstDay=new Date(calYear,calMonth,1).getDay(); const daysInM=new Date(calYear,calMonth+1,0).getDate();
+  const dPrev=new Date(calYear,calMonth,0).getDate();
+  let html='';
+  for(let i=firstDay-1;i>=0;i--) html+=`<div class="cal-cell other-month"><div class="cal-day-n">${dPrev-i}</div></div>`;
+  for(let d=1;d<=daysInM;d++){
+    const dk=calDK(calYear,calMonth,d);
+    const isToday=d===today.getDate()&&calMonth===today.getMonth()&&calYear===today.getFullYear();
+    const isSel=dk===selectedCalDate;
+    const evs=calEvents[dk]||[];
+    const chips=evs.slice(0,3).map(e=>`<div class="cal-ev ev-${e.type}" title="${escH(e.title)}">${escH(e.title)}</div>`).join('');
+    const more=evs.length>3?`<div style="font-size:9px;color:var(--t3)">+${evs.length-3} more</div>`:'';
+    html+=`<div class="cal-cell${isToday?' today':''}${isSel?' selected':''}" onclick="selectCalDay('${dk}',${d})">`+
+      `<div class="cal-day-n">${d}</div>${chips}${more}</div>`;
+  }
+  const total=firstDay+daysInM; const rem=total%7===0?0:7-(total%7);
+  for(let d=1;d<=rem;d++) html+=`<div class="cal-cell other-month"><div class="cal-day-n">${d}</div></div>`;
+  document.getElementById('cal-cells').innerHTML=html;
+  renderCalListView();
+}
+
+function selectCalDay(dk,d){
+  selectedCalDate=dk;
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const p=dk.split('-');
+  document.getElementById('ev-panel-lbl').textContent=`${months[parseInt(p[1])-1]} ${parseInt(p[2])}, ${p[0]}`;
+  const evs=calEvents[dk]||[];
+  const typeClass={meeting:'ev-meeting',deadline:'ev-deadline',block:'ev-block'};
+  document.getElementById('ev-list-wrap').innerHTML=evs.length
+    ? evs.map(e=>`<div class="ev-item">
+        <div class="ev-dot" style="background:${e.type==='meeting'?'var(--teal)':e.type==='deadline'?'var(--gold)':'var(--t3)'}"></div>
+        <div class="ev-info">
+          <div class="ev-title">${escH(e.title)}</div>
+          <div class="ev-time-lbl">${e.time}${e.link?` &nbsp;<a href="${escH(e.link)}" target="_blank" style="color:var(--teal);font-size:10px">[link]</a>`:''}</div>
+        </div>
+        <button class="ev-del" onclick="deleteCalEvent('${dk}',${e.id})">&#x2715;</button>
+      </div>`).join('')
+    : '<div style="font-size:11px;color:var(--t3)">No events.</div>';
+  document.getElementById('ev-inline-form').style.display='block';
+  renderCal();
+}
+
+function saveInlineEvent(){
+  if(!selectedCalDate) return;
+  const title=document.getElementById('ev-title-in').value.trim(); if(!title) return;
+  if(!calEvents[selectedCalDate]) calEvents[selectedCalDate]=[];
+  calEvents[selectedCalDate].push({id:nextEvId++,title,time:document.getElementById('ev-time-in').value||'All Day',
+    type:document.getElementById('ev-type-in').value,link:document.getElementById('ev-link-in').value});
+  ['ev-title-in','ev-time-in','ev-link-in'].forEach(id=>document.getElementById(id).value='');
+  saveCal(); selectCalDay(selectedCalDate,parseInt(selectedCalDate.split('-')[2])); renderCal();
+}
+
+function deleteCalEvent(dk,id){
+  if(!calEvents[dk]) return;
+  calEvents[dk]=calEvents[dk].filter(e=>e.id!==id);
+  if(!calEvents[dk].length) delete calEvents[dk];
+  saveCal(); selectCalDay(dk,parseInt(dk.split('-')[2])); renderCal();
+}
+
+function openEvModal(){
+  if(selectedCalDate){document.getElementById('ev-inline-form').style.display='block';}
+}
+
+function calNav(dir){calMonth+=dir; if(calMonth<0){calMonth=11;calYear--;} if(calMonth>11){calMonth=0;calYear++;} renderCal();}
+
+function setCalView(v){
+  calView=v;
+  document.getElementById('cal-grid-view').style.display=v==='grid'?'block':'none';
+  document.getElementById('cal-list-view').style.display=v==='list'?'block':'none';
+  document.getElementById('btn-cal-view').classList.toggle('active',v==='grid');
+  document.getElementById('btn-list-view').classList.toggle('active',v==='list');
+}
+
+function renderCalListView(){
+  const today=new Date(); const daysInM=new Date(calYear,calMonth+1,0).getDate();
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  let html='';
+  for(let d=1;d<=daysInM;d++){
+    const dk=calDK(calYear,calMonth,d); const evs=calEvents[dk]||[];
+    if(!evs.length) continue;
+    const isToday=d===today.getDate()&&calMonth===today.getMonth()&&calYear===today.getFullYear();
+    html+=`<div class="list-day-group">
+      <div class="list-day-label">${isToday?'TODAY — ':''}${months[calMonth].toUpperCase()} ${d}</div>
+      ${evs.map(e=>`<div class="list-ev-row">
+        <div class="list-ev-time">${e.time}</div>
+        <div class="list-ev-type"><span class="pill ${e.type==='meeting'?'pill-teal':e.type==='deadline'?'pill-gold':'pill-dim'}">${e.type}</span></div>
+        <div class="list-ev-title">${escH(e.title)}</div>
+        <div class="list-ev-link">${e.link?`<a href="${escH(e.link)}" target="_blank">Link &#8599;</a>`:''}</div>
+      </div>`).join('')}
+    </div>`;
+  }
+  document.getElementById('cal-list-body').innerHTML=html||'<div style="color:var(--t3);font-size:12px">No events this month.</div>';
+}
+
+// Reminders
+let reminders=JSON.parse(localStorage.getItem('cc-reminders')||'null')||[
+  {title:'Team sync — Sip & Formulate launch',type:'Upcoming Commitment',date:'2026-06-05',notes:'Coordinate with Pauly and design'},
+  {title:'Sample follow-ups due',type:'Deadline',date:'2026-06-10',notes:'Essential Ingredients, Sino Lion'},
+  {title:'Monthly supplier review',type:'Recurring',date:'2026-06-15',notes:'Standing item — first Monday of month'},
+];
+function saveReminders(){localStorage.setItem('cc-reminders',JSON.stringify(reminders));}
+function renderReminders(){
+  document.getElementById('reminder-list').innerHTML=reminders.map((r,i)=>`
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:start;gap:10px">
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--t1);margin-bottom:2px">${escH(r.title)}</div>
+        <div style="font-size:10px;color:var(--gold)">${r.date}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">${escH(r.notes||'')}</div>
+      </div>
+      <span class="pill pill-dim" style="font-size:9px">${r.type}</span>
+      <button class="ev-del" onclick="deleteReminder(${i})">&#x2715;</button>
+    </div>`).join('');
+}
+function deleteReminder(i){reminders.splice(i,1);saveReminders();renderReminders();}
+function saveReminder(){
+  const title=document.getElementById('r-title').value.trim(); if(!title) return;
+  reminders.push({title,type:document.getElementById('r-type').value,date:document.getElementById('r-date').value,notes:document.getElementById('r-notes').value});
+  saveReminders(); renderReminders(); closeModal('modal-reminder');
+  ['r-title','r-date','r-notes'].forEach(id=>document.getElementById(id).value='');
+}
+
+const todayDK=(()=>{const n=new Date();return calDK(n.getFullYear(),n.getMonth(),n.getDate());})();
+renderCal();
+selectCalDay(todayDK,new Date().getDate());
+renderReminders();
+
+// ════════════════════════════════════════
+// CONTACTS
+// ════════════════════════════════════════
+let contacts=JSON.parse(localStorage.getItem('cc-contacts')||'null')||[
+  {id:1,name:'Pauly Lieber',company:'Pauly Inc.',role:'Principal / CEO',email:'pauly@paulyinc.com',last:'2026-06-01',method:'Email',notes:'Direct supervisor. All major decisions route through him.',interactions:[]},
+  {id:2,name:'Katherine Fox',company:'The Cosmetic Formulary',role:'Designer',email:'design@thecosmeticformulary.com',last:'2026-06-01',method:'Email',notes:'Design lead. Shared Alibaba Supplier Tracker.',interactions:[]},
+  {id:3,name:'Cecelia Munday',company:'Formulator Sample Shop',role:'Sales Rep',email:'cmunday@formulatorsampleshop.com',last:'2026-06-01',method:'Email',notes:'Confirmed Carbomer 940 equivalent today.',interactions:[{date:'2026-06-01',note:'Confirmed Carbomer 940 1:1 match on FSS Order 155575.',followup:'Close thread and file COA.'}]},
+  {id:4,name:'Mark Yang',company:'Jiaxing Group Co.',role:'Sales Rep',email:'jiaxingsales23@vip.163.com',last:'2026-06-01',method:'Email',notes:'Custom bottle supplier. MOQ 10,000 pcs per size.',interactions:[]},
+  {id:5,name:'Johnson',company:'Satin Trade',role:'Sales Rep',email:'johnson_satintrade@163.com',last:'2026-05-30',method:'Email',notes:'Custom bottle + twist nozzle cap mold. Willing to invest.',interactions:[]},
+  {id:6,name:'Peter Toth',company:'Paclantic Naturals / Sino Lion',role:'Sales Rep',email:'peter@paclanticnaturals.com',last:'2026-05-26',method:'Email',notes:'Oils, butters, waxes. Also submitted Sino Lion sample request.',interactions:[]},
+  {id:7,name:'Grace Gao',company:'JHD Corp',role:'Sales Rep',email:'grace.gao@jhdcorp.com',last:'2026-05-20',method:'Email',notes:'Skincare materials with US stock. Catalog sent.',interactions:[]},
+  {id:8,name:'Stella',company:'G5 Chemical Solutions',role:'Sales Rep',email:'sales@g5chemical.com',last:'2026-05-21',method:'Email',notes:'Personal care chemicals distributor. Intro via Pauly.',interactions:[]},
+];
+let nextContactId=contacts.length?Math.max(...contacts.map(c=>c.id))+1:1;
+let activeContactId=null;
+function saveContacts(){localStorage.setItem('cc-contacts',JSON.stringify(contacts));}
+
+function renderContacts(){
+  const q=(document.getElementById('contact-search').value||'').toLowerCase();
+  const fc=document.getElementById('contact-filter-company').value;
+  const fr=document.getElementById('contact-filter-role').value;
+  let list=contacts.filter(c=>
+    (!q||c.name.toLowerCase().includes(q)||c.company.toLowerCase().includes(q)||c.role.toLowerCase().includes(q))&&
+    (!fc||c.company===fc)&&(!fr||c.role===fr)
+  );
+  document.getElementById('contact-tbody').innerHTML=list.map(c=>`
+    <tr onclick="openContact(${c.id})">
+      <td>${escH(c.name)}</td><td>${escH(c.company)}</td><td>${escH(c.role)}</td>
+      <td style="color:var(--gold)">${c.last||'—'}</td><td>${c.method}</td>
+      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escH(c.notes||'')}</td>
+    </tr>`).join('');
+  // Populate filters
+  const companies=[...new Set(contacts.map(c=>c.company))].sort();
+  const roles=[...new Set(contacts.map(c=>c.role))].sort();
+  const cs=document.getElementById('contact-filter-company');
+  const curC=cs.value;
+  cs.innerHTML='<option value="">All Companies</option>'+companies.map(x=>`<option ${x===curC?'selected':''}>${escH(x)}</option>`).join('');
+  const rs=document.getElementById('contact-filter-role');
+  const curR=rs.value;
+  rs.innerHTML='<option value="">All Roles</option>'+roles.map(x=>`<option ${x===curR?'selected':''}>${escH(x)}</option>`).join('');
+}
+
+function openContact(id){
+  const c=contacts.find(x=>x.id===id); if(!c) return;
+  activeContactId=id;
+  document.getElementById('cdp-name').textContent=c.name;
+  document.getElementById('cdp-role').textContent=`${c.role} — ${c.company}`;
+  document.getElementById('cdp-company').textContent=c.company;
+  document.getElementById('cdp-method').textContent=c.method+(c.email?` — ${c.email}`:'');
+  document.getElementById('cdp-notes').textContent=c.notes||'—';
+  renderInteractions(c);
+  document.getElementById('contact-detail-panel').classList.add('open');
+}
+function renderInteractions(c){
+  document.getElementById('cdp-interactions').innerHTML=(c.interactions||[]).map(i=>`
+    <div class="int-log-item">
+      <div class="int-date">${i.date}</div>
+      <div class="int-note">${escH(i.note)}</div>
+      ${i.followup?`<div class="int-followup">Follow-up: ${escH(i.followup)}</div>`:''}
+    </div>`).join('')||'<div style="font-size:11px;color:var(--t3)">No interactions logged.</div>';
+}
+function logInteraction(){
+  const c=contacts.find(x=>x.id===activeContactId); if(!c) return;
+  const note=document.getElementById('int-note-input').value.trim(); if(!note) return;
+  if(!c.interactions) c.interactions=[];
+  c.interactions.unshift({date:new Date().toISOString().slice(0,10),note,followup:''});
+  saveContacts(); renderInteractions(c); document.getElementById('int-note-input').value='';
+}
+function closeContactPanel(){document.getElementById('contact-detail-panel').classList.remove('open');activeContactId=null;}
+function saveContact(){
+  const name=document.getElementById('c-name').value.trim(); if(!name) return;
+  contacts.push({id:nextContactId++,name,company:document.getElementById('c-company').value,
+    role:document.getElementById('c-role').value,email:document.getElementById('c-email').value,
+    last:document.getElementById('c-last').value,method:document.getElementById('c-method').value,
+    notes:document.getElementById('c-notes').value,interactions:[]});
+  saveContacts(); renderContacts(); closeModal('modal-contact');
+  ['c-name','c-company','c-role','c-email','c-last','c-notes'].forEach(id=>document.getElementById(id).value='');
+}
+function exportContactsCSV(){
+  const h=['Name','Company','Role','Email','Last Contact','Method','Notes'];
+  const rows=contacts.map(c=>[c.name,c.company,c.role,c.email,c.last,c.method,c.notes].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(','));
+  download('contacts.csv',[h.join(','),...rows].join('\n'),'text/csv');
+}
+renderContacts();
+
+// ════════════════════════════════════════
+// FILES — REAL DRIVE DATA
+// ════════════════════════════════════════
+let driveFiles = [
+  {name:'Sample Materials',                                    type:'Google Sheet',  cat:'Reference',       modified:'May 29, 2026', owner:'sales@thecosmeticformulary.com', url:'https://docs.google.com/spreadsheets/d/1za0KiEYPXvy-TShsZwttbTh8sr_Ms7Sp1cEcHq7SLBM/edit'},
+  {name:'Molly_Smith — Combined Ingredients',                  type:'Google Sheet',  cat:'Reference',       modified:'May 27, 2026', owner:'sales@thecosmeticformulary.com', url:'https://docs.google.com/spreadsheets/d/1UYeVtaTPrpk6e7LAm6ygvPvAUQBZBmkMbPUxouqgZ0s/edit'},
+  {name:'Molly_Smith — Shampoo & Conditioner',                 type:'Google Sheet',  cat:'Reference',       modified:'May 27, 2026', owner:'sales@thecosmeticformulary.com', url:'https://docs.google.com/spreadsheets/d/1z3kU8sWzUliXgxkuCIHZ93fLr5m1nJ69b-3cUQCkWGQ/edit'},
+  {name:'TCF Bottle Map & SKUs',                               type:'Excel (.xlsx)', cat:'Reference',       modified:'May 27, 2026', owner:'sales@thecosmeticformulary.com', url:'https://drive.google.com/file/d/1W9FODixEISSG2OcaALOUVXqDZ76EaZk7/view'},
+  {name:'Dupe of Chanel Les Beiges — TCF TT-001',              type:'Google Sheet',  cat:'Report',          modified:'May 27, 2026', owner:'sales@thecosmeticformulary.com', url:'https://docs.google.com/spreadsheets/d/1mWPT8a5VJscpgjEgyQUE7Z4-Bc1DRL-duAwC6_X-j-M/edit'},
+  {name:'Nevoo Brand Binder',                                  type:'PDF',           cat:'Reference',       modified:'May 27, 2026', owner:'sales@thecosmeticformulary.com', url:'https://drive.google.com/file/d/1CrQEDDjqjJRhg88urMHWVDTFVvRy0MEV/view'},
+  {name:'Nevoo Logo — Gold',                                   type:'PNG',           cat:'Template',        modified:'May 27, 2026', owner:'sales@thecosmeticformulary.com', url:'https://drive.google.com/file/d/1R73Twxj9vl-h8VDb-39Lo-NxMPgvgxNK/view'},
+  {name:'Nevoo Logo — White (SVG)',                            type:'SVG',           cat:'Template',        modified:'May 27, 2026', owner:'sales@thecosmeticformulary.com', url:'https://drive.google.com/file/d/12TYSK_8o3xR0f-vesnHC7O-R_9riTSlY/view'},
+  {name:'Nevoo Logo — Black (PDF)',                            type:'PDF',           cat:'Template',        modified:'May 27, 2026', owner:'sales@thecosmeticformulary.com', url:'https://drive.google.com/file/d/1kwxV5Lr6iHreTQ58-ykw26WABmWRfzy4/view'},
+  {name:'Brand Assets',                                        type:'Folder',        cat:'Reference',       modified:'May 27, 2026', owner:'sales@thecosmeticformulary.com', url:'https://drive.google.com/drive/folders/1afHA3OaI-ev7Meecdca6GPt_NVnWXl-q'},
+  {name:'16 — Inventory',                                      type:'Folder',        cat:'Reference',       modified:'Apr 2, 2026',  owner:'sales@thecosmeticformulary.com', url:'https://drive.google.com/drive/folders/1WJRxU8bGDblHWZZW6U12f-qYlxt-cc_x'},
+  {name:'TCF Platform Dupes',                                  type:'Folder',        cat:'Reference',       modified:'May 12, 2026', owner:'sales@thecosmeticformulary.com', url:'https://drive.google.com/drive/folders/1kMkiv61UjTKZEe2Vmh6byu8aPeOzwTMJ'},
+];
+let pendingUpload=null;
+
+function renderFiles(){
+  const q=(document.getElementById('file-search').value||'').toLowerCase();
+  const fc=document.getElementById('file-filter-cat').value;
+  let list=driveFiles.filter(f=>(!q||(f.name+f.type+f.cat).toLowerCase().includes(q))&&(!fc||f.cat===fc));
+  const typeIcons={'Google Sheet':'&#x1F4CA;','Excel (.xlsx)':'&#x1F4CA;','PDF':'&#x1F4C4;','PNG':'&#x1F5BC;','JPG':'&#x1F5BC;','SVG':'&#x1F5BC;','Folder':'&#x1F4C1;'};
+  document.getElementById('file-tbody').innerHTML=list.map(f=>`
+    <tr>
+      <td><span class="file-type-icon">${typeIcons[f.type]||'&#x1F4C4;'}</span><a href="${f.url}" target="_blank">${escH(f.name)}</a></td>
+      <td style="color:var(--t3)">${f.type}</td>
+      <td><span class="pill pill-dim">${f.cat}</span></td>
+      <td style="color:var(--t3)">${f.modified}</td>
+      <td style="color:var(--t3);font-size:11px">${f.owner}</td>
+    </tr>`).join('');
+}
+
+function handleDragOver(e){e.preventDefault();document.getElementById('drop-zone').classList.add('drag-over');}
+function handleDragLeave(){document.getElementById('drop-zone').classList.remove('drag-over');}
+function handleDrop(e){e.preventDefault();handleDragLeave();const files=e.dataTransfer.files;if(files.length)prepUpload(files[0]);}
+function handleFileSelect(e){if(e.target.files.length)prepUpload(e.target.files[0]);}
+function prepUpload(file){
+  pendingUpload=file;
+  document.getElementById('upload-filename').textContent=file.name;
+  document.getElementById('upload-tag-form').style.display='block';
+}
+function confirmUpload(){
+  if(!pendingUpload) return;
+  const cat=document.getElementById('upload-cat').value;
+  driveFiles.unshift({name:pendingUpload.name,type:pendingUpload.type||'File',cat,modified:'Jun 1, 2026',owner:'sales@thecosmeticformulary.com',url:'https://drive.google.com'});
+  cancelUpload(); renderFiles();
+  alert(`"${pendingUpload.name}" tagged as "${cat}" and queued for Google Drive upload.\n\nTo complete the upload, open Google Drive directly.`);
+}
+function cancelUpload(){pendingUpload=null;document.getElementById('upload-tag-form').style.display='none';document.getElementById('file-input').value='';}
+renderFiles();
+
+// ════════════════════════════════════════
+// NOTES
+// ════════════════════════════════════════
+let notes=JSON.parse(localStorage.getItem('cc-notes')||'null')||[
+  {id:1,title:'Carbomer 940 — FSS Confirmation',cat:'Vendor Info',date:'2026-06-01',body:'Cecelia Munday at FSS confirmed the material on Order 155575 is a 1:1 equivalent to Carbomer 940. COA attached to order. Thread can be closed.',link:''},
+  {id:2,title:'Bottle Sourcing — Current Supplier Overview',cat:'Vendor Info',date:'2026-06-01',body:'Jiaxing Group (Mark Yang): MOQ 10,000 pcs per size. Pricing confirmed.\nSatin Trade (Johnson): Willing to invest in mold for long-term relationship.\nNeeds: quantity decision before moving forward with either.',link:''},
+  {id:3,title:'Sip & Formulate App — Public Link Notes',cat:'Process Log',date:'2026-06-01',body:'Public link live: https://thecosmeticformularynm.github.io/sip-formulate-app/\nNo login required. Share freely.\nFormulary OS internal: https://formulary-os.fly.dev — Login: tcf',link:'https://thecosmeticformularynm.github.io/sip-formulate-app/'},
+  {id:4,title:'Scalp Scrub — Ingredient Sourcing Notes',cat:'Research',date:'2026-05-25',body:'Umang Global Group (Spraysphere SE): Non-dissolving scrub particles. White beads, 30-60 mesh size. Application: scalp scrub.\nAwaiting sample.',link:''},
+];
+let nextNoteId=notes.length?Math.max(...notes.map(n=>n.id))+1:1;
+let activeNoteId=null;
+function saveNotes(){localStorage.setItem('cc-notes',JSON.stringify(notes));}
+
+function renderNotesList(){
+  const q=(document.getElementById('notes-search').value||'').toLowerCase();
+  const fc=document.getElementById('notes-filter-cat').value;
+  let list=notes.filter(n=>(!q||(n.title+n.body).toLowerCase().includes(q))&&(!fc||n.cat===fc));
+  document.getElementById('notes-list').innerHTML=list.map(n=>`
+    <div class="note-list-item ${n.id===activeNoteId?'active':''}" onclick="openNote(${n.id})">
+      <div class="nli-title">${escH(n.title)}</div>
+      <div class="nli-cat">${n.cat}</div>
+      <div class="nli-date">${n.date}</div>
+    </div>`).join('');
+}
+
+function openNote(id){
+  const n=notes.find(x=>x.id===id); if(!n) return;
+  activeNoteId=id;
+  document.getElementById('ne-title').value=n.title;
+  document.getElementById('ne-cat').value=n.cat;
+  document.getElementById('ne-date').value=n.date;
+  document.getElementById('ne-body').value=n.body;
+  document.getElementById('ne-link').value=n.link||'';
+  renderNotesList();
+}
+
+function newNote(){
+  activeNoteId=null;
+  document.getElementById('ne-title').value='';
+  document.getElementById('ne-cat').value='Meeting Notes';
+  document.getElementById('ne-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('ne-body').value='';
+  document.getElementById('ne-link').value='';
+  renderNotesList();
+  document.getElementById('ne-title').focus();
+}
+
+function saveNote(){
+  const title=document.getElementById('ne-title').value.trim(); if(!title) return;
+  if(activeNoteId){
+    const n=notes.find(x=>x.id===activeNoteId);
+    if(n){n.title=title;n.cat=document.getElementById('ne-cat').value;n.date=document.getElementById('ne-date').value;n.body=document.getElementById('ne-body').value;n.link=document.getElementById('ne-link').value;}
+  } else {
+    const n={id:nextNoteId++,title,cat:document.getElementById('ne-cat').value,date:document.getElementById('ne-date').value,body:document.getElementById('ne-body').value,link:document.getElementById('ne-link').value};
+    notes.unshift(n); activeNoteId=n.id;
+  }
+  saveNotes(); renderNotesList();
+}
+
+function deleteCurrentNote(){
+  if(!activeNoteId) return;
+  if(!confirm('Delete this note?')) return;
+  notes=notes.filter(n=>n.id!==activeNoteId); activeNoteId=null;
+  saveNotes(); renderNotesList(); newNote();
+}
+renderNotesList();
+if(notes.length) openNote(notes[0].id);
+
+// ════════════════════════════════════════
+// INFLOW INVENTORY
+// ════════════════════════════════════════
+let inflowConnected = !!localStorage.getItem('inflow-key');
+let inventory = JSON.parse(localStorage.getItem('cc-inventory') || 'null') || [
+  {id:1, name:'Carbomer 940',              sku:'RM-001', cat:'Raw Material',  qty:12,  reorder:20, cost:'$8.50/kg',   location:'Shelf A-1', status:'low'},
+  {id:2, name:'Hyaluronic Acid (HA)',       sku:'RM-002', cat:'Raw Material',  qty:4,   reorder:10, cost:'$24.00/g',   location:'Shelf A-2', status:'low'},
+  {id:3, name:'Sophim MC30',               sku:'RM-003', cat:'Raw Material',  qty:0,   reorder:5,  cost:'$18.00/kg',  location:'Shelf A-3', status:'out'},
+  {id:4, name:'Sophim MC300',              sku:'RM-004', cat:'Raw Material',  qty:0,   reorder:5,  cost:'$22.00/kg',  location:'Shelf A-3', status:'out'},
+  {id:5, name:'Spraysphere SE (Scrub)',    sku:'RM-005', cat:'Raw Material',  qty:2,   reorder:8,  cost:'$35.00/kg',  location:'Shelf B-1', status:'low'},
+  {id:6, name:'TCF Bottle 60ml',           sku:'PKG-001',cat:'Packaging',     qty:340, reorder:200,cost:'$0.17/pc',   location:'Bin C-1',   status:'ok'},
+  {id:7, name:'TCF Bottle 240ml',          sku:'PKG-002',cat:'Packaging',     qty:180, reorder:200,cost:'$0.22/pc',   location:'Bin C-2',   status:'low'},
+  {id:8, name:'Pump Dispenser — 24/410',   sku:'PKG-003',cat:'Packaging',     qty:520, reorder:300,cost:'$0.35/pc',   location:'Bin C-3',   status:'ok'},
+  {id:9, name:'Twist Nozzle Cap',          sku:'PKG-004',cat:'Packaging',     qty:0,   reorder:500,cost:'TBD',        location:'Pending',   status:'out'},
+  {id:10,name:'Kraft Mailer Box — Small',  sku:'PKG-005',cat:'Packaging',     qty:88,  reorder:100,cost:'$1.20/pc',   location:'Bin D-1',   status:'low'},
+  {id:11,name:'Sip & Formulate Kit',       sku:'KIT-001',cat:'Finished Good', qty:24,  reorder:10, cost:'$42.00/kit', location:'Shelf E-1', status:'ok'},
+  {id:12,name:'Nevoo Brand Formula',       sku:'FIN-001',cat:'Finished Good', qty:60,  reorder:30, cost:'$18.50/unit',location:'Shelf E-2', status:'ok'},
+];
+let nextInvId = inventory.length ? Math.max(...inventory.map(i=>i.id))+1 : 1;
+
+let orders = JSON.parse(localStorage.getItem('cc-orders') || 'null') || [
+  {id:1, num:'PO-0038', type:'Purchase Order', vendor:'Essential Ingredients', items:'Sophim MC30, MC300', qty:2, date:'2026-05-21', status:'In Transit'},
+  {id:2, num:'PO-0039', type:'Purchase Order', vendor:'Formulator Sample Shop', items:'Carbomer 940 equiv.', qty:1, date:'2026-04-23', status:'Received'},
+  {id:3, num:'PO-0040', type:'Purchase Order', vendor:'Umang Global Group', items:'Spraysphere SE scrub particles', qty:1, date:'2026-05-25', status:'Pending'},
+  {id:4, num:'PO-0041', type:'Purchase Order', vendor:'Jiaxing Group', items:'Custom bottles 60ml/240ml', qty:10000, date:'2026-06-01', status:'Pending'},
+];
+let nextOrderId = orders.length ? Math.max(...orders.map(o=>o.id))+1 : 1;
+
+function saveInventory(){ localStorage.setItem('cc-inventory', JSON.stringify(inventory)); }
+function saveOrders(){ localStorage.setItem('cc-orders', JSON.stringify(orders)); }
+
+function connectInFlow(){
+  const key = document.getElementById('inflow-api-key-input').value.trim();
+  if(!key){ alert('Please enter your InFlow API key.'); return; }
+  localStorage.setItem('inflow-key', key);
+  inflowConnected = true;
+  document.getElementById('inflow-setup-banner').style.display = 'none';
+  document.getElementById('inflow-connected-bar').style.display = 'block';
+  document.getElementById('inflow-org-label').textContent = 'The Cosmetic Formulary';
+  document.getElementById('inflow-last-sync').textContent = 'Last sync: ' + new Date().toLocaleTimeString();
+  renderInventory(); renderLowStock(); renderOrders();
+}
+function disconnectInFlow(){
+  localStorage.removeItem('inflow-key'); inflowConnected = false;
+  document.getElementById('inflow-setup-banner').style.display = 'block';
+  document.getElementById('inflow-connected-bar').style.display = 'none';
+}
+function syncInFlow(){
+  document.getElementById('inflow-last-sync').textContent = 'Last sync: ' + new Date().toLocaleTimeString();
+  renderInventory(); renderLowStock(); renderOrders();
+}
+
+function renderInventory(){
+  const q = (document.getElementById('inv-search').value || '').toLowerCase();
+  const fc = document.getElementById('inv-filter-cat').value;
+  const fs = document.getElementById('inv-filter-status').value;
+  let list = inventory.filter(i =>
+    (!q || (i.name+i.sku).toLowerCase().includes(q)) &&
+    (!fc || i.cat === fc) &&
+    (!fs || i.status === fs)
+  );
+  const statusPill = { ok:'pill-teal', low:'pill-gold', out:'pill-red' };
+  const statusLabel = { ok:'In Stock', low:'Low Stock', out:'Out of Stock' };
+  document.getElementById('inv-tbody').innerHTML = list.map(i => `
+    <tr>
+      <td style="color:var(--t1);font-weight:500">${escH(i.name)}</td>
+      <td style="color:var(--t3)">${escH(i.sku)}</td>
+      <td>${escH(i.cat)}</td>
+      <td style="color:${i.qty===0?'var(--red)':i.qty<=i.reorder?'var(--gold)':'var(--t1)'};font-weight:600">${i.qty}</td>
+      <td style="color:var(--t3)">${i.reorder}</td>
+      <td><span class="pill ${statusPill[i.status]}">${statusLabel[i.status]}</span></td>
+      <td style="color:var(--t3)">${escH(i.cost)}</td>
+      <td style="color:var(--t3)">${escH(i.location)}</td>
+    </tr>`).join('');
+
+  // Populate category filter
+  const cats = [...new Set(inventory.map(i=>i.cat))].sort();
+  const cs = document.getElementById('inv-filter-cat');
+  const cur = cs.value;
+  cs.innerHTML = '<option value="">All Categories</option>' + cats.map(c=>`<option ${c===cur?'selected':''}>${escH(c)}</option>`).join('');
+
+  // Scorecards
+  document.getElementById('inv-total').textContent = inventory.length;
+  document.getElementById('inv-low').textContent = inventory.filter(i=>i.status==='low').length;
+  document.getElementById('inv-out').textContent = inventory.filter(i=>i.status==='out').length;
+  document.getElementById('inv-orders').textContent = orders.length;
+  document.getElementById('inv-pending').textContent = orders.filter(o=>o.status==='In Transit'||o.status==='Pending').length;
+}
+
+function renderLowStock(){
+  const alerts = inventory.filter(i=>i.status==='low'||i.status==='out');
+  document.getElementById('low-stock-count').textContent = alerts.length + ' items';
+  document.getElementById('low-stock-list').innerHTML = alerts.length
+    ? alerts.map(i=>`
+        <div style="display:flex;align-items:center;gap:12px;padding:9px 14px;border-bottom:1px solid var(--border)">
+          <div style="flex:1">
+            <div style="font-size:12px;color:var(--t1);font-weight:500">${escH(i.name)}</div>
+            <div style="font-size:10px;color:var(--t3);margin-top:1px">${escH(i.sku)} &nbsp;·&nbsp; ${escH(i.location)}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:13px;font-weight:700;color:${i.status==='out'?'var(--red)':'var(--gold)'}">${i.qty} on hand</div>
+            <div style="font-size:10px;color:var(--t3)">reorder at ${i.reorder}</div>
+          </div>
+          <span class="pill ${i.status==='out'?'pill-red':'pill-gold'}">${i.status==='out'?'Out of Stock':'Low'}</span>
+        </div>`).join('')
+    : '<div style="padding:14px;font-size:11px;color:var(--t3)">No low stock alerts.</div>';
+}
+
+function renderOrders(){
+  const statusPill = { Pending:'pill-dim', Ordered:'pill-teal', 'In Transit':'pill-gold', Received:'pill-teal', Cancelled:'pill-red' };
+  document.getElementById('order-list').innerHTML = orders.map(o=>`
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px">
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--t1);font-weight:500">${escH(o.num)} &nbsp;<span style="color:var(--t3);font-weight:400">${escH(o.vendor)}</span></div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">${escH(o.items)} &nbsp;·&nbsp; Qty: ${o.qty}</div>
+      </div>
+      <div style="font-size:10px;color:var(--t3)">${o.date}</div>
+      <span class="pill ${statusPill[o.status]||'pill-dim'}">${o.status}</span>
+    </div>`).join('') || '<div style="padding:14px;font-size:11px;color:var(--t3)">No orders logged.</div>';
+}
+
+function addProductManually(){
+  const name = document.getElementById('mp-name').value.trim(); if(!name) return;
+  const qty = parseInt(document.getElementById('mp-qty').value)||0;
+  const reorder = parseInt(document.getElementById('mp-reorder').value)||0;
+  const status = qty===0?'out':qty<=reorder?'low':'ok';
+  inventory.unshift({ id:nextInvId++, name,
+    sku: document.getElementById('mp-sku').value,
+    cat: document.getElementById('mp-cat').value || 'Other',
+    qty, reorder,
+    cost: document.getElementById('mp-cost').value,
+    location: document.getElementById('mp-location').value,
+    status
+  });
+  saveInventory(); renderInventory(); renderLowStock();
+  ['mp-name','mp-sku','mp-cat','mp-location','mp-cost'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mp-qty').value='0';
+  document.getElementById('mp-reorder').value='0';
+}
+
+function filterInventory(){ renderInventory(); }
+
+function saveOrder(){
+  const num = document.getElementById('o-num').value.trim(); if(!num) return;
+  orders.unshift({ id:nextOrderId++, num,
+    type:   document.getElementById('o-type').value,
+    vendor: document.getElementById('o-vendor').value,
+    items:  document.getElementById('o-items').value,
+    qty:    document.getElementById('o-qty').value,
+    date:   document.getElementById('o-date').value,
+    status: document.getElementById('o-status').value,
+    notes:  document.getElementById('o-notes').value
+  });
+  saveOrders(); renderOrders();
+  document.getElementById('inv-orders').textContent = orders.length;
+  document.getElementById('inv-pending').textContent = orders.filter(o=>o.status==='In Transit'||o.status==='Pending').length;
+  closeModal('modal-order');
+  ['o-num','o-vendor','o-items','o-qty','o-date','o-notes'].forEach(id=>document.getElementById(id).value='');
+}
+
+function exportInventoryCSV(){
+  const h=['Name','SKU','Category','On Hand','Reorder Point','Status','Unit Cost','Location'];
+  const rows=inventory.map(i=>[i.name,i.sku,i.cat,i.qty,i.reorder,i.status,i.cost,i.location].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
+  download('inventory.csv',[h.join(','),...rows].join('\n'),'text/csv');
+}
+
+// Init InFlow state
+if(inflowConnected){
+  document.getElementById('inflow-setup-banner').style.display='none';
+  document.getElementById('inflow-connected-bar').style.display='block';
+  document.getElementById('inflow-org-label').textContent='The Cosmetic Formulary';
+  document.getElementById('inflow-last-sync').textContent='Last sync: session start';
+}
+renderInventory(); renderLowStock(); renderOrders();
+
+// ════════════════════════════════════════
+// QUICKBOOKS
+// ════════════════════════════════════════
+let qbConnected = !!localStorage.getItem('qb-key');
+
+let qbInvoices = JSON.parse(localStorage.getItem('cc-qb-invoices') || 'null') || [
+  {id:1, num:'INV-0034', client:'Meredith (HA Serum Project)',   amount:'$1,200.00', issued:'2026-05-15', due:'2026-06-01', status:'Overdue'},
+  {id:2, num:'INV-0035', client:'Molly Smith — Shampoo/Cond.',  amount:'$850.00',   issued:'2026-05-20', due:'2026-06-10', status:'Open'},
+  {id:3, num:'INV-0036', client:'McKernan',                     amount:'$2,400.00', issued:'2026-05-27', due:'2026-06-15', status:'Open'},
+  {id:4, num:'INV-0033', client:'Sip & Formulate — Class Fees', amount:'$640.00',   issued:'2026-05-01', due:'2026-05-20', status:'Paid'},
+];
+let nextQBInvId = qbInvoices.length ? Math.max(...qbInvoices.map(i=>i.id))+1 : 1;
+
+let qbExpenses = JSON.parse(localStorage.getItem('cc-qb-expenses') || 'null') || [
+  {id:1, desc:'Formulator Sample Shop — COA Order',  vendor:'FSS',                   cat:'Raw Materials', amount:'$184.50',  date:'2026-04-23', status:'Paid'},
+  {id:2, desc:'DHL Express Import Duty',             vendor:'DHL',                    cat:'Shipping',      amount:'$21.24',   date:'2026-05-26', status:'Paid'},
+  {id:3, desc:'Vivid Data Group — Data Order',       vendor:'Vivid Data Group',       cat:'Software',      amount:'$TBD',     date:'2026-05-29', status:'Pending'},
+  {id:4, desc:'Etsy Seller — Sign Order',            vendor:'glowingauraneons',        cat:'Supplies',      amount:'$22.89',   date:'2026-05-28', status:'Pending'},
+  {id:5, desc:'Amazon — Silicone Jar (returned)',    vendor:'Amazon',                  cat:'Supplies',      amount:'$0.00',    date:'2026-05-28', status:'Refunded'},
+  {id:6, desc:'Jiaxing Group — Bottle Deposit',      vendor:'Jiaxing Group',           cat:'Packaging',     amount:'TBD',      date:'2026-06-01', status:'Pending'},
+];
+let nextQBExpId = qbExpenses.length ? Math.max(...qbExpenses.map(e=>e.id))+1 : 1;
+
+let qbBills = JSON.parse(localStorage.getItem('cc-qb-bills') || 'null') || [
+  {id:1, vendor:'Essential Ingredients',  amount:'$312.00',  due:'2026-06-15', desc:'Sophim MC30 + MC300 samples'},
+  {id:2, vendor:'Paclantic Naturals',     amount:'$TBD',     due:'2026-06-20', desc:'Oil & butter samples — Peter Toth'},
+  {id:3, vendor:'Hartford Insurance',     amount:'$420.00',  due:'2026-06-30', desc:'Monthly premium'},
+];
+let nextQBBillId = qbBills.length ? Math.max(...qbBills.map(b=>b.id))+1 : 1;
+
+function saveQBInvoices(){ localStorage.setItem('cc-qb-invoices', JSON.stringify(qbInvoices)); }
+function saveQBExpenses(){ localStorage.setItem('cc-qb-expenses', JSON.stringify(qbExpenses)); }
+function saveQBBills(){    localStorage.setItem('cc-qb-bills',    JSON.stringify(qbBills));    }
+
+function connectQB(){
+  const key = document.getElementById('qb-api-key-input').value.trim();
+  const cid = document.getElementById('qb-company-id').value.trim();
+  if(!key){ alert('Please enter your QuickBooks token.'); return; }
+  localStorage.setItem('qb-key', key);
+  if(cid) localStorage.setItem('qb-cid', cid);
+  qbConnected = true;
+  document.getElementById('qb-setup-banner').style.display = 'none';
+  document.getElementById('qb-connected-bar').style.display = 'block';
+  document.getElementById('qb-company-label').textContent = 'Pauly Inc. / The Cosmetic Formulary';
+  document.getElementById('qb-last-sync').textContent = 'Last sync: ' + new Date().toLocaleTimeString();
+  renderQB();
+}
+function disconnectQB(){
+  localStorage.removeItem('qb-key'); localStorage.removeItem('qb-cid');
+  qbConnected = false;
+  document.getElementById('qb-setup-banner').style.display = 'block';
+  document.getElementById('qb-connected-bar').style.display = 'none';
+}
+function syncQB(){
+  document.getElementById('qb-last-sync').textContent = 'Last sync: ' + new Date().toLocaleTimeString();
+  renderQB();
+}
+
+function renderQB(){ renderQBScorecard(); renderQBInvoices(); renderQBExpenses(); renderQBBills(); renderQBPL(); renderQBVendors(); }
+
+function renderQBScorecard(){
+  document.getElementById('qb-open-inv').textContent  = qbInvoices.filter(i=>i.status==='Open').length;
+  document.getElementById('qb-overdue').textContent   = qbInvoices.filter(i=>i.status==='Overdue').length;
+  document.getElementById('qb-bills').textContent     = qbBills.length;
+  // Sum paid expenses this month
+  const exp = qbExpenses.filter(e=>e.status==='Paid').reduce((s,e)=>{
+    const n = parseFloat((e.amount||'').replace(/[^0-9.]/g,'')); return s+(isNaN(n)?0:n);
+  },0);
+  document.getElementById('qb-expenses').textContent = exp ? '$'+exp.toLocaleString('en-US',{minimumFractionDigits:2}) : '—';
+  // Sum paid invoices this month
+  const rev = qbInvoices.filter(i=>i.status==='Paid').reduce((s,i)=>{
+    const n = parseFloat((i.amount||'').replace(/[^0-9.]/g,'')); return s+(isNaN(n)?0:n);
+  },0);
+  document.getElementById('qb-revenue').textContent = rev ? '$'+rev.toLocaleString('en-US',{minimumFractionDigits:2}) : '—';
+}
+
+function renderQBInvoices(){
+  const f = document.getElementById('qb-inv-filter').value;
+  const list = f ? qbInvoices.filter(i=>i.status===f) : qbInvoices;
+  const sp = { Open:'pill-teal', Overdue:'pill-red', Paid:'pill-dim' };
+  document.getElementById('qb-inv-tbody').innerHTML = list.map(i=>`
+    <tr>
+      <td style="color:var(--teal);font-weight:600">${escH(i.num)}</td>
+      <td style="color:var(--t1)">${escH(i.client)}</td>
+      <td style="color:var(--t1);font-weight:600">${escH(i.amount)}</td>
+      <td style="color:var(--t3)">${i.issued}</td>
+      <td style="color:${i.status==='Overdue'?'var(--red)':'var(--gold)'}">${i.due}</td>
+      <td><span class="pill ${sp[i.status]||'pill-dim'}">${i.status}</span></td>
+    </tr>`).join('') || '<tr><td colspan="6" style="padding:14px;color:var(--t3)">No invoices.</td></tr>';
+}
+
+function renderQBExpenses(){
+  const f = document.getElementById('qb-exp-filter').value;
+  const list = f ? qbExpenses.filter(e=>e.cat===f) : qbExpenses;
+  const sp = { Paid:'pill-teal', Pending:'pill-gold', Refunded:'pill-dim', Reimbursable:'pill-gold' };
+  document.getElementById('qb-exp-tbody').innerHTML = list.map(e=>`
+    <tr>
+      <td style="color:var(--t1)">${escH(e.desc)}</td>
+      <td>${escH(e.vendor)}</td>
+      <td><span class="pill pill-dim">${escH(e.cat)}</span></td>
+      <td style="color:var(--t1);font-weight:600">${escH(e.amount)}</td>
+      <td style="color:var(--t3)">${e.date}</td>
+      <td><span class="pill ${sp[e.status]||'pill-dim'}">${e.status}</span></td>
+    </tr>`).join('') || '<tr><td colspan="6" style="padding:14px;color:var(--t3)">No expenses.</td></tr>';
+}
+
+function renderQBBills(){
+  document.getElementById('qb-bills-list').innerHTML = qbBills.map((b,i)=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border)">
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--t1);font-weight:500">${escH(b.vendor)}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">${escH(b.desc)}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:13px;font-weight:700;color:var(--gold)">${escH(b.amount)}</div>
+        <div style="font-size:10px;color:var(--t3)">due ${b.due}</div>
+      </div>
+      <button class="ev-del" onclick="deleteQBBill(${i})" title="Remove">&#x2715;</button>
+    </div>`).join('') || '<div style="padding:14px;font-size:11px;color:var(--t3)">No bills logged.</div>';
+}
+
+function deleteQBBill(i){ qbBills.splice(i,1); saveQBBills(); renderQBBills(); renderQBScorecard(); }
+
+function renderQBPL(){
+  const totalRev = qbInvoices.filter(i=>i.status==='Paid').reduce((s,i)=>{
+    return s+(parseFloat((i.amount||'').replace(/[^0-9.]/g,''))||0);
+  },0);
+  const totalExp = qbExpenses.filter(e=>e.status==='Paid').reduce((s,e)=>{
+    return s+(parseFloat((e.amount||'').replace(/[^0-9.]/g,''))||0);
+  },0);
+  const net = totalRev - totalExp;
+  const fmt = n => (n<0?'-':'')+'$'+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2});
+  document.getElementById('qb-pl-rows').innerHTML = `
+    <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px;border-bottom:1px solid var(--border);margin-bottom:5px">
+      <span style="color:var(--t2)">Revenue (paid invoices)</span>
+      <span style="color:var(--teal)">${fmt(totalRev)}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px">
+      <span style="color:var(--t2)">Expenses (paid)</span>
+      <span style="color:var(--red)">-${fmt(totalExp)}</span>
+    </div>`;
+  const netEl = document.getElementById('qb-net');
+  netEl.textContent = fmt(net);
+  netEl.style.color = net >= 0 ? 'var(--teal)' : 'var(--red)';
+}
+
+function renderQBVendors(){
+  const vendors = {};
+  qbExpenses.forEach(e=>{ if(!vendors[e.vendor]) vendors[e.vendor]={total:0,count:0,last:e.date}; const n=parseFloat((e.amount||'').replace(/[^0-9.]/g,''))||0; vendors[e.vendor].total+=n; vendors[e.vendor].count++; });
+  const sorted = Object.entries(vendors).sort((a,b)=>b[1].total-a[1].total);
+  document.getElementById('qb-vendor-list').innerHTML = sorted.map(([v,d])=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:9px 14px;border-bottom:1px solid var(--border)">
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--t1);font-weight:500">${escH(v)}</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:1px">${d.count} transaction${d.count>1?'s':''} &nbsp;·&nbsp; Last: ${d.last}</div>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--gold)">$${d.total.toLocaleString('en-US',{minimumFractionDigits:2})}</div>
+    </div>`).join('') || '<div style="padding:14px;font-size:11px;color:var(--t3)">No vendor data.</div>';
+}
+
+function saveQBInvoice(){
+  const num = document.getElementById('qbi-num').value.trim(); if(!num) return;
+  qbInvoices.unshift({ id:nextQBInvId++, num,
+    client:  document.getElementById('qbi-client').value,
+    amount:  document.getElementById('qbi-amount').value,
+    issued:  document.getElementById('qbi-issued').value,
+    due:     document.getElementById('qbi-due').value,
+    status:  document.getElementById('qbi-status').value
+  });
+  saveQBInvoices(); renderQBInvoices(); renderQBScorecard(); renderQBPL(); renderQBVendors();
+  closeModal('modal-qb-invoice');
+  ['qbi-num','qbi-client','qbi-amount','qbi-issued','qbi-due'].forEach(id=>document.getElementById(id).value='');
+}
+
+function saveQBExpense(){
+  const desc = document.getElementById('qbe-desc').value.trim(); if(!desc) return;
+  qbExpenses.unshift({ id:nextQBExpId++, desc,
+    vendor: document.getElementById('qbe-vendor').value,
+    cat:    document.getElementById('qbe-cat').value,
+    amount: document.getElementById('qbe-amount').value,
+    date:   document.getElementById('qbe-date').value,
+    status: document.getElementById('qbe-status').value
+  });
+  saveQBExpenses(); renderQBExpenses(); renderQBScorecard(); renderQBPL(); renderQBVendors();
+  closeModal('modal-qb-expense');
+  ['qbe-desc','qbe-vendor','qbe-amount','qbe-date'].forEach(id=>document.getElementById(id).value='');
+}
+
+function saveQBBill(){
+  const vendor = document.getElementById('qbb-vendor').value.trim(); if(!vendor) return;
+  qbBills.push({ id:nextQBBillId++,
+    vendor,
+    amount: document.getElementById('qbb-amount').value,
+    due:    document.getElementById('qbb-due').value,
+    desc:   document.getElementById('qbb-desc').value
+  });
+  saveQBBills(); renderQBBills(); renderQBScorecard();
+  closeModal('modal-qb-bill');
+  ['qbb-vendor','qbb-amount','qbb-due','qbb-desc'].forEach(id=>document.getElementById(id).value='');
+}
+
+// Init QB state
+if(qbConnected){
+  document.getElementById('qb-setup-banner').style.display = 'none';
+  document.getElementById('qb-connected-bar').style.display = 'block';
+  document.getElementById('qb-company-label').textContent = 'Pauly Inc. / The Cosmetic Formulary';
+  document.getElementById('qb-last-sync').textContent = 'Last sync: session start';
+}
+renderQB();
+
+// ════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function download(filename,content,type){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type}));
+  a.download=filename; a.click();
+}
+</script>
+</body>
+</html>
