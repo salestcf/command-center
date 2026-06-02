@@ -432,6 +432,7 @@ select option { background: var(--s1); }
     <button class="nav-btn active" onclick="showPage('home')">Home</button>
     <button class="nav-btn" onclick="showPage('tasks')">Tasks</button>
     <button class="nav-btn" onclick="showPage('inbox')">Inbox</button>
+    <button class="nav-btn" onclick="showPage('alibaba')">Alibaba</button>
     <button class="nav-btn" onclick="showPage('calendar')">Calendar</button>
     <button class="nav-btn" onclick="showPage('contacts')">Contacts</button>
     <button class="nav-btn" onclick="showPage('files')">Files</button>
@@ -661,6 +662,49 @@ select option { background: var(--s1); }
         <div id="reminder-list" style="overflow:auto"></div>
       </div>
     </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ ALIBABA ══ -->
+<div class="page" id="page-alibaba">
+<div class="page-inner">
+  <div class="g5 scorecard" style="margin-bottom:14px">
+    <div class="score-item"><div class="sc-label">Need to Reply</div><div class="sc-val red" id="ali-need">0</div><div class="sc-sub">action required</div></div>
+    <div class="score-item"><div class="sc-label">Waiting on Supplier</div><div class="sc-val gold" id="ali-wait">0</div><div class="sc-sub">ball in their court</div></div>
+    <div class="score-item"><div class="sc-label">Follow-up Due</div><div class="sc-val pink" id="ali-due">0</div><div class="sc-sub">overdue or today</div></div>
+    <div class="score-item"><div class="sc-label">Active Threads</div><div class="sc-val mint" id="ali-active">0</div><div class="sc-sub">open conversations</div></div>
+    <div class="score-item"><div class="sc-label">Resolved</div><div class="sc-val" id="ali-resolved">0</div><div class="sc-sub">closed out</div></div>
+  </div>
+
+  <div class="task-controls" style="margin-bottom:12px">
+    <input type="text" id="ali-search" placeholder="Search supplier, subject, notes..." style="flex:1;max-width:260px" oninput="renderAlibaba()">
+    <select id="ali-filter-status" onchange="renderAlibaba()">
+      <option value="">All Statuses</option>
+      <option>Need to Reply</option>
+      <option>Waiting on Supplier</option>
+      <option>Sent — Awaiting Sample</option>
+      <option>Negotiating</option>
+      <option>Resolved</option>
+      <option>Archived</option>
+    </select>
+    <select id="ali-filter-cat" onchange="renderAlibaba()">
+      <option value="">All Categories</option>
+      <option>Raw Materials</option>
+      <option>Packaging</option>
+      <option>Equipment</option>
+      <option>Private Label</option>
+      <option>Other</option>
+    </select>
+    <button class="btn btn-pink" onclick="openAliModal()">+ Log Conversation</button>
+    <a href="https://message.alibaba.com" target="_blank" class="btn btn-sm" style="margin-left:auto">Open Alibaba ↗</a>
+  </div>
+
+  <div class="card" style="overflow:auto">
+    <table class="tbl" id="ali-table">
+      <thead><tr><th>Supplier</th><th>Company</th><th>Subject / Item</th><th>Category</th><th>Last Message</th><th>Follow-up</th><th>Status</th><th>Notes</th><th></th></tr></thead>
+      <tbody id="ali-tbody"></tbody>
+    </table>
   </div>
 </div>
 </div>
@@ -943,6 +987,29 @@ select option { background: var(--s1); }
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
     <button class="btn" onclick="closeModal('modal-client')">Cancel</button>
     <button class="btn btn-pink" onclick="saveClientProject()">Save</button>
+  </div>
+</div></div></div>
+
+<!-- ══ ALIBABA MODAL ══ -->
+<div class="modal-overlay" id="modal-alibaba"><div class="modal" style="max-width:520px"><div class="modal-head"><h3 id="ali-modal-title">Log Alibaba Conversation</h3><button class="close-btn" onclick="closeModal('modal-alibaba')">&#x2715;</button></div><div class="modal-body">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div class="form-row"><label class="form-label">Supplier Name</label><input type="text" id="ali-supplier" placeholder="e.g. Mark Yang"></div>
+    <div class="form-row"><label class="form-label">Company</label><input type="text" id="ali-company" placeholder="e.g. Jiaxing Group"></div>
+  </div>
+  <div class="form-row"><label class="form-label">Subject / Item Discussed</label><input type="text" id="ali-subject" placeholder="e.g. Custom 60ml bottle MOQ inquiry"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div class="form-row"><label class="form-label">Category</label><select id="ali-cat"><option>Raw Materials</option><option>Packaging</option><option>Equipment</option><option>Private Label</option><option>Other</option></select></div>
+    <div class="form-row"><label class="form-label">Status</label><select id="ali-status"><option>Need to Reply</option><option>Waiting on Supplier</option><option>Sent — Awaiting Sample</option><option>Negotiating</option><option>Resolved</option><option>Archived</option></select></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div class="form-row"><label class="form-label">Last Message Date</label><input type="date" id="ali-last"></div>
+    <div class="form-row"><label class="form-label">Follow-up Date</label><input type="date" id="ali-followup"></div>
+  </div>
+  <div class="form-row"><label class="form-label">Alibaba Profile / Link</label><input type="url" id="ali-url" placeholder="https://...alibaba.com/..."></div>
+  <div class="form-row"><label class="form-label">Notes / Key Details</label><textarea id="ali-notes" rows="3" placeholder="MOQ, pricing discussed, samples requested, payment terms..."></textarea></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+    <button class="btn" onclick="closeModal('modal-alibaba')">Cancel</button>
+    <button class="btn btn-pink" onclick="saveAliConvo()">Save</button>
   </div>
 </div></div></div>
 
@@ -1451,6 +1518,68 @@ function saveLEComp(){const name=document.getElementById('le-comp-name').value.t
 function saveLENotes(){localStorage.setItem('le-notes',document.getElementById('le-notes').value);}
 document.getElementById('le-notes').value=localStorage.getItem('le-notes')||'';
 renderLEIdeas();renderLEMilestones();renderLEMood();renderLEComp();
+
+// ── ALIBABA ──
+let aliConvos=JSON.parse(localStorage.getItem('cc-alibaba')||'[]');
+let nextAliId=aliConvos.length?Math.max(...aliConvos.map(a=>a.id))+1:1;
+let editingAliId=null;
+function saveAli(){localStorage.setItem('cc-alibaba',JSON.stringify(aliConvos));}
+function openAliModal(id){
+  editingAliId=id||null;
+  const a=id?aliConvos.find(x=>x.id===id)||{}:{};
+  document.getElementById('ali-modal-title').textContent=id?'Edit Conversation':'Log Alibaba Conversation';
+  document.getElementById('ali-supplier').value=a.supplier||'';
+  document.getElementById('ali-company').value=a.company||'';
+  document.getElementById('ali-subject').value=a.subject||'';
+  document.getElementById('ali-cat').value=a.cat||'Packaging';
+  document.getElementById('ali-status').value=a.status||'Need to Reply';
+  document.getElementById('ali-last').value=a.last||new Date().toISOString().slice(0,10);
+  document.getElementById('ali-followup').value=a.followup||'';
+  document.getElementById('ali-url').value=a.url||'';
+  document.getElementById('ali-notes').value=a.notes||'';
+  openModal('modal-alibaba');
+}
+function saveAliConvo(){
+  const supplier=document.getElementById('ali-supplier').value.trim();if(!supplier)return;
+  const obj={id:editingAliId||nextAliId++,supplier,company:document.getElementById('ali-company').value,subject:document.getElementById('ali-subject').value,cat:document.getElementById('ali-cat').value,status:document.getElementById('ali-status').value,last:document.getElementById('ali-last').value,followup:document.getElementById('ali-followup').value,url:document.getElementById('ali-url').value,notes:document.getElementById('ali-notes').value};
+  if(editingAliId){const i=aliConvos.findIndex(x=>x.id===editingAliId);if(i>-1)aliConvos[i]=obj;else aliConvos.unshift(obj);}else{aliConvos.unshift(obj);}
+  saveAli();renderAlibaba();closeModal('modal-alibaba');
+}
+function deleteAli(id){if(!confirm('Delete this conversation?'))return;aliConvos=aliConvos.filter(a=>a.id!==id);saveAli();renderAlibaba();}
+function renderAlibaba(){
+  const q=(document.getElementById('ali-search').value||'').toLowerCase();
+  const fs=document.getElementById('ali-filter-status').value;
+  const fc=document.getElementById('ali-filter-cat').value;
+  const today=new Date().toISOString().slice(0,10);
+  const list=aliConvos.filter(a=>
+    (!q||(a.supplier+a.company+a.subject+a.notes).toLowerCase().includes(q))&&
+    (!fs||a.status===fs)&&(!fc||a.cat===fc));
+  const sp={'Need to Reply':'p-red','Waiting on Supplier':'p-gold','Sent — Awaiting Sample':'p-mint','Negotiating':'p-gold','Resolved':'p-dim','Archived':'p-dim'};
+  document.getElementById('ali-tbody').innerHTML=list.length?list.map(a=>{
+    const overdue=a.followup&&a.followup<=today&&!['Resolved','Archived'].includes(a.status);
+    return`<tr>
+      <td style="font-weight:600">${escH(a.supplier)}${a.url?` <a href="${escH(a.url)}" target="_blank" style="color:var(--pink);font-size:10px">↗</a>`:''}</td>
+      <td style="color:var(--t3)">${escH(a.company)}</td>
+      <td style="max-width:200px">${escH(a.subject)}</td>
+      <td><span class="pill p-dim" style="font-size:9px">${escH(a.cat)}</span></td>
+      <td style="color:var(--t3);white-space:nowrap">${a.last||'—'}</td>
+      <td style="white-space:nowrap;color:${overdue?'var(--red)':'var(--gold)'};font-weight:${overdue?700:400}">${a.followup||(overdue?'⚠ Overdue':'—')}</td>
+      <td><span class="pill ${sp[a.status]||'p-dim'}">${a.status}</span></td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t3);font-size:11px">${escH(a.notes||'')}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-pink" style="margin-right:4px" onclick="openAliModal(${a.id})">Edit</button>
+        <button class="ev-del" onclick="deleteAli(${a.id})">&#x2715;</button>
+      </td>
+    </tr>`;
+  }).join(''):'<tr><td colspan="9" style="padding:20px;text-align:center;color:var(--t3)">No conversations logged yet. Click + Log Conversation to add one.</td></tr>';
+  // Scorecard
+  document.getElementById('ali-need').textContent=aliConvos.filter(a=>a.status==='Need to Reply').length;
+  document.getElementById('ali-wait').textContent=aliConvos.filter(a=>a.status==='Waiting on Supplier').length;
+  document.getElementById('ali-due').textContent=aliConvos.filter(a=>a.followup&&a.followup<=today&&!['Resolved','Archived'].includes(a.status)).length;
+  document.getElementById('ali-active').textContent=aliConvos.filter(a=>!['Resolved','Archived'].includes(a.status)).length;
+  document.getElementById('ali-resolved').textContent=aliConvos.filter(a=>a.status==='Resolved').length;
+}
+renderAlibaba();
 
 // ── DAILY TRACKER ──
 const SCHEDULE=[
