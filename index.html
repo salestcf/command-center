@@ -1466,6 +1466,7 @@ function renderDailyTracker(){
 }
 renderDailyTracker();
 setInterval(renderDailyTracker,60000);
+setInterval(()=>location.reload(),3600000); // auto-refresh every 60 min
 
 // ── HOME PAGE ──
 function renderHome(){
