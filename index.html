@@ -989,10 +989,10 @@ select option { background: var(--s1); }
           <div style="font-size:11px;color:var(--t3);margin-bottom:10px">Your Client ID is stored only in your browser (localStorage). It is never sent to GitHub or any third party.</div>
           <label style="font-size:11px;font-weight:600;color:var(--t2);display:block;margin-bottom:5px">Google Client ID</label>
           <input type="text" id="google-client-id-input" placeholder="xxxxxxxxx.apps.googleusercontent.com" style="width:100%;margin-bottom:8px;font-size:11px" />
-          <div id="google-status" style="font-size:11px;color:var(--t3);margin-bottom:10px"></div>
-          <button class="btn btn-mint btn-sm" onclick="saveGoogleClientId()" style="width:100%;margin-bottom:6px">Save Client ID &amp; Connect Google</button>
-          <button class="btn btn-sm" onclick="googleDisconnect()" style="width:100%;margin-bottom:10px">Disconnect Google</button>
-          <div style="font-size:10px;color:var(--t3);line-height:1.6;border-top:1px solid var(--border);padding-top:10px">
+          <button class="btn btn-mint btn-sm" onclick="saveGoogleClientId()" style="width:100%;margin-bottom:12px">Save Client ID</button>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t2);margin-bottom:8px;padding-bottom:6px;border-top:1px solid var(--border);padding-top:10px">Google Accounts</div>
+          <div id="google-accounts-panel"></div>
+          <div style="font-size:10px;color:var(--t3);line-height:1.6;border-top:1px solid var(--border);padding-top:10px;margin-top:10px">
             <strong>Setup:</strong> Go to <a href="https://console.cloud.google.com" target="_blank" style="color:var(--mint)">console.cloud.google.com</a> &rarr; APIs &amp; Services &rarr; Credentials &rarr; Create OAuth 2.0 Client ID (Web Application). Add <strong>https://salestcf.github.io</strong> as an authorized JavaScript origin. Enable Calendar, Gmail, and Drive APIs.
           </div>
         </div>
@@ -1212,14 +1212,18 @@ let pendingReplies=JSON.parse(localStorage.getItem('cc-pending')||'null')||[
 function savePR(){localStorage.setItem('cc-pending',JSON.stringify(pendingReplies));}
 function renderThreads(){
   document.getElementById('thread-list').innerHTML=threads.length
-    ? threads.map((t,i)=>`<div class="thread-row ${t.unread?'unread':''}" onclick="openThread(${i})" style="position:relative">
-        <div class="t-sender">${t.unread?'<span class="unread-dot"></span>':''}${escH(t.sender)}</div>
-        <div style="flex:1;min-width:0"><div class="t-subject">${escH(t.subject)}</div><div class="t-snip">${escH(t.snip)}</div></div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
-          <div class="t-time">${t.time}</div>
-          <button class="ev-del" onclick="deleteThread(${i},event)" title="Remove from dashboard" style="font-size:10px;opacity:0.5">&#x2715;</button>
-        </div>
-      </div>`).join('')
+    ? threads.map((t,i)=>{
+        const badge = t.badge || (t.account ? ACCOUNT_BADGE[t.account] : null);
+        const badgeHtml = badge ? `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${badge.color};color:#fff;font-size:8px;font-weight:800;text-align:center;line-height:14px;vertical-align:middle;margin-left:4px;flex-shrink:0">${badge.letter}</span>` : '';
+        return `<div class="thread-row ${t.unread?'unread':''}" onclick="openThread(${i})" style="position:relative">
+          <div class="t-sender">${t.unread?'<span class="unread-dot"></span>':''}${escH(t.sender)}</div>
+          <div style="flex:1;min-width:0"><div class="t-subject" style="display:flex;align-items:center;gap:0">${escH(t.subject)}${badgeHtml}</div><div class="t-snip">${escH(t.snip)}</div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+            <div class="t-time">${t.time}</div>
+            <button class="ev-del" onclick="deleteThread(${i},event)" title="Remove from dashboard" style="font-size:10px;opacity:0.5">&#x2715;</button>
+          </div>
+        </div>`;
+      }).join('')
     : '<div style="padding:20px;text-align:center;font-size:11px;color:var(--t3)">Inbox cleared. Connect Gmail to load live threads.</div>';
   document.getElementById('sc-unread').textContent=threads.filter(t=>t.unread).length;
   document.getElementById('h-unread').textContent=threads.filter(t=>t.unread).length;
@@ -2015,7 +2019,7 @@ async function notionSync(){
 })();
 
 // ══════════════════════════════════════════
-// GOOGLE OAUTH 2.0 (GIS Token Model)
+// GOOGLE OAUTH 2.0 — MULTI-ACCOUNT (GIS Token Model)
 // ══════════════════════════════════════════
 
 const GOOGLE_SCOPES = [
@@ -2024,103 +2028,215 @@ const GOOGLE_SCOPES = [
   'https://www.googleapis.com/auth/drive.readonly'
 ].join(' ');
 
-function getGoogleToken(){ return localStorage.getItem('cc-google-token')||''; }
+// The 3 hardcoded accounts for this Command Center
+const GOOGLE_ACCOUNTS = [
+  'office@paulyinc.com',
+  'sales@thecosmeticformulary.com',
+  'tcfadmin.rashellklavinger@gmail.com'
+];
+
+// Account badge initials & colors
+const ACCOUNT_BADGE = {
+  'office@paulyinc.com':                    { letter:'O', color:'#d4457a' },
+  'sales@thecosmeticformulary.com':          { letter:'S', color:'#2aaa88' },
+  'tcfadmin.rashellklavinger@gmail.com':     { letter:'T', color:'#c0880a' }
+};
+
+// ── Multi-account helpers ──
+function getGoogleAccounts(){
+  try { return JSON.parse(localStorage.getItem('cc-google-accounts')||'[]'); }
+  catch(_){ return []; }
+}
+function saveGoogleAccounts(arr){
+  localStorage.setItem('cc-google-accounts', JSON.stringify(arr));
+}
+function getAccountTokens(){
+  return getGoogleAccounts().filter(a=>a.connected && a.token);
+}
+function getTokenForAccount(email){
+  const a = getGoogleAccounts().find(a=>a.email===email);
+  return (a && a.connected) ? (a.token||'') : '';
+}
 function getGoogleClientId(){ return localStorage.getItem('cc-google-client-id')||''; }
+// Legacy single-token getter — returns first connected token for backward compat
+function getGoogleToken(){ const a=getAccountTokens(); return a.length ? a[0].token : ''; }
 
 let _googleTokenClient = null;
+let _connectingForEmail = null; // track which account we are currently connecting
 
 function saveGoogleClientId(){
   const cid = (document.getElementById('google-client-id-input').value||'').trim();
   if(!cid){ alert('Please paste your Google OAuth Client ID.'); return; }
   localStorage.setItem('cc-google-client-id', cid);
-  googleConnect();
+  renderGoogleSettingsUI();
 }
 
-function googleConnect(){
+// Connect a specific account — opens OAuth popup, then verifies email matches
+function connectAccount(email){
   const cid = getGoogleClientId();
   if(!cid){
-    updateGoogleStatus('No Client ID saved. Go to Google Integration settings in the Notion tab.');
-    showPage('notion');
+    alert('No Client ID saved. Enter your Google OAuth Client ID above first.');
     return;
   }
   if(typeof google === 'undefined' || !google.accounts){
-    updateGoogleStatus('Google Identity Services not loaded yet. Check your internet connection and try again.');
+    alert('Google Identity Services not loaded yet. Check your internet connection.');
     return;
   }
+  _connectingForEmail = email;
   _googleTokenClient = google.accounts.oauth2.initTokenClient({
     client_id: cid,
     scope: GOOGLE_SCOPES,
-    callback: (tokenResponse) => {
-      if(tokenResponse && tokenResponse.access_token){
-        localStorage.setItem('cc-google-token', tokenResponse.access_token);
-        updateGoogleUI(true);
-        // Trigger all Google syncs after auth
-        syncGCal();
-        syncGmail();
-        syncDrive();
-      } else {
-        updateGoogleStatus('Auth failed or cancelled.');
+    hint: email, // suggest which account to sign in with
+    callback: async (tokenResponse) => {
+      if(!tokenResponse || !tokenResponse.access_token){
+        _connectingForEmail = null;
+        return;
+      }
+      const token = tokenResponse.access_token;
+      // Fetch userinfo to verify which account actually signed in
+      try {
+        const resp = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+          headers: { 'Authorization': 'Bearer '+token }
+        });
+        if(!resp.ok) throw new Error('userinfo '+resp.status);
+        const info = await resp.json();
+        const signedInEmail = (info.email||'').toLowerCase();
+        const expectedEmail = (_connectingForEmail||'').toLowerCase();
+        if(signedInEmail !== expectedEmail){
+          alert('Please sign in as '+_connectingForEmail+' (you signed in as '+signedInEmail+').');
+          _connectingForEmail = null;
+          return;
+        }
+        // Store token in multi-account array
+        const accounts = getGoogleAccounts();
+        const idx = accounts.findIndex(a=>a.email===_connectingForEmail);
+        const entry = { email: _connectingForEmail, token, connected: true };
+        if(idx >= 0) accounts[idx] = entry;
+        else accounts.push(entry);
+        saveGoogleAccounts(accounts);
+        _connectingForEmail = null;
+        renderGoogleSettingsUI();
+        updateGoogleBarUI();
+        // Kick off syncs
+        syncGCal(); syncGmail(); syncDrive();
+      } catch(e){
+        alert('Could not verify account: '+e.message);
+        _connectingForEmail = null;
       }
     }
   });
-  _googleTokenClient.requestAccessToken();
+  _googleTokenClient.requestAccessToken({ prompt:'select_account' });
 }
 
-function googleDisconnect(){
-  const token = getGoogleToken();
-  if(token && typeof google !== 'undefined' && google.accounts && google.accounts.oauth2){
-    google.accounts.oauth2.revoke(token, ()=>{});
+// Backward-compat: called from Inbox/Calendar/Files connect bars
+function googleConnect(){
+  // Connect the first not-yet-connected account, or prompt to use Notion settings
+  const accounts = getGoogleAccounts();
+  const unconnected = GOOGLE_ACCOUNTS.find(e => {
+    const a = accounts.find(x=>x.email===e);
+    return !a || !a.connected;
+  });
+  if(unconnected){ connectAccount(unconnected); }
+  else { showPage('notion'); }
+}
+
+function disconnectAccount(email){
+  const accounts = getGoogleAccounts();
+  const idx = accounts.findIndex(a=>a.email===email);
+  if(idx>=0){
+    const token = accounts[idx].token;
+    if(token && typeof google !== 'undefined' && google.accounts && google.accounts.oauth2){
+      google.accounts.oauth2.revoke(token, ()=>{});
+    }
+    accounts.splice(idx,1);
+    saveGoogleAccounts(accounts);
   }
-  localStorage.removeItem('cc-google-token');
-  updateGoogleUI(false);
-  updateGoogleStatus('Disconnected.');
+  renderGoogleSettingsUI();
+  updateGoogleBarUI();
 }
 
-function updateGoogleUI(connected){
-  // Update all connect/disconnect buttons
+// Legacy disconnect (called from bars)
+function googleDisconnect(){
+  // Disconnect all accounts
+  getGoogleAccounts().forEach(a=>{
+    if(a.token && typeof google !== 'undefined' && google.accounts && google.accounts.oauth2){
+      google.accounts.oauth2.revoke(a.token, ()=>{});
+    }
+  });
+  saveGoogleAccounts([]);
+  renderGoogleSettingsUI();
+  updateGoogleBarUI();
+}
+
+// Render the 3-account panel in the Notion sidebar
+function renderGoogleSettingsUI(){
+  const panel = document.getElementById('google-accounts-panel');
+  if(!panel) return;
+  const accounts = getGoogleAccounts();
+  panel.innerHTML = GOOGLE_ACCOUNTS.map(email=>{
+    const acct = accounts.find(a=>a.email===email);
+    const connected = !!(acct && acct.connected);
+    const badge = ACCOUNT_BADGE[email] || { letter: email[0].toUpperCase(), color:'var(--t2)' };
+    const shortEmail = email.length > 28 ? email.slice(0,26)+'…' : email;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="width:20px;height:20px;border-radius:50%;background:${badge.color};color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${badge.letter}</span>
+      <span style="flex:1;font-size:11px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${email}">${shortEmail}</span>
+      ${connected
+        ? `<span style="font-size:10px;color:var(--mint);font-weight:700;flex-shrink:0">✓</span>
+           <button class="btn btn-sm" style="font-size:9px;padding:3px 8px;flex-shrink:0" onclick="disconnectAccount('${email}')">Disconnect</button>`
+        : `<button class="btn btn-mint btn-sm" style="font-size:9px;padding:3px 8px;flex-shrink:0" onclick="connectAccount('${email}')">Connect</button>`
+      }
+    </div>`;
+  }).join('');
+  // Pre-fill client ID
+  const cidInput = document.getElementById('google-client-id-input');
+  if(cidInput && !cidInput.value) cidInput.value = getGoogleClientId();
+}
+
+// Update the connect/disconnect bars on inbox/calendar/files pages
+function updateGoogleBarUI(){
+  const anyConnected = getAccountTokens().length > 0;
   ['gcal','gmail','drive'].forEach(svc => {
     const bar = document.getElementById(svc+'-connect-bar');
     const connectBtn = document.getElementById(svc+'-connect-btn');
     const disconnectBtn = document.getElementById(svc+'-disconnect-btn');
     if(bar) bar.style.display = 'flex';
-    if(connectBtn) connectBtn.style.display = connected ? 'none' : 'inline-block';
-    if(disconnectBtn) disconnectBtn.style.display = connected ? 'inline-block' : 'none';
+    if(connectBtn) connectBtn.style.display = anyConnected ? 'none' : 'inline-block';
+    if(disconnectBtn) disconnectBtn.style.display = anyConnected ? 'inline-block' : 'none';
   });
-  // Update settings panel status
-  const statusEl = document.getElementById('google-status');
-  if(statusEl){
-    statusEl.innerHTML = connected
-      ? '<span style="color:var(--mint)">Connected as sales@thecosmeticformulary.com</span>'
-      : '<span style="color:var(--t3)">Not connected.</span>';
-  }
-  // Pre-fill client ID if saved
-  const cidInput = document.getElementById('google-client-id-input');
-  if(cidInput && !cidInput.value) cidInput.value = getGoogleClientId();
 }
+
+// Legacy alias used in older references
+function updateGoogleUI(connected){ updateGoogleBarUI(); }
 
 function updateGoogleStatus(msg, svc){
   ['gcal','gmail','drive'].forEach(s => {
     const el = document.getElementById((svc||s)+'-sync-status');
     if(el) el.textContent = msg;
-    if(svc) return; // if svc specified, only update that one
+    if(svc) return;
   });
 }
 
-function handleGoogleAuthError(resp, svc){
+function handleGoogleAuthError(resp, svc, email){
   if(resp.status === 401){
-    localStorage.removeItem('cc-google-token');
-    updateGoogleUI(false);
+    // Remove just the bad account token
+    if(email){
+      const accounts = getGoogleAccounts();
+      const idx = accounts.findIndex(a=>a.email===email);
+      if(idx>=0){ accounts[idx].connected=false; accounts[idx].token=''; saveGoogleAccounts(accounts); }
+    }
+    updateGoogleBarUI();
     const barMsg = document.getElementById(svc+'-bar-msg');
-    if(barMsg) barMsg.textContent = 'Token expired. Please reconnect.';
+    if(barMsg) barMsg.textContent = 'Token expired. Please reconnect in Google Integration settings.';
   }
 }
 
-// ── GOOGLE CALENDAR SYNC ──
-let gcalEvents = []; // in-memory only, not persisted to cc-cal-events
+// ── GOOGLE CALENDAR SYNC — multi-account ──
+let gcalEvents = [];
 
 async function syncGCal(){
-  const token = getGoogleToken();
-  if(!token){ updateGoogleUI(false); return; }
+  const connectedAccounts = getAccountTokens();
+  if(!connectedAccounts.length){ updateGoogleBarUI(); return; }
 
   const statusEl = document.getElementById('gcal-sync-status');
   if(statusEl) statusEl.textContent = 'Syncing…';
@@ -2129,33 +2245,39 @@ async function syncGCal(){
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const lastDay  = new Date(now.getFullYear(), now.getMonth()+1, 0, 23, 59, 59).toISOString();
-    const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(firstDay)}&timeMax=${encodeURIComponent(lastDay)}&singleEvents=true&orderBy=startTime&maxResults=250`;
 
-    const resp = await fetch(url, { headers: { 'Authorization': 'Bearer '+token } });
-    if(!resp.ok){
-      handleGoogleAuthError(resp, 'gcal');
-      throw new Error('GCal API '+resp.status);
+    const allEvents = [];
+    for(const acct of connectedAccounts){
+      const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(firstDay)}&timeMax=${encodeURIComponent(lastDay)}&singleEvents=true&orderBy=startTime&maxResults=250`;
+      const resp = await fetch(url, { headers: { 'Authorization': 'Bearer '+acct.token } });
+      if(!resp.ok){ handleGoogleAuthError(resp, 'gcal', acct.email); continue; }
+      const data = await resp.json();
+      const badge = ACCOUNT_BADGE[acct.email] || { letter: acct.email[0].toUpperCase(), color:'var(--t2)' };
+      (data.items||[]).forEach(ev => {
+        allEvents.push({
+          id: 'gcal_'+ev.id+'_'+acct.email,
+          date: (ev.start.dateTime || ev.start.date||'').slice(0,10),
+          title: ev.summary || '(no title)',
+          time: ev.start.dateTime ? new Date(ev.start.dateTime).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true}) : 'All Day',
+          type: 'gcal',
+          link: ev.htmlLink || '',
+          account: acct.email,
+          badge
+        });
+      });
     }
-    const data = await resp.json();
-    gcalEvents = (data.items||[]).map(ev => ({
-      id: 'gcal_'+ev.id,
-      date: (ev.start.dateTime || ev.start.date||'').slice(0,10),
-      title: ev.summary || '(no title)',
-      time: ev.start.dateTime ? new Date(ev.start.dateTime).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true}) : 'All Day',
-      type: 'gcal',
-      link: ev.htmlLink || ''
-    }));
 
-    // Persist cache
+    // Sort by date
+    allEvents.sort((a,b)=> a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+    gcalEvents = allEvents;
+
     localStorage.setItem('cc-gcal-events', JSON.stringify(gcalEvents));
-
     const syncTime = now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
     if(statusEl) statusEl.textContent = 'Last synced: '+syncTime;
     renderCal();
   } catch(e){
     console.error('GCal sync error:', e);
     if(statusEl) statusEl.textContent = 'Sync failed: '+e.message;
-    // Load from cache
     const cached = localStorage.getItem('cc-gcal-events');
     if(cached){ try { gcalEvents = JSON.parse(cached); renderCal(); } catch(_){} }
   }
@@ -2181,7 +2303,11 @@ renderCal = function(){
   for(let d=1;d<=dim;d++){
     const dk=cDK(calYear,calMonth,d),isTd=d===today.getDate()&&calMonth===today.getMonth()&&calYear===today.getFullYear(),isSel=dk===selDay;
     const evs=getMergedEvs(dk);
-    const chips=evs.slice(0,2).map(e=>`<div class="cal-ev ${e.type==='gcal'?'ev-gcal':'ev-'+e.type}" title="${escH(e.title)}">${escH(e.title)}</div>`).join('');
+    const chips=evs.slice(0,2).map(e=>{
+      const badgeColor = e.badge ? e.badge.color : null;
+      const style = badgeColor ? `style="border-left:2px solid ${badgeColor}"` : '';
+      return `<div class="cal-ev ${e.type==='gcal'?'ev-gcal':'ev-'+e.type}" ${style} title="${escH(e.title)}">${escH(e.title)}</div>`;
+    }).join('');
     const more=evs.length>2?`<div style="font-size:9px;color:var(--t3)">+${evs.length-2}</div>`:'';
     h+=`<div class="cal-cell${isTd?' today':''}${isSel?' selected':''}" onclick="selCalDay('${dk}',${d})"><div class="cal-day-n">${d}</div>${chips}${more}</div>`;
   }
@@ -2205,30 +2331,30 @@ selCalDay = function(dk, d){
     const dotColor=isGcal?'var(--mint)':e.type==='meeting'?'var(--mint)':e.type==='deadline'?'var(--gold)':'var(--t3)';
     const delBtn=isGcal?`<a href="${escH(e.link)}" target="_blank" style="font-size:11px;color:var(--mint);white-space:nowrap">Google Cal ↗</a>`:
       `<button class="ev-del" onclick="delCalEv('${dk}',${e.id})">&#x2715;</button>`;
-    return`<div class="ev-item"><div class="ev-dot" style="background:${dotColor}"></div><div class="ev-info"><div class="ev-title">${escH(e.title)}${isGcal?' <span style="font-size:9px;color:var(--mint);font-weight:700">●GCal</span>':''}</div><div class="ev-time-l">${e.time}${e.link&&!isGcal?` <a href="${escH(e.link)}" target="_blank" style="color:var(--pink);font-size:10px">[link]</a>`:''}</div></div>${delBtn}</div>`;
+    const acctBadge = isGcal && e.badge ? `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${e.badge.color};color:#fff;font-size:8px;font-weight:800;text-align:center;line-height:14px;vertical-align:middle;margin-left:4px">${e.badge.letter}</span>` : '';
+    return`<div class="ev-item"><div class="ev-dot" style="background:${dotColor}"></div><div class="ev-info"><div class="ev-title">${escH(e.title)}${acctBadge}</div><div class="ev-time-l">${e.time}${e.link&&!isGcal?` <a href="${escH(e.link)}" target="_blank" style="color:var(--pink);font-size:10px">[link]</a>`:''}</div></div>${delBtn}</div>`;
   }).join(''):'<div style="font-size:11px;color:var(--t3)">No events. Add one below.</div>';
   document.getElementById('ev-inline-form').style.display='block';
   renderCal();
 };
 
-// ── GMAIL SYNC ──
+// ── GMAIL SYNC — multi-account ──
 async function syncGmail(){
-  const token = getGoogleToken();
-  if(!token){ updateGoogleUI(false); return; }
+  const connectedAccounts = getAccountTokens();
+  if(!connectedAccounts.length){ updateGoogleBarUI(); return; }
 
   const statusEl = document.getElementById('gmail-sync-status');
   if(statusEl) statusEl.textContent = 'Syncing…';
 
-  try {
-    // Fetch thread list
+  const parseThreads = async (token, accountEmail) => {
+    const badge = ACCOUNT_BADGE[accountEmail] || { letter: accountEmail[0].toUpperCase(), color:'var(--t2)' };
     const resp = await fetch('https://www.googleapis.com/gmail/v1/users/me/threads?maxResults=20&labelIds=INBOX', {
       headers: { 'Authorization': 'Bearer '+token }
     });
-    if(!resp.ok){ handleGoogleAuthError(resp, 'gmail'); throw new Error('Gmail API '+resp.status); }
+    if(!resp.ok){ handleGoogleAuthError(resp, 'gmail', accountEmail); return []; }
     const data = await resp.json();
     const threadIds = (data.threads||[]).map(t=>t.id);
 
-    // Fetch metadata for each thread (in parallel, capped at 10 to avoid rate limits)
     const fetchMeta = async (id) => {
       const r = await fetch(`https://www.googleapis.com/gmail/v1/users/me/threads/${id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`, {
         headers: { 'Authorization': 'Bearer '+token }
@@ -2238,7 +2364,7 @@ async function syncGmail(){
     };
     const metaResults = await Promise.all(threadIds.slice(0,20).map(fetchMeta));
 
-    const gmailThreads = metaResults.filter(Boolean).map(t => {
+    return metaResults.filter(Boolean).map(t => {
       const msgs = t.messages || [];
       const latest = msgs[msgs.length-1] || {};
       const headers = (latest.payload && latest.payload.headers) || [];
@@ -2248,27 +2374,28 @@ async function syncGmail(){
       const dateStr = getHdr('Date') || '';
       const snippet = t.snippet || '';
       const unread = (latest.labelIds||[]).includes('UNREAD');
-      // Format sender name from "Name <email>"
       const senderMatch = from.match(/^"?([^"<]+)"?\s*<?.+>?$/);
       const senderName = senderMatch ? senderMatch[1].trim() : from;
-      // Format date
-      let timeLabel = '';
+      let timeLabel = ''; let sortDate = 0;
       try {
-        const d = new Date(dateStr);
+        const d = new Date(dateStr); sortDate = d.getTime();
         const now = new Date();
-        const diff = now - d;
-        if(diff < 86400000 && d.getDate()===now.getDate()) timeLabel = d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+        if(now - d < 86400000 && d.getDate()===now.getDate()) timeLabel = d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
         else timeLabel = d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-      } catch(_){ timeLabel = ''; }
-      return { id:t.id, sender:senderName, from, subject, snip:snippet, time:timeLabel, unread, labels:latest.labelIds||[] };
+      } catch(_){}
+      return { id:t.id, sender:senderName, from, subject, snip:snippet, time:timeLabel, unread, labels:latest.labelIds||[], account:accountEmail, badge, sortDate };
     });
+  };
 
-    // Cache
-    localStorage.setItem('cc-gmail-threads', JSON.stringify(gmailThreads));
+  try {
+    const allResults = await Promise.all(connectedAccounts.map(a => parseThreads(a.token, a.email)));
+    const allThreads = allResults.flat();
+    // Sort by date descending
+    allThreads.sort((a,b)=>(b.sortDate||0)-(a.sortDate||0));
 
-    // Merge: Gmail threads first, then any locally saved manual threads
+    localStorage.setItem('cc-gmail-threads', JSON.stringify(allThreads));
     const localThreads = JSON.parse(localStorage.getItem('cc-threads')||'[]').filter(t=>!t.id.startsWith('gmail_placeholder'));
-    threads = [...gmailThreads, ...localThreads];
+    threads = [...allThreads, ...localThreads];
     renderThreads();
 
     const syncTime = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
@@ -2277,7 +2404,7 @@ async function syncGmail(){
     console.error('Gmail sync error:', e);
     if(statusEl) statusEl.textContent = 'Sync failed: '+e.message;
     const cached = localStorage.getItem('cc-gmail-threads');
-    if(cached){ try { threads = [...JSON.parse(cached), ...threads]; renderThreads(); } catch(_){} }
+    if(cached){ try { const ct=JSON.parse(cached); threads=[...ct,...threads.filter(t=>!ct.find(c=>c.id===t.id))]; renderThreads(); } catch(_){} }
   }
 }
 
@@ -2294,35 +2421,42 @@ function mimeToType(mime){
 }
 
 async function syncDrive(){
-  const token = getGoogleToken();
-  if(!token){ updateGoogleUI(false); return; }
+  const connectedAccounts = getAccountTokens();
+  if(!connectedAccounts.length){ updateGoogleBarUI(); return; }
 
   const statusEl = document.getElementById('drive-sync-status');
   if(statusEl) statusEl.textContent = 'Syncing…';
 
   try {
-    const url = 'https://www.googleapis.com/drive/v3/files?pageSize=50&fields=files(id,name,mimeType,modifiedTime,owners,webViewLink)&orderBy=modifiedTime%20desc';
-    const resp = await fetch(url, { headers: { 'Authorization': 'Bearer '+token } });
-    if(!resp.ok){ handleGoogleAuthError(resp, 'drive'); throw new Error('Drive API '+resp.status); }
-    const data = await resp.json();
+    const allDriveItems = [];
+    const seenIds = new Set();
 
-    const driveItems = (data.files||[]).map(f => ({
-      id: f.id,
-      name: f.name,
-      type: mimeToType(f.mimeType),
-      cat: 'Reference',
-      modified: f.modifiedTime ? new Date(f.modifiedTime).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—',
-      owner: f.owners && f.owners[0] ? (f.owners[0].emailAddress||f.owners[0].displayName||'—') : '—',
-      url: f.webViewLink || 'https://drive.google.com/file/d/'+f.id+'/view'
-    }));
+    for(const acct of connectedAccounts){
+      const url = 'https://www.googleapis.com/drive/v3/files?pageSize=50&fields=files(id,name,mimeType,modifiedTime,owners,webViewLink)&orderBy=modifiedTime%20desc';
+      const resp = await fetch(url, { headers: { 'Authorization': 'Bearer '+acct.token } });
+      if(!resp.ok){ handleGoogleAuthError(resp, 'drive', acct.email); continue; }
+      const data = await resp.json();
+      (data.files||[]).forEach(f => {
+        const uid = f.id+'_'+acct.email;
+        if(seenIds.has(uid)) return; seenIds.add(uid);
+        allDriveItems.push({
+          id: f.id,
+          name: f.name,
+          type: mimeToType(f.mimeType),
+          cat: 'Reference',
+          modified: f.modifiedTime ? new Date(f.modifiedTime).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—',
+          owner: acct.email,
+          url: f.webViewLink || 'https://drive.google.com/file/d/'+f.id+'/view',
+          account: acct.email
+        });
+      });
+    }
 
-    // Cache
-    localStorage.setItem('cc-drive-files', JSON.stringify(driveItems));
+    localStorage.setItem('cc-drive-files', JSON.stringify(allDriveItems));
 
-    // Merge: Drive files first, then any locally added files not in Drive list
-    const driveIds = new Set(driveItems.map(f=>f.id));
+    const driveIds = new Set(allDriveItems.map(f=>f.id));
     const localOnly = driveFiles.filter(f=>!f.id||!driveIds.has(f.id));
-    driveFiles = [...driveItems, ...localOnly];
+    driveFiles = [...allDriveItems, ...localOnly];
     renderFiles();
 
     const syncTime = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
@@ -2341,8 +2475,7 @@ async function syncAll(){
   if(statusEl) statusEl.textContent = 'Syncing…';
   try {
     await notionSync();
-    const token = getGoogleToken();
-    if(token){
+    if(getAccountTokens().length){
       await Promise.all([syncGCal(), syncGmail(), syncDrive()]);
     }
     const now = new Date();
@@ -2376,12 +2509,11 @@ function checkAutoSync(){
   const cachedGCal = localStorage.getItem('cc-gcal-events');
   if(cachedGCal){ try { gcalEvents = JSON.parse(cachedGCal); } catch(_){} }
 
-  // Pre-fill client ID
-  const cidInput = document.getElementById('google-client-id-input');
-  if(cidInput) cidInput.value = getGoogleClientId();
+  // Render multi-account settings panel
+  renderGoogleSettingsUI();
 
-  const token = getGoogleToken();
-  updateGoogleUI(!!token);
+  // Update connect bars based on any connected account
+  updateGoogleBarUI();
 
   // Restore last sync status on home page
   const lastDate = localStorage.getItem('cc-last-sync-date');
@@ -2391,7 +2523,7 @@ function checkAutoSync(){
     if(statusEl) statusEl.textContent = 'Last full sync: '+lastSlot.toUpperCase()+' slot on '+lastDate;
   }
 
-  // Show connect bars always (so user knows the feature exists)
+  // Show connect bars always
   ['gcal','gmail','drive'].forEach(svc => {
     const bar = document.getElementById(svc+'-connect-bar');
     if(bar) bar.style.display = 'flex';
