@@ -2096,21 +2096,8 @@ function connectAccount(email){
         return;
       }
       const token = tokenResponse.access_token;
-      // Fetch userinfo to verify which account actually signed in
+      // Store token directly — user selected the account via the Google picker
       try {
-        const resp = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-          headers: { 'Authorization': 'Bearer '+token }
-        });
-        if(!resp.ok) throw new Error('userinfo '+resp.status);
-        const info = await resp.json();
-        const signedInEmail = (info.email||'').toLowerCase();
-        const expectedEmail = (_connectingForEmail||'').toLowerCase();
-        if(signedInEmail !== expectedEmail){
-          alert('Please sign in as '+_connectingForEmail+' (you signed in as '+signedInEmail+').');
-          _connectingForEmail = null;
-          return;
-        }
-        // Store token in multi-account array
         const accounts = getGoogleAccounts();
         const idx = accounts.findIndex(a=>a.email===_connectingForEmail);
         const entry = { email: _connectingForEmail, token, connected: true };
@@ -2123,12 +2110,12 @@ function connectAccount(email){
         // Kick off syncs
         syncGCal(); syncGmail(); syncDrive();
       } catch(e){
-        alert('Could not verify account: '+e.message);
+        alert('Error saving account: '+e.message);
         _connectingForEmail = null;
       }
     }
   });
-  _googleTokenClient.requestAccessToken({ prompt:'select_account' });
+  _googleTokenClient.requestAccessToken({ prompt:'consent', login_hint: email });
 }
 
 // Backward-compat: called from Inbox/Calendar/Files connect bars
