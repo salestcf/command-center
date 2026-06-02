@@ -478,36 +478,36 @@ select option { background: var(--s1); }
 
   <!-- ── TAB SNAPSHOTS ── -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
-    <div class="card" style="cursor:pointer" onclick="showPage('communications')">
-      <div class="card-body" style="padding:12px 14px">
-        <div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:6px">Communications</div>
+    <div class="card" style="cursor:pointer;transition:box-shadow 0.15s" onmouseenter="this.style.boxShadow='0 4px 16px rgba(212,69,122,0.15)'" onmouseleave="this.style.boxShadow=''" onclick="showPage('communications')">
+      <div class="card-body" style="padding:12px 14px;pointer-events:none">
+        <div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:6px">✉ Communications</div>
         <div style="display:flex;justify-content:space-between;align-items:flex-end">
           <div><div id="snap-unread" style="font-size:22px;font-weight:800;color:var(--pink);line-height:1">0</div><div style="font-size:9px;color:var(--t3);margin-top:2px">unread emails</div></div>
-          <div style="text-align:right"><div id="snap-ali-reply" style="font-size:22px;font-weight:800;color:var(--gold);line-height:1">0</div><div style="font-size:9px;color:var(--t3);margin-top:2px">alibaba replies due</div></div>
+          <div style="text-align:right"><div id="snap-ali-reply" style="font-size:22px;font-weight:800;color:var(--gold);line-height:1">0</div><div style="font-size:9px;color:var(--t3);margin-top:2px">alibaba due</div></div>
         </div>
       </div>
     </div>
-    <div class="card" style="cursor:pointer" onclick="showPage('calendar')">
-      <div class="card-body" style="padding:12px 14px">
-        <div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:6px">Calendar</div>
+    <div class="card" style="cursor:pointer;transition:box-shadow 0.15s" onmouseenter="this.style.boxShadow='0 4px 16px rgba(42,170,136,0.15)'" onmouseleave="this.style.boxShadow=''" onclick="showPage('calendar')">
+      <div class="card-body" style="padding:12px 14px;pointer-events:none">
+        <div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:6px">📅 Calendar</div>
         <div><div id="snap-cal-today" style="font-size:22px;font-weight:800;color:var(--mint);line-height:1">0</div><div style="font-size:9px;color:var(--t3);margin-top:2px">events today</div></div>
       </div>
     </div>
-    <div class="card" style="cursor:pointer" onclick="showPage('operations')">
-      <div class="card-body" style="padding:12px 14px">
-        <div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:6px">Operations</div>
+    <div class="card" style="cursor:pointer;transition:box-shadow 0.15s" onmouseenter="this.style.boxShadow='0 4px 16px rgba(192,136,10,0.15)'" onmouseleave="this.style.boxShadow=''" onclick="showPage('operations')">
+      <div class="card-body" style="padding:12px 14px;pointer-events:none">
+        <div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:6px">⚙ Operations</div>
         <div style="display:flex;justify-content:space-between;align-items:flex-end">
           <div><div id="snap-lowstock" style="font-size:22px;font-weight:800;color:var(--red);line-height:1">0</div><div style="font-size:9px;color:var(--t3);margin-top:2px">low stock</div></div>
           <div style="text-align:right"><div id="snap-invoices" style="font-size:22px;font-weight:800;color:var(--gold);line-height:1">0</div><div style="font-size:9px;color:var(--t3);margin-top:2px">open invoices</div></div>
         </div>
       </div>
     </div>
-    <div class="card" style="cursor:pointer" onclick="showPage('workspace')">
-      <div class="card-body" style="padding:12px 14px">
-        <div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:6px">Workspace</div>
+    <div class="card" style="cursor:pointer;transition:box-shadow 0.15s" onmouseenter="this.style.boxShadow='0 4px 16px rgba(42,170,136,0.15)'" onmouseleave="this.style.boxShadow=''" onclick="showPage('workspace')">
+      <div class="card-body" style="padding:12px 14px;pointer-events:none">
+        <div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:6px">📁 Workspace</div>
         <div style="display:flex;justify-content:space-between;align-items:flex-end">
           <div><div id="snap-files" style="font-size:22px;font-weight:800;color:var(--mint);line-height:1">0</div><div style="font-size:9px;color:var(--t3);margin-top:2px">drive files</div></div>
-          <div style="text-align:right"><div id="snap-notion-open" style="font-size:22px;font-weight:800;color:var(--pink);line-height:1">0</div><div style="font-size:9px;color:var(--t3);margin-top:2px">notion open tasks</div></div>
+          <div style="text-align:right"><div id="snap-notion-open" style="font-size:22px;font-weight:800;color:var(--pink);line-height:1">0</div><div style="font-size:9px;color:var(--t3);margin-top:2px">open tasks</div></div>
         </div>
       </div>
     </div>
@@ -700,6 +700,8 @@ select option { background: var(--s1); }
       <option>Private Label</option>
       <option>Other</option>
     </select>
+    <button class="btn btn-sm btn-mint" onclick="renderAlibaba()">↻ Refresh</button>
+    <button class="btn btn-sm" onclick="resetAliData()">Reset Data</button>
     <button class="btn btn-pink" onclick="openAliModal()">+ Log Conversation</button>
     <a href="https://message.alibaba.com" target="_blank" class="btn btn-sm" style="margin-left:auto">Open Alibaba ↗</a>
   </div>
@@ -1730,7 +1732,7 @@ const _aliDefaults=[
   {id:6,supplier:'Tina Hu',company:'Vanjoin Group',subject:'Contract manufacturing — bottle pricing at MOQ',cat:'Private Label',status:'Need to Reply',last:'2026-06-02',followup:'2026-06-03',url:'',notes:'Unread reply from Tina. Asked "How many do you need?" in response to pricing request. Pauly asked to base price on their MOQ. Need to reply with quantity.'},
   {id:7,supplier:'Jessica Li',company:'XXNEW Tech Group Limited',subject:'Package in transit — arriving June 3',cat:'Packaging',status:'Sent — Awaiting Sample',last:'2026-06-01',followup:'2026-06-03',url:'',notes:'Package shipped, tracking via 17TRACK. Estimated delivery 2026-06-03. Jessica confirmed "you will receive the box package about tomorrow."'},
 ];
-let aliConvos=(()=>{const s=localStorage.getItem('cc-alibaba');const p=s?JSON.parse(s):null;return(p&&p.length)?p:_aliDefaults;})();
+let aliConvos=(()=>{try{const s=localStorage.getItem('cc-alibaba');const p=s?JSON.parse(s):null;return(p&&Array.isArray(p)&&p.length>0)?p:[..._aliDefaults];}catch(e){return[..._aliDefaults];}})();
 let nextAliId=aliConvos.length?Math.max(...aliConvos.map(a=>a.id))+1:1;
 let editingAliId=null;
 function saveAli(){localStorage.setItem('cc-alibaba',JSON.stringify(aliConvos));}
@@ -1756,10 +1758,22 @@ function saveAliConvo(){
   saveAli();renderAlibaba();closeModal('modal-alibaba');
 }
 function deleteAli(id){if(!confirm('Delete this conversation?'))return;aliConvos=aliConvos.filter(a=>a.id!==id);saveAli();renderAlibaba();}
+function resetAliData(){
+  if(!confirm('Reset Alibaba data to the 7 default conversations? This cannot be undone.')) return;
+  localStorage.removeItem('cc-alibaba');
+  aliConvos=[..._aliDefaults];
+  nextAliId=Math.max(...aliConvos.map(a=>a.id))+1;
+  renderAlibaba();
+}
 function renderAlibaba(){
-  const q=(document.getElementById('ali-search').value||'').toLowerCase();
-  const fs=document.getElementById('ali-filter-status').value;
-  const fc=document.getElementById('ali-filter-cat').value;
+  const searchEl=document.getElementById('ali-search');
+  const fsEl=document.getElementById('ali-filter-status');
+  const fcEl=document.getElementById('ali-filter-cat');
+  const tbodyEl=document.getElementById('ali-tbody');
+  if(!tbodyEl) return; // not in DOM yet
+  const q=(searchEl?searchEl.value||'':'').toLowerCase();
+  const fs=fsEl?fsEl.value:'';
+  const fc=fcEl?fcEl.value:'';
   const today=new Date().toISOString().slice(0,10);
   const list=aliConvos.filter(a=>
     (!q||(a.supplier+a.company+a.subject+a.notes).toLowerCase().includes(q))&&
