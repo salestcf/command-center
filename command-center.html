@@ -1479,17 +1479,29 @@ function exportContactsCSV(){const h=['Name','Company','Role','Email','Last Cont
 renderContacts();
 
 // ── FILES ──
-let driveFiles=JSON.parse(localStorage.getItem('cc-files')||'null')||[
+// Merge manual files (cc-files) + synced Drive files (cc-drive-files) on load
+let driveFiles=(()=>{
+  try{
+    const manual=JSON.parse(localStorage.getItem('cc-files')||'null');
+    const synced=JSON.parse(localStorage.getItem('cc-drive-files')||'null');
+    if(synced&&synced.length){
+      const syncedIds=new Set(synced.map(f=>f.id).filter(Boolean));
+      const manualOnly=(manual||[]).filter(f=>!f.id||!syncedIds.has(f.id));
+      return[...synced,...manualOnly];
+    }
+    if(manual&&manual.length) return manual;
+  }catch(e){}
+  return[
   {name:'Sample Materials',type:'Google Sheet',cat:'Reference',modified:'May 29, 2026',owner:'sales@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1za0KiEYPXvy-TShsZwttbTh8sr_Ms7Sp1cEcHq7SLBM/edit'},
   {name:'Molly_Smith — Combined Ingredients',type:'Google Sheet',cat:'Reference',modified:'May 27, 2026',owner:'sales@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1UYeVtaTPrpk6e7LAm6ygvPvAUQBZBmkMbPUxouqgZ0s/edit'},
   {name:'Molly_Smith — Shampoo & Conditioner',type:'Google Sheet',cat:'Reference',modified:'May 27, 2026',owner:'sales@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1z3kU8sWzUliXgxkuCIHZ93fLr5m1nJ69b-3cUQCkWGQ/edit'},
   {name:'TCF Bottle Map & SKUs',type:'Excel (.xlsx)',cat:'Reference',modified:'May 27, 2026',owner:'sales@thecosmeticformulary.com',url:'https://drive.google.com/file/d/1W9FODixEISSG2OcaALOUVXqDZ76EaZk7/view'},
   {name:'Dupe of Chanel Les Beiges — TCF TT-001',type:'Google Sheet',cat:'Report',modified:'May 27, 2026',owner:'sales@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1mWPT8a5VJscpgjEgyQUE7Z4-Bc1DRL-duAwC6_X-j-M/edit'},
   {name:'Nevoo Brand Binder',type:'PDF',cat:'Reference',modified:'May 27, 2026',owner:'sales@thecosmeticformulary.com',url:'https://drive.google.com/file/d/1CrQEDDjqjJRhg88urMHWVDTFVvRy0MEV/view'},
-  {name:'TCF Bottle Map & SKUs',type:'Excel',cat:'Reference',modified:'May 27, 2026',owner:'sales@thecosmeticformulary.com',url:'https://drive.google.com/file/d/1W9FODixEISSG2OcaALOUVXqDZ76EaZk7/view'},
   {name:'Brand Assets (folder)',type:'Folder',cat:'Reference',modified:'May 27, 2026',owner:'sales@thecosmeticformulary.com',url:'https://drive.google.com/drive/folders/1afHA3OaI-ev7Meecdca6GPt_NVnWXl-q'},
   {name:'16 — Inventory (folder)',type:'Folder',cat:'Reference',modified:'Apr 2, 2026',owner:'sales@thecosmeticformulary.com',url:'https://drive.google.com/drive/folders/1WJRxU8bGDblHWZZW6U12f-qYlxt-cc_x'},
-];
+  ];}
+})();
 let pendingUpload=null;
 function saveFiles(){localStorage.setItem('cc-files',JSON.stringify(driveFiles));}
 function renderFiles(){
@@ -2590,6 +2602,8 @@ async function syncDrive(){
     const driveIds = new Set(allDriveItems.map(f=>f.id));
     const localOnly = driveFiles.filter(f=>!f.id||!driveIds.has(f.id));
     driveFiles = [...allDriveItems, ...localOnly];
+    // Also persist merged result so it survives page reload
+    localStorage.setItem('cc-files', JSON.stringify(driveFiles));
     renderFiles();
 
     const syncTime = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
