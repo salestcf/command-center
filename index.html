@@ -928,6 +928,24 @@ select option { background: var(--s1); }
 
 <div class="modal-overlay" id="modal-le-mood"><div class="modal"><div class="modal-head"><h3>Add Mood Board Link</h3><button class="close-btn" onclick="closeModal('modal-le-mood')">&#x2715;</button></div><div class="modal-body"><div class="form-row"><label class="form-label">Title</label><input type="text" id="le-mood-title"></div><div class="form-row"><label class="form-label">URL</label><input type="url" id="le-mood-url"></div><div class="form-row"><label class="form-label">Notes</label><input type="text" id="le-mood-notes"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal('modal-le-mood')">Cancel</button><button class="btn btn-pink" onclick="saveLEMood()">Save</button></div></div></div></div>
 
+<!-- ══ CLIENT PROJECT MODAL ══ -->
+<div class="modal-overlay" id="modal-client"><div class="modal" style="max-width:480px"><div class="modal-head"><h3 id="cp-modal-title">Client Project</h3><button class="close-btn" onclick="closeModal('modal-client')">&#x2715;</button></div><div class="modal-body">
+  <div class="form-row"><label class="form-label">Client Name</label><input type="text" id="cp-client-name" placeholder="e.g. Meredith"></div>
+  <div class="form-row"><label class="form-label">Project / Description</label><input type="text" id="cp-project-name" placeholder="e.g. HA Serum formulation"></div>
+  <div class="form-row"><label class="form-label">Progress — <span id="cp-pct-label">0</span>%</label>
+    <input type="range" id="cp-progress" min="0" max="100" value="0" oninput="document.getElementById('cp-pct-label').textContent=this.value" style="width:100%;accent-color:var(--pink)">
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--t3);margin-top:2px"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+  </div>
+  <div class="form-row"><label class="form-label">Status</label>
+    <select id="cp-status"><option>Active</option><option>On Hold</option><option>Complete</option><option>Cancelled</option></select>
+  </div>
+  <div class="form-row"><label class="form-label">Notes / Next Steps</label><textarea id="cp-proj-notes" rows="3" placeholder="Key milestones, blockers, next steps..."></textarea></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+    <button class="btn" onclick="closeModal('modal-client')">Cancel</button>
+    <button class="btn btn-pink" onclick="saveClientProject()">Save</button>
+  </div>
+</div></div></div>
+
 <div class="modal-overlay" id="modal-le-comp"><div class="modal"><div class="modal-head"><h3>Add Competitor / Inspiration</h3><button class="close-btn" onclick="closeModal('modal-le-comp')">&#x2715;</button></div><div class="modal-body"><div class="form-row"><label class="form-label">Brand Name</label><input type="text" id="le-comp-name"></div><div class="form-row"><label class="form-label">URL</label><input type="url" id="le-comp-url"></div><div class="form-row"><label class="form-label">Notes</label><textarea id="le-comp-notes" rows="2"></textarea></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal('modal-le-comp')">Cancel</button><button class="btn btn-mint" onclick="saveLEComp()">Save</button></div></div></div></div>
 
 <script>
@@ -1504,18 +1522,30 @@ function addActivity(text){
 }
 
 let clientProjects=JSON.parse(localStorage.getItem('cc-clients')||'null')||[
-  {name:'Meredith',project:'HA Serum',p:60},
-  {name:'Molly Smith',project:'Shampoo & Cond.',p:75},
-  {name:'McKernan',project:'Product Order',p:40},
+  {name:'Meredith',project:'HA Serum',p:60,status:'Active',notes:''},
+  {name:'Molly Smith',project:'Shampoo & Cond.',p:75,status:'Active',notes:''},
+  {name:'McKernan',project:'Product Order',p:40,status:'Active',notes:''},
 ];
+let editingClientIdx=null;
 function saveClients(){localStorage.setItem('cc-clients',JSON.stringify(clientProjects));}
 function deleteClient(i){clientProjects.splice(i,1);saveClients();renderHome();}
-function addClientProject(){
-  const name=prompt('Client name:');if(!name)return;
-  const project=prompt('Project name:');if(!project)return;
-  const p=parseInt(prompt('Progress % (0-100):','0'))||0;
-  clientProjects.push({name,project,p:Math.min(100,Math.max(0,p))});
-  saveClients();renderHome();
+function openClientModal(i){
+  editingClientIdx=(i===undefined?null:i);
+  const c=i!==undefined?clientProjects[i]:{name:'',project:'',p:0,status:'Active',notes:''};
+  document.getElementById('cp-modal-title').textContent=i!==undefined?'Edit Project':'New Client Project';
+  document.getElementById('cp-client-name').value=c.name||'';
+  document.getElementById('cp-project-name').value=c.project||'';
+  document.getElementById('cp-progress').value=c.p||0;
+  document.getElementById('cp-pct-label').textContent=c.p||0;
+  document.getElementById('cp-status').value=c.status||'Active';
+  document.getElementById('cp-proj-notes').value=c.notes||'';
+  openModal('modal-client');
+}
+function saveClientProject(){
+  const name=document.getElementById('cp-client-name').value.trim();if(!name)return;
+  const obj={name,project:document.getElementById('cp-project-name').value,p:parseInt(document.getElementById('cp-progress').value)||0,status:document.getElementById('cp-status').value,notes:document.getElementById('cp-proj-notes').value};
+  if(editingClientIdx!==null){clientProjects[editingClientIdx]=obj;}else{clientProjects.push(obj);}
+  saveClients();renderHome();closeModal('modal-client');
 }
 
 function renderHome(){
@@ -1530,7 +1560,8 @@ function renderHome(){
     : ['<div style="font-size:11px;color:var(--t3)">No activity logged yet.</div>']
   ).join('')+`<div style="margin-top:10px"><button class="btn btn-sm" onclick="const t=prompt('Log activity:');if(t)addActivity(t)">+ Log Activity</button></div>`;
   // Clients
-  document.getElementById('home-clients').innerHTML=clientProjects.map((c,i)=>`<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px;position:relative"><button class="ev-del" onclick="deleteClient(${i})" title="Remove" style="position:absolute;top:8px;right:8px;opacity:0.4">&#x2715;</button><div style="font-size:13px;font-weight:700;margin-bottom:3px;padding-right:16px">${escH(c.name)}</div><div style="font-size:10px;color:var(--pink);font-weight:600;margin-bottom:10px">${escH(c.project)}</div><div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:${c.p}%;background:linear-gradient(90deg,var(--pink),var(--mint));border-radius:3px"></div></div><div style="font-size:10px;color:var(--t3)">${c.p}% complete</div></div>`).join('')+`<div style="display:flex;align-items:center;justify-content:center;height:80px;background:var(--bg);border:1px dashed var(--border2);border-radius:var(--radius);cursor:pointer;font-size:11px;color:var(--t3)" onclick="addClientProject()">+ Add Client Project</div>`;
+  const stColors={Active:'var(--mint)',Complete:'var(--pink)','On Hold':'var(--gold)',Cancelled:'var(--t3)'};
+  document.getElementById('home-clients').innerHTML=clientProjects.map((c,i)=>`<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px;position:relative;cursor:pointer" onclick="openClientModal(${i})"><button class="ev-del" onclick="event.stopPropagation();deleteClient(${i})" title="Remove" style="position:absolute;top:8px;right:8px;opacity:0.4">&#x2715;</button><div style="font-size:13px;font-weight:700;margin-bottom:2px;padding-right:20px">${escH(c.name)}</div><div style="font-size:10px;color:var(--pink);font-weight:600;margin-bottom:2px">${escH(c.project)}</div>${c.status?`<div style="font-size:9px;color:${stColors[c.status]||'var(--t3)'};font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px">${c.status}</div>`:'<div style="margin-bottom:8px"></div>'}<div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:${c.p}%;background:linear-gradient(90deg,var(--pink),var(--mint));border-radius:3px;transition:width 0.3s"></div></div><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:10px;color:var(--t3)">${c.p}% complete</div><div style="font-size:9px;color:var(--t3);font-style:italic">click to edit</div></div>${c.notes?`<div style="font-size:10px;color:var(--t3);margin-top:6px;padding-top:6px;border-top:1px solid var(--border);line-height:1.5">${escH(c.notes)}</div>`:''}</div>`).join('')+`<div style="display:flex;align-items:center;justify-content:center;height:80px;background:var(--bg);border:1px dashed var(--border2);border-radius:var(--radius);cursor:pointer;font-size:11px;color:var(--t3)" onclick="openClientModal()">+ Add Client Project</div>`;
 }
 renderHome();
 </script>
