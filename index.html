@@ -457,6 +457,18 @@ select option { background: var(--s1); }
 <!-- ══ HOME ══ -->
 <div class="page active" id="page-home">
 <div class="page-inner">
+
+  <!-- Google reconnect banner — shown when no accounts connected -->
+  <div id="google-reconnect-banner" style="display:none;background:linear-gradient(135deg,var(--pink-bg2),var(--mint-bg));border:1px solid var(--border2);border-radius:10px;padding:16px 20px;margin-bottom:16px">
+    <div style="font-size:13px;font-weight:800;color:var(--t1);margin-bottom:4px">🔗 Connect Google to sync your accounts</div>
+    <div style="font-size:11px;color:var(--t2);margin-bottom:12px">Your Google session expired or was cleared. Re-enter your Client ID and reconnect all 3 accounts.</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+      <input type="text" id="home-client-id-input" placeholder="Google Client ID  (xxxxxxxxx.apps.googleusercontent.com)" style="flex:1;min-width:260px;font-size:11px">
+      <button class="btn btn-mint" onclick="saveHomeClientId()">Save Client ID</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap" id="home-connect-btns"></div>
+  </div>
+
   <div style="margin-bottom:16px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px">
     <div>
       <div style="font-size:18px;font-weight:800;color:var(--t1);margin-bottom:3px">Good morning, Rashell</div>
@@ -2314,28 +2326,62 @@ function googleDisconnect(){
 }
 
 // Render the 3-account panel in the Notion sidebar
+function saveHomeClientId(){
+  const v=(document.getElementById('home-client-id-input').value||'').trim();
+  if(!v){alert('Paste your Google Client ID first.');return;}
+  localStorage.setItem('cc-google-client-id',v);
+  renderGoogleSettingsUI();
+}
 function renderGoogleSettingsUI(){
-  const panel = document.getElementById('google-accounts-panel');
-  if(!panel) return;
   const accounts = getGoogleAccounts();
-  panel.innerHTML = GOOGLE_ACCOUNTS.map(email=>{
-    const acct = accounts.find(a=>a.email===email);
-    const connected = !!(acct && acct.connected);
-    const badge = ACCOUNT_BADGE[email] || { letter: email[0].toUpperCase(), color:'var(--t2)' };
-    const shortEmail = email.length > 28 ? email.slice(0,26)+'…' : email;
-    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
-      <span style="width:20px;height:20px;border-radius:50%;background:${badge.color};color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${badge.letter}</span>
-      <span style="flex:1;font-size:11px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${email}">${shortEmail}</span>
-      ${connected
-        ? `<span style="font-size:10px;color:var(--mint);font-weight:700;flex-shrink:0">✓</span>
-           <button class="btn btn-sm" style="font-size:9px;padding:3px 8px;flex-shrink:0" onclick="disconnectAccount('${email}')">Disconnect</button>`
-        : `<button class="btn btn-mint btn-sm" style="font-size:9px;padding:3px 8px;flex-shrink:0" onclick="connectAccount('${email}')">Connect</button>`
-      }
-    </div>`;
-  }).join('');
-  // Pre-fill client ID
-  const cidInput = document.getElementById('google-client-id-input');
-  if(cidInput && !cidInput.value) cidInput.value = getGoogleClientId();
+  const anyConnected = accounts.some(a=>a.connected && a.token);
+  const hasCid = !!getGoogleClientId();
+
+  // Homepage reconnect banner
+  const banner = document.getElementById('google-reconnect-banner');
+  if(banner){
+    banner.style.display = (!anyConnected) ? 'block' : 'none';
+    const homeIn = document.getElementById('home-client-id-input');
+    if(homeIn && !homeIn.value) homeIn.value = getGoogleClientId();
+    const homeBtns = document.getElementById('home-connect-btns');
+    if(homeBtns){
+      homeBtns.innerHTML = GOOGLE_ACCOUNTS.map(email=>{
+        const acct = accounts.find(a=>a.email===email);
+        const connected = !!(acct && acct.connected && acct.token);
+        const badge = ACCOUNT_BADGE[email]||{letter:email[0].toUpperCase(),color:'var(--t2)'};
+        return `<div style="display:flex;align-items:center;gap:6px;background:var(--s1);border:1px solid var(--border2);border-radius:6px;padding:6px 10px">
+          <span style="width:16px;height:16px;border-radius:50%;background:${badge.color};color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center">${badge.letter}</span>
+          <span style="font-size:10px;color:var(--t2)">${email.split('@')[0]}</span>
+          ${connected
+            ? `<span style="font-size:10px;color:var(--mint);font-weight:700">✓ Connected</span>`
+            : `<button class="btn btn-mint btn-sm" style="font-size:9px;padding:2px 8px" onclick="connectAccount('${email}')">Connect</button>`
+          }
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Settings panel in Workspace > Notion tab
+  const panel = document.getElementById('google-accounts-panel');
+  if(panel){
+    panel.innerHTML = GOOGLE_ACCOUNTS.map(email=>{
+      const acct = accounts.find(a=>a.email===email);
+      const connected = !!(acct && acct.connected && acct.token);
+      const badge = ACCOUNT_BADGE[email] || { letter: email[0].toUpperCase(), color:'var(--t2)' };
+      const shortEmail = email.length > 28 ? email.slice(0,26)+'…' : email;
+      return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="width:20px;height:20px;border-radius:50%;background:${badge.color};color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${badge.letter}</span>
+        <span style="flex:1;font-size:11px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${email}">${shortEmail}</span>
+        ${connected
+          ? `<span style="font-size:10px;color:var(--mint);font-weight:700;flex-shrink:0">✓</span>
+             <button class="btn btn-sm" style="font-size:9px;padding:3px 8px;flex-shrink:0" onclick="disconnectAccount('${email}')">Disconnect</button>`
+          : `<button class="btn btn-mint btn-sm" style="font-size:9px;padding:3px 8px;flex-shrink:0" onclick="connectAccount('${email}')">Connect</button>`
+        }
+      </div>`;
+    }).join('');
+    const cidInput = document.getElementById('google-client-id-input');
+    if(cidInput && !cidInput.value) cidInput.value = getGoogleClientId();
+  }
 }
 
 // Update the connect/disconnect bars on inbox/calendar/files pages
