@@ -592,7 +592,7 @@ select option { background: var(--s1); }
     <div style="flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--mint)">Gmail</div><div style="font-size:12px;color:var(--t2)" id="gmail-bar-msg">Connect to load live Gmail threads.</div></div>
     <button class="btn btn-mint btn-sm" id="gmail-connect-btn" onclick="googleConnect()">Connect Google</button>
     <button class="btn btn-sm" id="gmail-disconnect-btn" onclick="googleDisconnect()" style="display:none">Disconnect</button>
-    <span id="gmail-sync-status" class="gcal-sync-status"></span>
+    <span id="gmail-bar-sync-status" class="gcal-sync-status"></span>
   </div>
   <div class="scorecard g4" style="margin-bottom:14px">
     <div class="score-item"><div class="sc-label">Unread</div><div class="sc-val pink" id="sc-unread">1</div><div class="sc-sub">in inbox</div></div>
@@ -603,7 +603,17 @@ select option { background: var(--s1); }
   <div class="glw">
     <div>
       <div class="card">
-        <div class="card-head"><h3>Inbox — Recent Threads</h3><div class="ch-r"><a href="https://mail.google.com" target="_blank" class="btn btn-sm">Open Gmail</a></div></div>
+        <div class="card-head"><h3>Inbox — Recent Threads</h3><div class="ch-r">
+          <select id="inbox-acct-filter" onchange="renderThreads()" style="font-size:10px;padding:4px 8px">
+            <option value="">All Accounts</option>
+            <option>office@paulyinc.com</option>
+            <option>sales@thecosmeticformulary.com</option>
+            <option>tcfadmin.rashellklavinger@gmail.com</option>
+          </select>
+          <button class="btn btn-sm btn-mint" onclick="syncGmail()">↻ Sync Gmail</button>
+          <span id="gmail-sync-status" class="gcal-sync-status"></span>
+          <a href="https://mail.google.com" target="_blank" class="btn btn-sm">Open Gmail</a>
+        </div></div>
         <div id="thread-list"></div>
       </div>
     </div>
@@ -640,7 +650,7 @@ select option { background: var(--s1); }
     <div style="flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--mint)">Google Calendar</div><div style="font-size:12px;color:var(--t2)" id="gcal-bar-msg">Connect to overlay live Google Calendar events.</div></div>
     <button class="btn btn-mint btn-sm" id="gcal-connect-btn" onclick="googleConnect()">Connect Google</button>
     <button class="btn btn-sm" id="gcal-disconnect-btn" onclick="googleDisconnect()" style="display:none">Disconnect</button>
-    <span id="gcal-sync-status" class="gcal-sync-status"></span>
+    <span id="gcal-bar-sync-status" class="gcal-sync-status"></span>
   </div>
   <div class="cal-top">
     <div style="display:flex;gap:1px">
@@ -651,6 +661,8 @@ select option { background: var(--s1); }
     <div class="cal-month-lbl" id="cal-month-lbl"></div>
     <button class="cal-nav-btn" onclick="calNav(1)">&#8250;</button>
     <button class="btn btn-sm btn-pink" onclick="document.getElementById('ev-inline-form').style.display='block'" style="margin-left:auto">+ Event</button>
+    <button class="btn btn-sm btn-mint" onclick="syncGCal()">↻ Sync Calendar</button>
+    <span id="gcal-sync-status" style="font-size:10px;color:var(--t3)"></span>
   </div>
   <div class="glw">
     <div>
@@ -773,7 +785,7 @@ select option { background: var(--s1); }
     <div style="flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--mint)">Google Drive</div><div style="font-size:12px;color:var(--t2)" id="drive-bar-msg">Connect to load recent Drive files.</div></div>
     <button class="btn btn-mint btn-sm" id="drive-connect-btn" onclick="googleConnect()">Connect Google</button>
     <button class="btn btn-sm" id="drive-disconnect-btn" onclick="googleDisconnect()" style="display:none">Disconnect</button>
-    <span id="drive-sync-status" class="gcal-sync-status"></span>
+    <span id="drive-bar-sync-status" class="gcal-sync-status"></span>
   </div>
   <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave()" ondrop="handleDrop(event)">
     <input type="file" id="file-input" multiple style="display:none" onchange="handleFileSelect(event)">
@@ -788,9 +800,17 @@ select option { background: var(--s1); }
       <button class="btn" onclick="cancelUpload()">Cancel</button>
     </div>
   </div>
-  <div style="display:flex;gap:8px;margin-bottom:14px">
+  <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
     <input type="text" id="file-search" placeholder="Search by name or tag..." oninput="renderFiles()" style="flex:1">
     <select id="file-cat-filter" onchange="renderFiles()"><option value="">All Categories</option><option>Contract</option><option>Template</option><option>Reference</option><option>Report</option><option>Correspondence</option><option>Other</option></select>
+    <select id="file-acct-filter" onchange="renderFiles()">
+      <option value="">All Accounts</option>
+      <option>office@paulyinc.com</option>
+      <option>sales@thecosmeticformulary.com</option>
+      <option>tcfadmin.rashellklavinger@gmail.com</option>
+    </select>
+    <button class="btn btn-sm btn-mint" onclick="syncDrive()">↻ Sync Drive</button>
+    <span id="drive-sync-status" class="gcal-sync-status"></span>
   </div>
   <div class="card" style="overflow:auto">
     <table class="tbl"><thead><tr><th>Name</th><th>Type</th><th>Category</th><th>Modified</th><th>Owner</th></tr></thead><tbody id="file-tbody"></tbody></table>
@@ -1211,8 +1231,10 @@ let pendingReplies=JSON.parse(localStorage.getItem('cc-pending')||'null')||[
 ];
 function savePR(){localStorage.setItem('cc-pending',JSON.stringify(pendingReplies));}
 function renderThreads(){
-  document.getElementById('thread-list').innerHTML=threads.length
-    ? threads.map((t,i)=>{
+  const fa=(document.getElementById('inbox-acct-filter')||{}).value||'';
+  const displayThreads=fa?threads.filter(t=>t.account===fa):threads;
+  document.getElementById('thread-list').innerHTML=displayThreads.length
+    ? displayThreads.map((t,i)=>{
         const badge = t.badge || (t.account ? ACCOUNT_BADGE[t.account] : null);
         const badgeHtml = badge ? `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${badge.color};color:#fff;font-size:8px;font-weight:800;text-align:center;line-height:14px;vertical-align:middle;margin-left:4px;flex-shrink:0">${badge.letter}</span>` : '';
         return `<div class="thread-row ${t.unread?'unread':''}" onclick="openThread(${i})" style="position:relative">
@@ -1396,9 +1418,15 @@ let pendingUpload=null;
 function saveFiles(){localStorage.setItem('cc-files',JSON.stringify(driveFiles));}
 function renderFiles(){
   const q=(document.getElementById('file-search').value||'').toLowerCase(),fc=document.getElementById('file-cat-filter').value;
-  const list=driveFiles.filter(f=>(!q||(f.name+f.type+f.cat).toLowerCase().includes(q))&&(!fc||f.cat===fc));
+  const fa=(document.getElementById('file-acct-filter')||{}).value||'';
+  const list=driveFiles.filter(f=>(!q||(f.name+f.type+f.cat).toLowerCase().includes(q))&&(!fc||f.cat===fc)&&(!fa||(f.account||f.owner)===fa));
   const icons={'Google Sheet':'📊','Excel (.xlsx)':'📊','Excel':'📊','PDF':'📄','PNG':'🖼','JPG':'🖼','SVG':'🖼','Folder':'📁'};
-  document.getElementById('file-tbody').innerHTML=list.map((f,idx)=>`<tr><td><span style="margin-right:6px">${icons[f.type]||'📄'}</span><a href="${f.url}" target="_blank" style="color:var(--pink);text-decoration:none;font-weight:500">${escH(f.name)}</a></td><td style="color:var(--t3)">${f.type}</td><td><span class="pill p-dim">${f.cat}</span></td><td style="color:var(--t3)">${f.modified}</td><td style="font-size:11px;color:var(--t3)">${f.owner}</td><td><button class="ev-del" onclick="deleteFile(${idx})" title="Remove from dashboard">&#x2715;</button></td></tr>`).join('');
+  document.getElementById('file-tbody').innerHTML=list.map((f,idx)=>{
+    const acctKey=f.account||f.owner||'';
+    const badge=ACCOUNT_BADGE[acctKey];
+    const badgeDot=badge?`<span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:${badge.color};color:#fff;font-size:8px;font-weight:800;margin-right:5px;flex-shrink:0;vertical-align:middle">${badge.letter}</span>`:'';
+    return`<tr><td><span style="margin-right:6px">${icons[f.type]||'📄'}</span><a href="${f.url}" target="_blank" style="color:var(--pink);text-decoration:none;font-weight:500">${escH(f.name)}</a></td><td style="color:var(--t3)">${f.type}</td><td><span class="pill p-dim">${f.cat}</span></td><td style="color:var(--t3)">${f.modified}</td><td style="font-size:11px;color:var(--t3)">${badgeDot}${escH(acctKey)}</td><td><button class="ev-del" onclick="deleteFile(${idx})" title="Remove from dashboard">&#x2715;</button></td></tr>`;
+  }).join('');
 }
 function deleteFile(idx){driveFiles.splice(idx,1);saveFiles();renderFiles();}
 function handleDragOver(e){e.preventDefault();document.getElementById('drop-zone').classList.add('drag-over');}
