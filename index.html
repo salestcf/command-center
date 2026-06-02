@@ -1548,10 +1548,26 @@ function saveClientProject(){
   saveClients();renderHome();closeModal('modal-client');
 }
 
+function changeStatusFromHome(id,status){const t=tasks.find(x=>x.id===id);if(!t)return;t.status=status;saveTasks();renderTasks();renderHome();}
 function renderHome(){
   // Actions
   const urgent=tasks.filter(t=>t.status==='Urgent'||t.priority==='High'&&t.status!=='Done');
-  document.getElementById('action-list').innerHTML=urgent.slice(0,6).map(t=>`<div class="action-item"><div class="action-dot" style="background:${t.status==='Urgent'?'var(--red)':'var(--gold)'}"></div><div style="flex:1"><div class="action-text">${escH(t.name)}</div><div class="action-meta">${escH(t.project)} · due ${t.due||'TBD'}</div></div><span class="pill ${t.status==='Urgent'?'p-red':'p-gold'} action-tag">${t.status}</span></div>`).join('')||'<div style="font-size:11px;color:var(--t3);padding:8px 0">No urgent items. You\'re on top of it.</div>';
+  document.getElementById('action-list').innerHTML=urgent.slice(0,6).map(t=>`
+    <div class="action-item" style="cursor:pointer;border-radius:8px;transition:background 0.15s" onmouseenter="this.style.background='var(--s2)'" onmouseleave="this.style.background=''" >
+      <div class="action-dot" style="background:${t.status==='Urgent'?'var(--red)':'var(--gold)'}"></div>
+      <div style="flex:1" onclick="editTask(${t.id})">
+        <div class="action-text">${escH(t.name)}</div>
+        <div class="action-meta">${escH(t.project)} · due ${t.due||'TBD'}</div>
+        ${t.notes?`<div style="font-size:10px;color:var(--t3);margin-top:2px">${escH(t.notes)}</div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+        <span class="pill ${t.status==='Urgent'?'p-red':'p-gold'} action-tag">${t.status}</span>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-sm btn-mint" style="font-size:9px;padding:2px 7px" onclick="changeStatusFromHome(${t.id},'Done')">✓ Done</button>
+          <button class="btn btn-sm" style="font-size:9px;padding:2px 7px" onclick="editTask(${t.id})">Edit</button>
+        </div>
+      </div>
+    </div>`).join('')||'<div style="font-size:11px;color:var(--t3);padding:8px 0">No urgent items. You\'re on top of it. ✨</div>';
   document.getElementById('action-count').textContent=urgent.length+' urgent';
   document.getElementById('h-urgent').textContent=urgent.length;
   // Activity feed
