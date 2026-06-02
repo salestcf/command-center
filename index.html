@@ -1520,7 +1520,16 @@ document.getElementById('le-notes').value=localStorage.getItem('le-notes')||'';
 renderLEIdeas();renderLEMilestones();renderLEMood();renderLEComp();
 
 // ── ALIBABA ──
-let aliConvos=JSON.parse(localStorage.getItem('cc-alibaba')||'[]');
+const _aliDefaults=[
+  {id:1,supplier:'Nathan Chen',company:'Guangzhou Runxuan Plastic',subject:'60ml & 240ml Boston round bottles — 24/410 nozzle/applicator caps',cat:'Packaging',status:'Waiting on Supplier',last:'2026-06-02',followup:'2026-06-04',url:'',notes:'Discussing squeezing on nozzle caps that fit 24/410 neck finish. Nathan sending photos of similar 240ml bottles with nozzles installed. Confirmed Boston round shape required.'},
+  {id:2,supplier:'Lydia Zhao',company:'Hangzhou Sanle Imp. & Export',subject:'Soft-touch / matte finish packaging',cat:'Packaging',status:'Need to Reply',last:'2026-06-02',followup:'2026-06-03',url:'',notes:'Lydia confirmed they can do soft-touch and matte finish. Asked "does our models workable?" — need to reply with model specs/dimensions.'},
+  {id:3,supplier:'Vinky Zhou',company:'Guangzhou Meiyan Packaging',subject:'LDPE squeeze bottles with gold foil decoration',cat:'Packaging',status:'Waiting on Supplier',last:'2026-06-02',followup:'2026-06-05',url:'',notes:'Discussing LDPE vs HDPE for gold adhesion. LDPE needed for easy squeeze but gold decoration is critical brand element. Vinky checking with production team on HDPE alternative that allows gold foil + easy squeeze.'},
+  {id:4,supplier:'Gavin Zhuang',company:'Yixin Technology (Ningbo)',subject:'Clear bottle — white text + gold foil sample',cat:'Packaging',status:'Waiting on Supplier',last:'2026-06-02',followup:'2026-06-05',url:'',notes:'Can create sample with clear bottle, white text, gold foil for 60ml or 240ml. Sample cost $140, shipped via FedEx. Asked if sample is needed — need to confirm.'},
+  {id:5,supplier:'Claire Wei',company:'Cixi Yangen Plastic Industry',subject:'Olive green body bottle — 2-color printing, MOQ 10,000/size',cat:'Packaging',status:'Negotiating',last:'2026-06-02',followup:'2026-06-06',url:'',notes:'Confirmed olive green body with 2-color printing. MOQ is 10,000 pcs per size. Need to confirm sizes and proceed with sample or quote.'},
+  {id:6,supplier:'Tina Hu',company:'Vanjoin Group',subject:'Contract manufacturing — bottle pricing at MOQ',cat:'Private Label',status:'Need to Reply',last:'2026-06-02',followup:'2026-06-03',url:'',notes:'Unread reply from Tina. Asked "How many do you need?" in response to pricing request. Pauly asked to base price on their MOQ. Need to reply with quantity.'},
+  {id:7,supplier:'Jessica Li',company:'XXNEW Tech Group Limited',subject:'Package in transit — arriving June 3',cat:'Packaging',status:'Sent — Awaiting Sample',last:'2026-06-01',followup:'2026-06-03',url:'',notes:'Package shipped, tracking via 17TRACK. Estimated delivery 2026-06-03. Jessica confirmed "you will receive the box package about tomorrow."'},
+];
+let aliConvos=(()=>{const s=localStorage.getItem('cc-alibaba');const p=s?JSON.parse(s):null;return(p&&p.length)?p:_aliDefaults;})();
 let nextAliId=aliConvos.length?Math.max(...aliConvos.map(a=>a.id))+1:1;
 let editingAliId=null;
 function saveAli(){localStorage.setItem('cc-alibaba',JSON.stringify(aliConvos));}
