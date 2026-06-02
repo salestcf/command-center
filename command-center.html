@@ -1139,6 +1139,18 @@ select option { background: var(--s1); }
 <div class="modal-overlay" id="modal-le-comp"><div class="modal"><div class="modal-head"><h3>Add Competitor / Inspiration</h3><button class="close-btn" onclick="closeModal('modal-le-comp')">&#x2715;</button></div><div class="modal-body"><div class="form-row"><label class="form-label">Brand Name</label><input type="text" id="le-comp-name"></div><div class="form-row"><label class="form-label">URL</label><input type="url" id="le-comp-url"></div><div class="form-row"><label class="form-label">Notes</label><textarea id="le-comp-notes" rows="2"></textarea></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal('modal-le-comp')">Cancel</button><button class="btn btn-mint" onclick="saveLEComp()">Save</button></div></div></div></div>
 
 <script>
+// ── GOOGLE ACCOUNT CONSTANTS (must be first — referenced throughout) ──
+const GOOGLE_ACCOUNTS = [
+  'office@paulyinc.com',
+  'sales@thecosmeticformulary.com',
+  'tcfadmin.rashellklavinger@gmail.com'
+];
+const ACCOUNT_BADGE = {
+  'office@paulyinc.com':                { letter:'O', color:'#d4457a' },
+  'sales@thecosmeticformulary.com':     { letter:'S', color:'#2aaa88' },
+  'tcfadmin.rashellklavinger@gmail.com':{ letter:'T', color:'#c0880a' }
+};
+
 // ── GLOBAL ERROR HANDLER ──
 window.onerror = function(msg, src, line, col, err){
   const bar = document.getElementById('js-error-bar');
@@ -2074,19 +2086,8 @@ const GOOGLE_SCOPES = [
   'https://www.googleapis.com/auth/drive.readonly'
 ].join(' ');
 
-// The 3 hardcoded accounts for this Command Center
-const GOOGLE_ACCOUNTS = [
-  'office@paulyinc.com',
-  'sales@thecosmeticformulary.com',
-  'tcfadmin.rashellklavinger@gmail.com'
-];
-
-// Account badge initials & colors
-const ACCOUNT_BADGE = {
-  'office@paulyinc.com':                    { letter:'O', color:'#d4457a' },
-  'sales@thecosmeticformulary.com':          { letter:'S', color:'#2aaa88' },
-  'tcfadmin.rashellklavinger@gmail.com':     { letter:'T', color:'#c0880a' }
-};
+// (GOOGLE_ACCOUNTS and ACCOUNT_BADGE defined earlier in script)
+// (moved to top of script)
 
 // ── Multi-account helpers ──
 function getGoogleAccounts(){
