@@ -394,6 +394,24 @@ select option { background: var(--s1); }
 .conn-banner-sub { font-size: 12px; color: var(--t2); }
 .conn-bar { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--mint-bg); border: 1px solid rgba(42,170,136,0.3); border-radius: var(--radius); margin-bottom: 14px; }
 .conn-indicator { width: 7px; height: 7px; border-radius: 50%; background: var(--mint); flex-shrink: 0; }
+/* ── Daily Tracker ── */
+.dt-block{display:flex;align-items:flex-start;gap:10px;padding:8px 12px;border-radius:8px;margin-bottom:5px;cursor:pointer;transition:background 0.15s;border:1px solid transparent;}
+.dt-block:hover{background:var(--s2);}
+.dt-block.dt-active{background:var(--pink-bg);border-color:var(--pink-l);}
+.dt-block.dt-done{opacity:0.45;}
+.dt-block.dt-done .dt-label{text-decoration:line-through;}
+.dt-block.dt-past:not(.dt-done){opacity:0.6;}
+.dt-time-col{font-size:10px;color:var(--t3);width:72px;flex-shrink:0;font-weight:600;padding-top:2px;line-height:1.4;}
+.dt-info{flex:1;min-width:0;}
+.dt-label{font-size:12px;color:var(--t1);font-weight:600;line-height:1.3;}
+.dt-sub{font-size:10px;color:var(--t3);margin-top:2px;line-height:1.5;}
+.dt-badge{font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0;margin-top:2px;}
+.dt-admin{background:rgba(212,69,122,0.12);color:var(--pink);}
+.dt-ops{background:rgba(42,170,136,0.12);color:var(--mint);}
+.dt-break{background:rgba(192,136,10,0.12);color:var(--gold);}
+.dt-wrap{background:rgba(122,48,96,0.12);color:var(--t2);}
+.dt-now-bar{height:2px;background:linear-gradient(90deg,var(--pink),var(--pink-l));border-radius:2px;margin:3px 0 6px 0;position:relative;}
+.dt-now-bar::after{content:'▶ NOW';position:absolute;right:0;top:-9px;font-size:8px;color:var(--pink);font-weight:800;letter-spacing:1px;}
 </style>
 </head>
 <body>
@@ -468,6 +486,16 @@ select option { background: var(--s1); }
       </div>
     </div>
     <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-head"><h3>Daily Schedule</h3>
+          <div class="ch-r">
+            <span id="dt-clock" style="font-size:11px;color:var(--pink);font-weight:700;letter-spacing:0.5px"></span>
+            <button class="btn btn-sm" onclick="resetDayTracker()" title="Reset all done states">Reset Day</button>
+          </div>
+        </div>
+        <div class="card-body" id="daily-tracker"></div>
+      </div>
+
       <div class="card">
         <div class="card-head"><h3>Camera</h3>
           <div class="ch-r"><button class="btn btn-sm" id="cam-switch-btn" onclick="switchCamera()" style="display:none">Switch</button></div>
@@ -1387,6 +1415,57 @@ function saveLEComp(){const name=document.getElementById('le-comp-name').value.t
 function saveLENotes(){localStorage.setItem('le-notes',document.getElementById('le-notes').value);}
 document.getElementById('le-notes').value=localStorage.getItem('le-notes')||'';
 renderLEIdeas();renderLEMilestones();renderLEMood();renderLEComp();
+
+// ── DAILY TRACKER ──
+const SCHEDULE=[
+  {start:'9:00', end:'9:30',  label:'Email Triage',               sub:'Clear inbox · flag urgent threads · mark pending replies',         type:'admin'},
+  {start:'9:30', end:'10:00', label:'Task Review',                 sub:'Update priorities · check due dates · flag blockers',               type:'admin'},
+  {start:'10:00',end:'12:00', label:'Admin & Follow-Ups',          sub:'Supplier replies · scheduling · document processing · SOPs',       type:'admin'},
+  {start:'12:00',end:'13:00', label:'Lunch Break',                 sub:'Step away from the screen — recharge',                             type:'break'},
+  {start:'13:00',end:'14:30', label:'Deep Work — Operations',      sub:'Procurement research · vendor negotiations · project execution',   type:'ops'},
+  {start:'14:30',end:'15:00', label:'Operations Check-In',         sub:'InFlow stock · QuickBooks · pending orders · shipping',            type:'ops'},
+  {start:'15:00',end:'16:00', label:'Outreach & Communications',   sub:'New supplier contact · client updates · team check-in',            type:'ops'},
+  {start:'16:00',end:'16:30', label:'Review & Wrap-Up',            sub:'Check off tasks · log blockers · update statuses',                 type:'wrap'},
+  {start:'16:30',end:'17:00', label:'Plan Tomorrow',               sub:'Set priorities · prep calendar · send end-of-day notes',           type:'wrap'},
+];
+const DT_LABELS={admin:'Admin',ops:'Operations',break:'Break',wrap:'Wrap-Up'};
+function dtMins(str){const[h,m]=str.split(':').map(Number);return h*60+m;}
+function dtFmt(str){const[h,m]=str.split(':').map(Number);const ap=h>=12?'PM':'AM';const hh=h>12?h-12:h===0?12:h;return hh+':'+(m===0?'00':m<10?'0'+m:m)+' '+ap;}
+let dtDone=JSON.parse(localStorage.getItem('dt-done-'+new Date().toDateString())||'{}');
+function saveDtDone(){localStorage.setItem('dt-done-'+new Date().toDateString(),JSON.stringify(dtDone));}
+function toggleDtBlock(idx){dtDone[idx]=!dtDone[idx];saveDtDone();renderDailyTracker();}
+function resetDayTracker(){dtDone={};saveDtDone();renderDailyTracker();}
+function renderDailyTracker(){
+  const el=document.getElementById('daily-tracker');if(!el)return;
+  const now=new Date();const cur=now.getHours()*60+now.getMinutes();
+  const ck=document.getElementById('dt-clock');
+  if(ck)ck.textContent=now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  let html='';
+  SCHEDULE.forEach((b,i)=>{
+    const bs=dtMins(b.start),be=dtMins(b.end);
+    const isActive=cur>=bs&&cur<be;
+    const isPast=cur>=be;
+    const isDone=!!dtDone[i];
+    let cls='dt-block';
+    if(isActive&&!isDone)cls+=' dt-active';
+    if(isDone)cls+=' dt-done';
+    else if(isPast)cls+=' dt-past';
+    if(isActive&&!isDone)html+='<div class="dt-now-bar"></div>';
+    html+=`<div class="${cls}" onclick="toggleDtBlock(${i})" title="Click to mark done / undo">
+      <div class="dt-time-col">${dtFmt(b.start)}<br><span style="opacity:.6">→ ${dtFmt(b.end)}</span></div>
+      <div class="dt-info">
+        <div class="dt-label">${isDone?'✓ ':''} ${escH(b.label)}</div>
+        <div class="dt-sub">${escH(b.sub)}</div>
+      </div>
+      <span class="dt-badge dt-${b.type}">${DT_LABELS[b.type]}</span>
+    </div>`;
+  });
+  if(cur<dtMins('9:00'))html='<div style="font-size:11px;color:var(--t3);padding:8px 4px">Your day starts at 9:00 AM. You\'re early — well done. ✨</div>'+html;
+  if(cur>=dtMins('17:00'))html+='<div style="font-size:11px;color:var(--mint);padding:8px 4px;font-weight:600">Day complete. Great work today, Rashell. 🌸</div>';
+  el.innerHTML=html;
+}
+renderDailyTracker();
+setInterval(renderDailyTracker,60000);
 
 // ── HOME PAGE ──
 function renderHome(){
