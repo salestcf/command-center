@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Command Center — Rashell Klavinger</title>
+<script src="https://accounts.google.com/gsi/client" async></script>
 <style>
 :root {
   --bg:       #fdf1f7;
@@ -412,6 +413,10 @@ select option { background: var(--s1); }
 .dt-wrap{background:rgba(122,48,96,0.12);color:var(--t2);}
 .dt-now-bar{height:2px;background:linear-gradient(90deg,var(--pink),var(--pink-l));border-radius:2px;margin:3px 0 6px 0;position:relative;}
 .dt-now-bar::after{content:'▶ NOW';position:absolute;right:0;top:-9px;font-size:8px;color:var(--pink);font-weight:800;letter-spacing:1px;}
+/* ── GCAL EVENTS ── */
+.ev-gcal { background: var(--mint-bg2); color: var(--mint); border-left: 2px solid var(--mint); }
+.gcal-connect-bar { display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--mint-bg); border:1px solid rgba(42,170,136,0.3); border-radius:var(--radius); margin-bottom:14px; flex-wrap:wrap; }
+.gcal-sync-status { font-size:10px; color:var(--t3); margin-top:4px; }
 </style>
 </head>
 <body>
@@ -457,9 +462,15 @@ select option { background: var(--s1); }
 <!-- ══ HOME ══ -->
 <div class="page active" id="page-home">
 <div class="page-inner">
-  <div style="margin-bottom:16px">
-    <div style="font-size:18px;font-weight:800;color:var(--t1);margin-bottom:3px">Good morning, Rashell</div>
-    <div id="home-date" style="font-size:11px;color:var(--t3)"></div>
+  <div style="margin-bottom:16px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <div>
+      <div style="font-size:18px;font-weight:800;color:var(--t1);margin-bottom:3px">Good morning, Rashell</div>
+      <div id="home-date" style="font-size:11px;color:var(--t3)"></div>
+    </div>
+    <div style="text-align:right">
+      <div id="home-sync-status" style="font-size:10px;color:var(--t3)">—</div>
+      <button class="btn btn-sm btn-mint" style="margin-top:4px" onclick="syncAll()">↻ Sync All</button>
+    </div>
   </div>
 
   <div class="g5 scorecard" style="margin-bottom:14px">
@@ -577,6 +588,12 @@ select option { background: var(--s1); }
 <!-- ══ INBOX ══ -->
 <div class="page" id="page-inbox">
 <div class="page-inner">
+  <div id="gmail-connect-bar" class="gcal-connect-bar" style="display:none">
+    <div style="flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--mint)">Gmail</div><div style="font-size:12px;color:var(--t2)" id="gmail-bar-msg">Connect to load live Gmail threads.</div></div>
+    <button class="btn btn-mint btn-sm" id="gmail-connect-btn" onclick="googleConnect()">Connect Google</button>
+    <button class="btn btn-sm" id="gmail-disconnect-btn" onclick="googleDisconnect()" style="display:none">Disconnect</button>
+    <span id="gmail-sync-status" class="gcal-sync-status"></span>
+  </div>
   <div class="scorecard g4" style="margin-bottom:14px">
     <div class="score-item"><div class="sc-label">Unread</div><div class="sc-val pink" id="sc-unread">1</div><div class="sc-sub">in inbox</div></div>
     <div class="score-item"><div class="sc-label">Flagged</div><div class="sc-val gold" id="sc-flagged">3</div><div class="sc-sub">need attention</div></div>
@@ -619,6 +636,12 @@ select option { background: var(--s1); }
 <!-- ══ CALENDAR ══ -->
 <div class="page" id="page-calendar">
 <div class="page-inner">
+  <div id="gcal-connect-bar" class="gcal-connect-bar" style="display:none">
+    <div style="flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--mint)">Google Calendar</div><div style="font-size:12px;color:var(--t2)" id="gcal-bar-msg">Connect to overlay live Google Calendar events.</div></div>
+    <button class="btn btn-mint btn-sm" id="gcal-connect-btn" onclick="googleConnect()">Connect Google</button>
+    <button class="btn btn-sm" id="gcal-disconnect-btn" onclick="googleDisconnect()" style="display:none">Disconnect</button>
+    <span id="gcal-sync-status" class="gcal-sync-status"></span>
+  </div>
   <div class="cal-top">
     <div style="display:flex;gap:1px">
       <button class="cal-toggle-btn active" id="btn-cal" onclick="setCalView('grid')">Calendar</button>
@@ -746,6 +769,12 @@ select option { background: var(--s1); }
 <!-- ══ FILES ══ -->
 <div class="page" id="page-files">
 <div class="page-inner">
+  <div id="drive-connect-bar" class="gcal-connect-bar" style="display:none">
+    <div style="flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--mint)">Google Drive</div><div style="font-size:12px;color:var(--t2)" id="drive-bar-msg">Connect to load recent Drive files.</div></div>
+    <button class="btn btn-mint btn-sm" id="drive-connect-btn" onclick="googleConnect()">Connect Google</button>
+    <button class="btn btn-sm" id="drive-disconnect-btn" onclick="googleDisconnect()" style="display:none">Disconnect</button>
+    <span id="drive-sync-status" class="gcal-sync-status"></span>
+  </div>
   <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave()" ondrop="handleDrop(event)">
     <input type="file" id="file-input" multiple style="display:none" onchange="handleFileSelect(event)">
     <div class="dz-title">Drop files here or click to upload</div>
@@ -950,9 +979,23 @@ select option { background: var(--s1); }
           <button class="btn btn-sm" onclick="clearNotionSettings()" style="width:100%;margin-top:6px">Clear Saved Token</button>
         </div>
       </div>
-      <div class="card">
+      <div class="card" style="margin-bottom:14px">
         <div class="card-head"><h3>Summary</h3></div>
         <div class="card-body" id="notion-summary" style="font-size:12px;line-height:1.8;color:var(--t2)">—</div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Google Integration</h3></div>
+        <div class="card-body">
+          <div style="font-size:11px;color:var(--t3);margin-bottom:10px">Your Client ID is stored only in your browser (localStorage). It is never sent to GitHub or any third party.</div>
+          <label style="font-size:11px;font-weight:600;color:var(--t2);display:block;margin-bottom:5px">Google Client ID</label>
+          <input type="text" id="google-client-id-input" placeholder="xxxxxxxxx.apps.googleusercontent.com" style="width:100%;margin-bottom:8px;font-size:11px" />
+          <div id="google-status" style="font-size:11px;color:var(--t3);margin-bottom:10px"></div>
+          <button class="btn btn-mint btn-sm" onclick="saveGoogleClientId()" style="width:100%;margin-bottom:6px">Save Client ID &amp; Connect Google</button>
+          <button class="btn btn-sm" onclick="googleDisconnect()" style="width:100%;margin-bottom:10px">Disconnect Google</button>
+          <div style="font-size:10px;color:var(--t3);line-height:1.6;border-top:1px solid var(--border);padding-top:10px">
+            <strong>Setup:</strong> Go to <a href="https://console.cloud.google.com" target="_blank" style="color:var(--mint)">console.cloud.google.com</a> &rarr; APIs &amp; Services &rarr; Credentials &rarr; Create OAuth 2.0 Client ID (Web Application). Add <strong>https://salestcf.github.io</strong> as an authorized JavaScript origin. Enable Calendar, Gmail, and Drive APIs.
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1969,6 +2012,395 @@ async function notionSync(){
   // Auto-sync if token present
   if(getNotionToken()) notionSync();
   else notionSync(); // will show "no token" message
+})();
+
+// ══════════════════════════════════════════
+// GOOGLE OAUTH 2.0 (GIS Token Model)
+// ══════════════════════════════════════════
+
+const GOOGLE_SCOPES = [
+  'https://www.googleapis.com/auth/calendar.readonly',
+  'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/drive.readonly'
+].join(' ');
+
+function getGoogleToken(){ return localStorage.getItem('cc-google-token')||''; }
+function getGoogleClientId(){ return localStorage.getItem('cc-google-client-id')||''; }
+
+let _googleTokenClient = null;
+
+function saveGoogleClientId(){
+  const cid = (document.getElementById('google-client-id-input').value||'').trim();
+  if(!cid){ alert('Please paste your Google OAuth Client ID.'); return; }
+  localStorage.setItem('cc-google-client-id', cid);
+  googleConnect();
+}
+
+function googleConnect(){
+  const cid = getGoogleClientId();
+  if(!cid){
+    updateGoogleStatus('No Client ID saved. Go to Google Integration settings in the Notion tab.');
+    showPage('notion');
+    return;
+  }
+  if(typeof google === 'undefined' || !google.accounts){
+    updateGoogleStatus('Google Identity Services not loaded yet. Check your internet connection and try again.');
+    return;
+  }
+  _googleTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: cid,
+    scope: GOOGLE_SCOPES,
+    callback: (tokenResponse) => {
+      if(tokenResponse && tokenResponse.access_token){
+        localStorage.setItem('cc-google-token', tokenResponse.access_token);
+        updateGoogleUI(true);
+        // Trigger all Google syncs after auth
+        syncGCal();
+        syncGmail();
+        syncDrive();
+      } else {
+        updateGoogleStatus('Auth failed or cancelled.');
+      }
+    }
+  });
+  _googleTokenClient.requestAccessToken();
+}
+
+function googleDisconnect(){
+  const token = getGoogleToken();
+  if(token && typeof google !== 'undefined' && google.accounts && google.accounts.oauth2){
+    google.accounts.oauth2.revoke(token, ()=>{});
+  }
+  localStorage.removeItem('cc-google-token');
+  updateGoogleUI(false);
+  updateGoogleStatus('Disconnected.');
+}
+
+function updateGoogleUI(connected){
+  // Update all connect/disconnect buttons
+  ['gcal','gmail','drive'].forEach(svc => {
+    const bar = document.getElementById(svc+'-connect-bar');
+    const connectBtn = document.getElementById(svc+'-connect-btn');
+    const disconnectBtn = document.getElementById(svc+'-disconnect-btn');
+    if(bar) bar.style.display = 'flex';
+    if(connectBtn) connectBtn.style.display = connected ? 'none' : 'inline-block';
+    if(disconnectBtn) disconnectBtn.style.display = connected ? 'inline-block' : 'none';
+  });
+  // Update settings panel status
+  const statusEl = document.getElementById('google-status');
+  if(statusEl){
+    statusEl.innerHTML = connected
+      ? '<span style="color:var(--mint)">Connected as sales@thecosmeticformulary.com</span>'
+      : '<span style="color:var(--t3)">Not connected.</span>';
+  }
+  // Pre-fill client ID if saved
+  const cidInput = document.getElementById('google-client-id-input');
+  if(cidInput && !cidInput.value) cidInput.value = getGoogleClientId();
+}
+
+function updateGoogleStatus(msg, svc){
+  ['gcal','gmail','drive'].forEach(s => {
+    const el = document.getElementById((svc||s)+'-sync-status');
+    if(el) el.textContent = msg;
+    if(svc) return; // if svc specified, only update that one
+  });
+}
+
+function handleGoogleAuthError(resp, svc){
+  if(resp.status === 401){
+    localStorage.removeItem('cc-google-token');
+    updateGoogleUI(false);
+    const barMsg = document.getElementById(svc+'-bar-msg');
+    if(barMsg) barMsg.textContent = 'Token expired. Please reconnect.';
+  }
+}
+
+// ── GOOGLE CALENDAR SYNC ──
+let gcalEvents = []; // in-memory only, not persisted to cc-cal-events
+
+async function syncGCal(){
+  const token = getGoogleToken();
+  if(!token){ updateGoogleUI(false); return; }
+
+  const statusEl = document.getElementById('gcal-sync-status');
+  if(statusEl) statusEl.textContent = 'Syncing…';
+
+  try {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const lastDay  = new Date(now.getFullYear(), now.getMonth()+1, 0, 23, 59, 59).toISOString();
+    const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(firstDay)}&timeMax=${encodeURIComponent(lastDay)}&singleEvents=true&orderBy=startTime&maxResults=250`;
+
+    const resp = await fetch(url, { headers: { 'Authorization': 'Bearer '+token } });
+    if(!resp.ok){
+      handleGoogleAuthError(resp, 'gcal');
+      throw new Error('GCal API '+resp.status);
+    }
+    const data = await resp.json();
+    gcalEvents = (data.items||[]).map(ev => ({
+      id: 'gcal_'+ev.id,
+      date: (ev.start.dateTime || ev.start.date||'').slice(0,10),
+      title: ev.summary || '(no title)',
+      time: ev.start.dateTime ? new Date(ev.start.dateTime).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true}) : 'All Day',
+      type: 'gcal',
+      link: ev.htmlLink || ''
+    }));
+
+    // Persist cache
+    localStorage.setItem('cc-gcal-events', JSON.stringify(gcalEvents));
+
+    const syncTime = now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+    if(statusEl) statusEl.textContent = 'Last synced: '+syncTime;
+    renderCal();
+  } catch(e){
+    console.error('GCal sync error:', e);
+    if(statusEl) statusEl.textContent = 'Sync failed: '+e.message;
+    // Load from cache
+    const cached = localStorage.getItem('cc-gcal-events');
+    if(cached){ try { gcalEvents = JSON.parse(cached); renderCal(); } catch(_){} }
+  }
+}
+
+// Patch renderCal to merge gcalEvents into the grid
+// We override the calendar cells generation to include gcal events
+const _origRenderCal = renderCal;
+renderCal = function(){
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-month-lbl').textContent=months[calMonth]+' '+calYear;
+  const today=new Date(),fd=new Date(calYear,calMonth,1).getDay(),dim=new Date(calYear,calMonth+1,0).getDate(),dp=new Date(calYear,calMonth,0).getDate();
+
+  // Build merged events map: combine calEvents + gcalEvents
+  function getMergedEvs(dk){
+    const local = calEvents[dk]||[];
+    const google = gcalEvents.filter(e=>e.date===dk);
+    return [...local, ...google];
+  }
+
+  let h='';
+  for(let i=fd-1;i>=0;i--) h+=`<div class="cal-cell other-m"><div class="cal-day-n">${dp-i}</div></div>`;
+  for(let d=1;d<=dim;d++){
+    const dk=cDK(calYear,calMonth,d),isTd=d===today.getDate()&&calMonth===today.getMonth()&&calYear===today.getFullYear(),isSel=dk===selDay;
+    const evs=getMergedEvs(dk);
+    const chips=evs.slice(0,2).map(e=>`<div class="cal-ev ${e.type==='gcal'?'ev-gcal':'ev-'+e.type}" title="${escH(e.title)}">${escH(e.title)}</div>`).join('');
+    const more=evs.length>2?`<div style="font-size:9px;color:var(--t3)">+${evs.length-2}</div>`:'';
+    h+=`<div class="cal-cell${isTd?' today':''}${isSel?' selected':''}" onclick="selCalDay('${dk}',${d})"><div class="cal-day-n">${d}</div>${chips}${more}</div>`;
+  }
+  const rem=(fd+dim)%7;for(let d=1;d<=(rem===0?0:7-rem);d++) h+=`<div class="cal-cell other-m"><div class="cal-day-n">${d}</div></div>`;
+  document.getElementById('cal-cells').innerHTML=h;
+  renderCalList();renderHomeCalToday();
+};
+
+// Patch selCalDay to also show gcal events in day panel
+const _origSelCalDay = selCalDay;
+selCalDay = function(dk, d){
+  selDay=dk;
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const p=dk.split('-');
+  document.getElementById('ev-panel-lbl').textContent=months[parseInt(p[1])-1]+' '+parseInt(p[2])+', '+p[0];
+  const localEvs=calEvents[dk]||[];
+  const googleEvs=gcalEvents.filter(e=>e.date===dk);
+  const allEvs=[...localEvs, ...googleEvs];
+  document.getElementById('ev-list-wrap').innerHTML=allEvs.length?allEvs.map(e=>{
+    const isGcal=e.type==='gcal';
+    const dotColor=isGcal?'var(--mint)':e.type==='meeting'?'var(--mint)':e.type==='deadline'?'var(--gold)':'var(--t3)';
+    const delBtn=isGcal?`<a href="${escH(e.link)}" target="_blank" style="font-size:11px;color:var(--mint);white-space:nowrap">Google Cal ↗</a>`:
+      `<button class="ev-del" onclick="delCalEv('${dk}',${e.id})">&#x2715;</button>`;
+    return`<div class="ev-item"><div class="ev-dot" style="background:${dotColor}"></div><div class="ev-info"><div class="ev-title">${escH(e.title)}${isGcal?' <span style="font-size:9px;color:var(--mint);font-weight:700">●GCal</span>':''}</div><div class="ev-time-l">${e.time}${e.link&&!isGcal?` <a href="${escH(e.link)}" target="_blank" style="color:var(--pink);font-size:10px">[link]</a>`:''}</div></div>${delBtn}</div>`;
+  }).join(''):'<div style="font-size:11px;color:var(--t3)">No events. Add one below.</div>';
+  document.getElementById('ev-inline-form').style.display='block';
+  renderCal();
+};
+
+// ── GMAIL SYNC ──
+async function syncGmail(){
+  const token = getGoogleToken();
+  if(!token){ updateGoogleUI(false); return; }
+
+  const statusEl = document.getElementById('gmail-sync-status');
+  if(statusEl) statusEl.textContent = 'Syncing…';
+
+  try {
+    // Fetch thread list
+    const resp = await fetch('https://www.googleapis.com/gmail/v1/users/me/threads?maxResults=20&labelIds=INBOX', {
+      headers: { 'Authorization': 'Bearer '+token }
+    });
+    if(!resp.ok){ handleGoogleAuthError(resp, 'gmail'); throw new Error('Gmail API '+resp.status); }
+    const data = await resp.json();
+    const threadIds = (data.threads||[]).map(t=>t.id);
+
+    // Fetch metadata for each thread (in parallel, capped at 10 to avoid rate limits)
+    const fetchMeta = async (id) => {
+      const r = await fetch(`https://www.googleapis.com/gmail/v1/users/me/threads/${id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`, {
+        headers: { 'Authorization': 'Bearer '+token }
+      });
+      if(!r.ok) return null;
+      return r.json();
+    };
+    const metaResults = await Promise.all(threadIds.slice(0,20).map(fetchMeta));
+
+    const gmailThreads = metaResults.filter(Boolean).map(t => {
+      const msgs = t.messages || [];
+      const latest = msgs[msgs.length-1] || {};
+      const headers = (latest.payload && latest.payload.headers) || [];
+      const getHdr = name => (headers.find(h=>h.name.toLowerCase()===name.toLowerCase())||{}).value || '';
+      const subject = getHdr('Subject') || '(no subject)';
+      const from = getHdr('From') || '';
+      const dateStr = getHdr('Date') || '';
+      const snippet = t.snippet || '';
+      const unread = (latest.labelIds||[]).includes('UNREAD');
+      // Format sender name from "Name <email>"
+      const senderMatch = from.match(/^"?([^"<]+)"?\s*<?.+>?$/);
+      const senderName = senderMatch ? senderMatch[1].trim() : from;
+      // Format date
+      let timeLabel = '';
+      try {
+        const d = new Date(dateStr);
+        const now = new Date();
+        const diff = now - d;
+        if(diff < 86400000 && d.getDate()===now.getDate()) timeLabel = d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+        else timeLabel = d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      } catch(_){ timeLabel = ''; }
+      return { id:t.id, sender:senderName, from, subject, snip:snippet, time:timeLabel, unread, labels:latest.labelIds||[] };
+    });
+
+    // Cache
+    localStorage.setItem('cc-gmail-threads', JSON.stringify(gmailThreads));
+
+    // Merge: Gmail threads first, then any locally saved manual threads
+    const localThreads = JSON.parse(localStorage.getItem('cc-threads')||'[]').filter(t=>!t.id.startsWith('gmail_placeholder'));
+    threads = [...gmailThreads, ...localThreads];
+    renderThreads();
+
+    const syncTime = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+    if(statusEl) statusEl.textContent = 'Last synced: '+syncTime;
+  } catch(e){
+    console.error('Gmail sync error:', e);
+    if(statusEl) statusEl.textContent = 'Sync failed: '+e.message;
+    const cached = localStorage.getItem('cc-gmail-threads');
+    if(cached){ try { threads = [...JSON.parse(cached), ...threads]; renderThreads(); } catch(_){} }
+  }
+}
+
+// ── GOOGLE DRIVE SYNC ──
+function mimeToType(mime){
+  if(!mime) return 'File';
+  if(mime==='application/vnd.google-apps.document') return 'Doc';
+  if(mime==='application/vnd.google-apps.spreadsheet') return 'Sheet';
+  if(mime==='application/vnd.google-apps.presentation') return 'Slide';
+  if(mime==='application/pdf') return 'PDF';
+  if(mime.startsWith('image/')) return mime.split('/')[1].toUpperCase();
+  if(mime==='application/vnd.google-apps.folder') return 'Folder';
+  return 'File';
+}
+
+async function syncDrive(){
+  const token = getGoogleToken();
+  if(!token){ updateGoogleUI(false); return; }
+
+  const statusEl = document.getElementById('drive-sync-status');
+  if(statusEl) statusEl.textContent = 'Syncing…';
+
+  try {
+    const url = 'https://www.googleapis.com/drive/v3/files?pageSize=50&fields=files(id,name,mimeType,modifiedTime,owners,webViewLink)&orderBy=modifiedTime%20desc';
+    const resp = await fetch(url, { headers: { 'Authorization': 'Bearer '+token } });
+    if(!resp.ok){ handleGoogleAuthError(resp, 'drive'); throw new Error('Drive API '+resp.status); }
+    const data = await resp.json();
+
+    const driveItems = (data.files||[]).map(f => ({
+      id: f.id,
+      name: f.name,
+      type: mimeToType(f.mimeType),
+      cat: 'Reference',
+      modified: f.modifiedTime ? new Date(f.modifiedTime).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—',
+      owner: f.owners && f.owners[0] ? (f.owners[0].emailAddress||f.owners[0].displayName||'—') : '—',
+      url: f.webViewLink || 'https://drive.google.com/file/d/'+f.id+'/view'
+    }));
+
+    // Cache
+    localStorage.setItem('cc-drive-files', JSON.stringify(driveItems));
+
+    // Merge: Drive files first, then any locally added files not in Drive list
+    const driveIds = new Set(driveItems.map(f=>f.id));
+    const localOnly = driveFiles.filter(f=>!f.id||!driveIds.has(f.id));
+    driveFiles = [...driveItems, ...localOnly];
+    renderFiles();
+
+    const syncTime = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+    if(statusEl) statusEl.textContent = 'Last synced: '+syncTime;
+  } catch(e){
+    console.error('Drive sync error:', e);
+    if(statusEl) statusEl.textContent = 'Sync failed: '+e.message;
+    const cached = localStorage.getItem('cc-drive-files');
+    if(cached){ try { driveFiles = JSON.parse(cached); renderFiles(); } catch(_){} }
+  }
+}
+
+// ── SYNC ALL ──
+async function syncAll(){
+  const statusEl = document.getElementById('home-sync-status');
+  if(statusEl) statusEl.textContent = 'Syncing…';
+  try {
+    await notionSync();
+    const token = getGoogleToken();
+    if(token){
+      await Promise.all([syncGCal(), syncGmail(), syncDrive()]);
+    }
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+    if(statusEl) statusEl.textContent = 'Last full sync: '+timeStr;
+    localStorage.setItem('cc-last-sync-date', now.toISOString().slice(0,10));
+    const h = now.getHours();
+    localStorage.setItem('cc-last-sync-slot', h>=9&&h<12?'am':h>=17?'pm':'off');
+  } catch(e){
+    if(statusEl) statusEl.textContent = 'Sync error: '+e.message;
+  }
+}
+
+// ── TWICE-DAILY AUTO-SYNC ──
+function checkAutoSync(){
+  const now = new Date();
+  const h = now.getHours();
+  const slot = h>=9&&h<12 ? 'am' : h>=17 ? 'pm' : null;
+  if(!slot) return;
+  const today = now.toISOString().slice(0,10);
+  const lastDate = localStorage.getItem('cc-last-sync-date')||'';
+  const lastSlot = localStorage.getItem('cc-last-sync-slot')||'';
+  if(lastDate !== today || lastSlot !== slot){
+    syncAll();
+  }
+}
+
+// ── INIT GOOGLE ON PAGE LOAD ──
+(function initGoogle(){
+  // Load cached GCal events
+  const cachedGCal = localStorage.getItem('cc-gcal-events');
+  if(cachedGCal){ try { gcalEvents = JSON.parse(cachedGCal); } catch(_){} }
+
+  // Pre-fill client ID
+  const cidInput = document.getElementById('google-client-id-input');
+  if(cidInput) cidInput.value = getGoogleClientId();
+
+  const token = getGoogleToken();
+  updateGoogleUI(!!token);
+
+  // Restore last sync status on home page
+  const lastDate = localStorage.getItem('cc-last-sync-date');
+  const lastSlot = localStorage.getItem('cc-last-sync-slot');
+  if(lastDate && lastSlot){
+    const statusEl = document.getElementById('home-sync-status');
+    if(statusEl) statusEl.textContent = 'Last full sync: '+lastSlot.toUpperCase()+' slot on '+lastDate;
+  }
+
+  // Show connect bars always (so user knows the feature exists)
+  ['gcal','gmail','drive'].forEach(svc => {
+    const bar = document.getElementById(svc+'-connect-bar');
+    if(bar) bar.style.display = 'flex';
+  });
+
+  // Auto-sync check on load
+  checkAutoSync();
+  // Re-check every 30 minutes
+  setInterval(checkAutoSync, 1800000);
 })();
 
 </script>
