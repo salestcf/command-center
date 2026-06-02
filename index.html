@@ -1008,7 +1008,7 @@ function takeSnapshot(){
 }
 
 // ── THREADS / INBOX ──
-const threads=[
+let threads=JSON.parse(localStorage.getItem('cc-threads')||'null')||[
   {id:'19e844a8678d9ef2',sender:'eBay',subject:'Clean: The New Scie… available with no cost returns',snip:'Need to return it? No problem with free returns.',time:'Today 5:45 PM',unread:true},
   {id:'19e8448a5825fc7b',sender:'Pauly Lieber',subject:'prompt',snip:'No, it\'s not enough. That prompt builds her a task manager. You want her operating like a principal.',time:'Today 5:43 PM',unread:false},
   {id:'19e83f0c5cec2bed',sender:'formulary@thecosmeticformulary.com',subject:'new code — Sip & Formulate App',snip:'Anyone in the world can open that link — share freely, no login required.',time:'Today 4:07 PM',unread:false},
@@ -1020,6 +1020,9 @@ const threads=[
   {id:'19e74e1b3ffe0876',sender:'Johnson — Satin Trade',subject:'Re: Custom bottle + twist nozzle cap',snip:'Happy to invest a bottle mold for you — long-term business with brands globally.',time:'May 30',unread:false},
   {id:'19e83b849e16c4ae',sender:'formulary@thecosmeticformulary.com',subject:'Sip & Formulate — elevated prompt brief',snip:'Significantly elevated version of the prompt — tighter, more specific.',time:'Today 3:05 PM',unread:false},
 ];
+function saveThreads(){localStorage.setItem('cc-threads',JSON.stringify(threads));}
+function deleteThread(i,e){e.stopPropagation();threads.splice(i,1);saveThreads();renderThreads();}
+function archiveThread(i,e){e.stopPropagation();threads.splice(i,1);saveThreads();renderThreads();}
 let pendingReplies=JSON.parse(localStorage.getItem('cc-pending')||'null')||[
   {recipient:'Cecelia Munday — FSS',subject:'Carbomer 940 thread close',due:'2026-06-03',status:'Pending'},
   {recipient:'Mark Yang — Jiaxing',subject:'Bottle MOQ qty confirmation',due:'2026-06-04',status:'Pending'},
@@ -1028,7 +1031,16 @@ let pendingReplies=JSON.parse(localStorage.getItem('cc-pending')||'null')||[
 ];
 function savePR(){localStorage.setItem('cc-pending',JSON.stringify(pendingReplies));}
 function renderThreads(){
-  document.getElementById('thread-list').innerHTML=threads.map((t,i)=>`<div class="thread-row ${t.unread?'unread':''}" onclick="openThread(${i})"><div class="t-sender">${t.unread?'<span class="unread-dot"></span>':''}${escH(t.sender)}</div><div><div class="t-subject">${escH(t.subject)}</div><div class="t-snip">${escH(t.snip)}</div></div><div class="t-time">${t.time}</div></div>`).join('');
+  document.getElementById('thread-list').innerHTML=threads.length
+    ? threads.map((t,i)=>`<div class="thread-row ${t.unread?'unread':''}" onclick="openThread(${i})" style="position:relative">
+        <div class="t-sender">${t.unread?'<span class="unread-dot"></span>':''}${escH(t.sender)}</div>
+        <div style="flex:1;min-width:0"><div class="t-subject">${escH(t.subject)}</div><div class="t-snip">${escH(t.snip)}</div></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+          <div class="t-time">${t.time}</div>
+          <button class="ev-del" onclick="deleteThread(${i},event)" title="Remove from dashboard" style="font-size:10px;opacity:0.5">&#x2715;</button>
+        </div>
+      </div>`).join('')
+    : '<div style="padding:20px;text-align:center;font-size:11px;color:var(--t3)">Inbox cleared. Connect Gmail to load live threads.</div>';
   document.getElementById('sc-unread').textContent=threads.filter(t=>t.unread).length;
   document.getElementById('h-unread').textContent=threads.filter(t=>t.unread).length;
 }
@@ -1043,7 +1055,7 @@ function openThread(i){
 function closeThread(){document.getElementById('thread-panel').classList.remove('open');}
 function renderPR(){
   const sp={Pending:'p-gold',Sent:'p-mint','In Progress':'p-mint',Blocked:'p-red'};
-  document.getElementById('pr-tbody').innerHTML=pendingReplies.map(r=>`<tr><td>${escH(r.recipient)}</td><td>${escH(r.subject)}</td><td style="color:var(--gold)">${r.due}</td><td><span class="pill ${sp[r.status]||'p-dim'}">${r.status}</span></td></tr>`).join('');
+  document.getElementById('pr-tbody').innerHTML=pendingReplies.map((r,i)=>`<tr><td>${escH(r.recipient)}</td><td>${escH(r.subject)}</td><td style="color:var(--gold)">${r.due}</td><td><span class="pill ${sp[r.status]||'p-dim'}">${r.status}</span></td><td><button class="ev-del" onclick="deletePR(${i})" title="Remove">&#x2715;</button></td></tr>`).join('');
   document.getElementById('sc-pending').textContent=pendingReplies.filter(r=>r.status!=='Sent').length;
   document.getElementById('h-pending').textContent=pendingReplies.filter(r=>r.status!=='Sent').length;
 }
@@ -1053,6 +1065,7 @@ function savePendingReply(){
   pendingReplies.unshift(r);savePR();renderPR();closeModal('modal-pending');
   ['pr-recipient','pr-subject','pr-due'].forEach(id=>document.getElementById(id).value='');
 }
+function deletePR(i){pendingReplies.splice(i,1);savePR();renderPR();}
 renderThreads();renderPR();
 
 // ── TASKS ──
@@ -1469,24 +1482,50 @@ setInterval(renderDailyTracker,60000);
 setInterval(()=>location.reload(),3600000); // auto-refresh every 60 min
 
 // ── HOME PAGE ──
+let activityFeed=JSON.parse(localStorage.getItem('cc-activity')||'null')||[
+  {text:'Cecelia Munday confirmed Carbomer 940 equivalent',time:'Today, 2:33 PM',color:'var(--mint)'},
+  {text:'Alibaba Supplier Tracker updated by Katherine Fox',time:'Today, 2:21 PM',color:'var(--pink)'},
+  {text:'Jiaxing Group requested bottle MOQ quantity',time:'Today, 12:36 AM',color:'var(--gold)'},
+  {text:'Sip & Formulate app link shared by formulary team',time:'Today, 4:07 PM',color:'var(--pink)'},
+  {text:'Satin Trade confirmed mold investment for bottles',time:'May 30, 8:15 AM',color:'var(--mint)'},
+];
+function saveActivity(){localStorage.setItem('cc-activity',JSON.stringify(activityFeed));}
+function deleteActivity(i){activityFeed.splice(i,1);saveActivity();renderHome();}
+function addActivity(text){
+  const colors=['var(--mint)','var(--pink)','var(--gold)'];
+  const now=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  activityFeed.unshift({text,time:'Today, '+now,color:colors[activityFeed.length%3]});
+  saveActivity();renderHome();
+}
+
+let clientProjects=JSON.parse(localStorage.getItem('cc-clients')||'null')||[
+  {name:'Meredith',project:'HA Serum',p:60},
+  {name:'Molly Smith',project:'Shampoo & Cond.',p:75},
+  {name:'McKernan',project:'Product Order',p:40},
+];
+function saveClients(){localStorage.setItem('cc-clients',JSON.stringify(clientProjects));}
+function deleteClient(i){clientProjects.splice(i,1);saveClients();renderHome();}
+function addClientProject(){
+  const name=prompt('Client name:');if(!name)return;
+  const project=prompt('Project name:');if(!project)return;
+  const p=parseInt(prompt('Progress % (0-100):','0'))||0;
+  clientProjects.push({name,project,p:Math.min(100,Math.max(0,p))});
+  saveClients();renderHome();
+}
+
 function renderHome(){
   // Actions
   const urgent=tasks.filter(t=>t.status==='Urgent'||t.priority==='High'&&t.status!=='Done');
   document.getElementById('action-list').innerHTML=urgent.slice(0,6).map(t=>`<div class="action-item"><div class="action-dot" style="background:${t.status==='Urgent'?'var(--red)':'var(--gold)'}"></div><div style="flex:1"><div class="action-text">${escH(t.name)}</div><div class="action-meta">${escH(t.project)} · due ${t.due||'TBD'}</div></div><span class="pill ${t.status==='Urgent'?'p-red':'p-gold'} action-tag">${t.status}</span></div>`).join('')||'<div style="font-size:11px;color:var(--t3);padding:8px 0">No urgent items. You\'re on top of it.</div>';
   document.getElementById('action-count').textContent=urgent.length+' urgent';
   document.getElementById('h-urgent').textContent=urgent.length;
-  // Activity
-  const feed=[
-    {text:'Cecelia Munday confirmed Carbomer 940 equivalent',time:'Today, 2:33 PM',color:'var(--mint)'},
-    {text:'Alibaba Supplier Tracker updated by Katherine Fox',time:'Today, 2:21 PM',color:'var(--pink)'},
-    {text:'Jiaxing Group requested bottle MOQ quantity',time:'Today, 12:36 AM',color:'var(--gold)'},
-    {text:'Sip & Formulate app link shared by formulary team',time:'Today, 4:07 PM',color:'var(--pink)'},
-    {text:'Satin Trade confirmed mold investment for bottles',time:'May 30, 8:15 AM',color:'var(--mint)'},
-  ];
-  document.getElementById('activity-feed').innerHTML=feed.map(f=>`<div class="feed-item"><div class="feed-dot" style="background:${f.color}"></div><div class="feed-content"><div class="feed-title">${escH(f.text)}</div><div class="feed-time">${f.time}</div></div></div>`).join('');
+  // Activity feed
+  document.getElementById('activity-feed').innerHTML=(activityFeed.length
+    ? activityFeed.map((f,i)=>`<div class="feed-item" style="display:flex;align-items:flex-start;gap:8px"><div class="feed-dot" style="background:${f.color};margin-top:4px;flex-shrink:0"></div><div class="feed-content" style="flex:1"><div class="feed-title">${escH(f.text)}</div><div class="feed-time">${f.time}</div></div><button class="ev-del" onclick="deleteActivity(${i})" title="Remove" style="opacity:0.4;flex-shrink:0">&#x2715;</button></div>`)
+    : ['<div style="font-size:11px;color:var(--t3)">No activity logged yet.</div>']
+  ).join('')+`<div style="margin-top:10px"><button class="btn btn-sm" onclick="const t=prompt('Log activity:');if(t)addActivity(t)">+ Log Activity</button></div>`;
   // Clients
-  const clients=[{name:'Meredith',project:'HA Serum',p:60},{name:'Molly Smith',project:'Shampoo & Cond.',p:75},{name:'McKernan',project:'Product Order',p:40}];
-  document.getElementById('home-clients').innerHTML=clients.map(c=>`<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px"><div style="font-size:13px;font-weight:700;margin-bottom:3px">${escH(c.name)}</div><div style="font-size:10px;color:var(--pink);font-weight:600;margin-bottom:10px">${escH(c.project)}</div><div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:${c.p}%;background:linear-gradient(90deg,var(--pink),var(--mint));border-radius:3px"></div></div><div style="font-size:10px;color:var(--t3)">${c.p}% complete</div></div>`).join('');
+  document.getElementById('home-clients').innerHTML=clientProjects.map((c,i)=>`<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px;position:relative"><button class="ev-del" onclick="deleteClient(${i})" title="Remove" style="position:absolute;top:8px;right:8px;opacity:0.4">&#x2715;</button><div style="font-size:13px;font-weight:700;margin-bottom:3px;padding-right:16px">${escH(c.name)}</div><div style="font-size:10px;color:var(--pink);font-weight:600;margin-bottom:10px">${escH(c.project)}</div><div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:${c.p}%;background:linear-gradient(90deg,var(--pink),var(--mint));border-radius:3px"></div></div><div style="font-size:10px;color:var(--t3)">${c.p}% complete</div></div>`).join('')+`<div style="display:flex;align-items:center;justify-content:center;height:80px;background:var(--bg);border:1px dashed var(--border2);border-radius:var(--radius);cursor:pointer;font-size:11px;color:var(--t3)" onclick="addClientProject()">+ Add Client Project</div>`;
 }
 renderHome();
 </script>
