@@ -436,15 +436,10 @@ select option { background: var(--s1); }
   <nav class="hdr-nav">
     <button class="nav-btn active" onclick="showPage('home')">Home</button>
     <button class="nav-btn" onclick="showPage('tasks')">Tasks</button>
-    <button class="nav-btn" onclick="showPage('inbox')">Inbox</button>
-    <button class="nav-btn" onclick="showPage('alibaba')">Alibaba</button>
+    <button class="nav-btn" onclick="showPage('communications')">Communications</button>
     <button class="nav-btn" onclick="showPage('calendar')">Calendar</button>
-    <button class="nav-btn" onclick="showPage('contacts')">Contacts</button>
-    <button class="nav-btn" onclick="showPage('files')">Files</button>
-    <button class="nav-btn" onclick="showPage('inventory')">Inventory</button>
-    <button class="nav-btn" onclick="showPage('finance')">QuickBooks</button>
-    <button class="nav-btn mint-tab" onclick="showPage('links')">External Links</button>
-    <button class="nav-btn" onclick="showPage('notion')">Notion</button>
+    <button class="nav-btn" onclick="showPage('operations')">Operations</button>
+    <button class="nav-btn" onclick="showPage('workspace')">Workspace</button>
     <button class="nav-btn lexie-tab" onclick="showPage('lexie')">Lexie &amp; Emmie</button>
   </nav>
 
@@ -585,9 +580,16 @@ select option { background: var(--s1); }
 </div>
 </div>
 
-<!-- ══ INBOX ══ -->
-<div class="page" id="page-inbox">
+<!-- ══ COMMUNICATIONS ══ -->
+<div class="page" id="page-communications">
 <div class="page-inner">
+  <div style="display:flex;gap:1px;margin-bottom:18px">
+    <button class="cal-toggle-btn active" id="btn-comm-gmail" onclick="setCommView('gmail')">Gmail</button>
+    <button class="cal-toggle-btn" id="btn-comm-alibaba" onclick="setCommView('alibaba')">Alibaba</button>
+  </div>
+
+  <!-- Gmail sub-tab -->
+  <div id="comm-gmail">
   <div id="gmail-connect-bar" class="gcal-connect-bar" style="display:none">
     <div style="flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--mint)">Gmail</div><div style="font-size:12px;color:var(--t2)" id="gmail-bar-msg">Connect to load live Gmail threads.</div></div>
     <button class="btn btn-mint btn-sm" id="gmail-connect-btn" onclick="googleConnect()">Connect Google</button>
@@ -630,6 +632,49 @@ select option { background: var(--s1); }
       </div>
     </div>
   </div>
+  </div><!-- /comm-gmail -->
+
+  <!-- Alibaba sub-tab -->
+  <div id="comm-alibaba" style="display:none">
+  <div class="g5 scorecard" style="margin-bottom:14px">
+    <div class="score-item"><div class="sc-label">Need to Reply</div><div class="sc-val red" id="ali-need">0</div><div class="sc-sub">action required</div></div>
+    <div class="score-item"><div class="sc-label">Waiting on Supplier</div><div class="sc-val gold" id="ali-wait">0</div><div class="sc-sub">ball in their court</div></div>
+    <div class="score-item"><div class="sc-label">Follow-up Due</div><div class="sc-val pink" id="ali-due">0</div><div class="sc-sub">overdue or today</div></div>
+    <div class="score-item"><div class="sc-label">Active Threads</div><div class="sc-val mint" id="ali-active">0</div><div class="sc-sub">open conversations</div></div>
+    <div class="score-item"><div class="sc-label">Resolved</div><div class="sc-val" id="ali-resolved">0</div><div class="sc-sub">closed out</div></div>
+  </div>
+
+  <div class="task-controls" style="margin-bottom:12px">
+    <input type="text" id="ali-search" placeholder="Search supplier, subject, notes..." style="flex:1;max-width:260px" oninput="renderAlibaba()">
+    <select id="ali-filter-status" onchange="renderAlibaba()">
+      <option value="">All Statuses</option>
+      <option>Need to Reply</option>
+      <option>Waiting on Supplier</option>
+      <option>Sent — Awaiting Sample</option>
+      <option>Negotiating</option>
+      <option>Resolved</option>
+      <option>Archived</option>
+    </select>
+    <select id="ali-filter-cat" onchange="renderAlibaba()">
+      <option value="">All Categories</option>
+      <option>Raw Materials</option>
+      <option>Packaging</option>
+      <option>Equipment</option>
+      <option>Private Label</option>
+      <option>Other</option>
+    </select>
+    <button class="btn btn-pink" onclick="openAliModal()">+ Log Conversation</button>
+    <a href="https://message.alibaba.com" target="_blank" class="btn btn-sm" style="margin-left:auto">Open Alibaba ↗</a>
+  </div>
+
+  <div class="card" style="overflow:auto">
+    <table class="tbl" id="ali-table">
+      <thead><tr><th>Supplier</th><th>Company</th><th>Subject / Item</th><th>Category</th><th>Last Message</th><th>Follow-up</th><th>Status</th><th>Notes</th><th></th></tr></thead>
+      <tbody id="ali-tbody"></tbody>
+    </table>
+  </div>
+  </div><!-- /comm-alibaba -->
+
 </div>
 </div>
 <div class="thread-panel" id="thread-panel">
@@ -702,64 +747,7 @@ select option { background: var(--s1); }
 </div>
 </div>
 
-<!-- ══ ALIBABA ══ -->
-<div class="page" id="page-alibaba">
-<div class="page-inner">
-  <div class="g5 scorecard" style="margin-bottom:14px">
-    <div class="score-item"><div class="sc-label">Need to Reply</div><div class="sc-val red" id="ali-need">0</div><div class="sc-sub">action required</div></div>
-    <div class="score-item"><div class="sc-label">Waiting on Supplier</div><div class="sc-val gold" id="ali-wait">0</div><div class="sc-sub">ball in their court</div></div>
-    <div class="score-item"><div class="sc-label">Follow-up Due</div><div class="sc-val pink" id="ali-due">0</div><div class="sc-sub">overdue or today</div></div>
-    <div class="score-item"><div class="sc-label">Active Threads</div><div class="sc-val mint" id="ali-active">0</div><div class="sc-sub">open conversations</div></div>
-    <div class="score-item"><div class="sc-label">Resolved</div><div class="sc-val" id="ali-resolved">0</div><div class="sc-sub">closed out</div></div>
-  </div>
-
-  <div class="task-controls" style="margin-bottom:12px">
-    <input type="text" id="ali-search" placeholder="Search supplier, subject, notes..." style="flex:1;max-width:260px" oninput="renderAlibaba()">
-    <select id="ali-filter-status" onchange="renderAlibaba()">
-      <option value="">All Statuses</option>
-      <option>Need to Reply</option>
-      <option>Waiting on Supplier</option>
-      <option>Sent — Awaiting Sample</option>
-      <option>Negotiating</option>
-      <option>Resolved</option>
-      <option>Archived</option>
-    </select>
-    <select id="ali-filter-cat" onchange="renderAlibaba()">
-      <option value="">All Categories</option>
-      <option>Raw Materials</option>
-      <option>Packaging</option>
-      <option>Equipment</option>
-      <option>Private Label</option>
-      <option>Other</option>
-    </select>
-    <button class="btn btn-pink" onclick="openAliModal()">+ Log Conversation</button>
-    <a href="https://message.alibaba.com" target="_blank" class="btn btn-sm" style="margin-left:auto">Open Alibaba ↗</a>
-  </div>
-
-  <div class="card" style="overflow:auto">
-    <table class="tbl" id="ali-table">
-      <thead><tr><th>Supplier</th><th>Company</th><th>Subject / Item</th><th>Category</th><th>Last Message</th><th>Follow-up</th><th>Status</th><th>Notes</th><th></th></tr></thead>
-      <tbody id="ali-tbody"></tbody>
-    </table>
-  </div>
-</div>
-</div>
-
-<!-- ══ CONTACTS ══ -->
-<div class="page" id="page-contacts">
-<div class="page-inner">
-  <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center">
-    <input type="text" id="contact-search" placeholder="Search name, company, role..." oninput="renderContacts()" style="flex:1">
-    <select id="cf-company" onchange="renderContacts()"><option value="">All Companies</option></select>
-    <select id="cf-role" onchange="renderContacts()"><option value="">All Roles</option></select>
-    <button class="btn btn-pink" onclick="openModal('modal-contact')">+ Add</button>
-    <button class="btn" onclick="exportContactsCSV()">Export CSV</button>
-  </div>
-  <div class="card" style="overflow:auto">
-    <table class="tbl"><thead><tr><th>Name</th><th>Company</th><th>Role</th><th>Last Contact</th><th>Method</th><th>Notes</th></tr></thead><tbody id="contact-tbody"></tbody></table>
-  </div>
-</div>
-</div>
+<!-- contact-panel slide-out (outside .page divs) -->
 <div class="contact-panel" id="contact-panel">
   <div class="cp-head">
     <div><div class="cp-name" id="cp-name"></div><div class="cp-role" id="cp-role"></div></div>
@@ -778,50 +766,16 @@ select option { background: var(--s1); }
   </div>
 </div>
 
-<!-- ══ FILES ══ -->
-<div class="page" id="page-files">
+<!-- ══ OPERATIONS ══ -->
+<div class="page" id="page-operations">
 <div class="page-inner">
-  <div id="drive-connect-bar" class="gcal-connect-bar" style="display:none">
-    <div style="flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--mint)">Google Drive</div><div style="font-size:12px;color:var(--t2)" id="drive-bar-msg">Connect to load recent Drive files.</div></div>
-    <button class="btn btn-mint btn-sm" id="drive-connect-btn" onclick="googleConnect()">Connect Google</button>
-    <button class="btn btn-sm" id="drive-disconnect-btn" onclick="googleDisconnect()" style="display:none">Disconnect</button>
-    <span id="drive-bar-sync-status" class="gcal-sync-status"></span>
+  <div style="display:flex;gap:1px;margin-bottom:18px">
+    <button class="cal-toggle-btn active" id="btn-ops-inventory" onclick="setOpsView('inventory')">Inventory</button>
+    <button class="cal-toggle-btn" id="btn-ops-finance" onclick="setOpsView('finance')">QuickBooks</button>
   </div>
-  <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave()" ondrop="handleDrop(event)">
-    <input type="file" id="file-input" multiple style="display:none" onchange="handleFileSelect(event)">
-    <div class="dz-title">Drop files here or click to upload</div>
-    <div class="dz-sub">Files go directly to Google Drive — tag on upload</div>
-  </div>
-  <div id="upload-tag-form" style="display:none" class="card">
-    <div class="card-body" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <span id="upload-filename" style="font-size:12px;color:var(--t1);flex:1"></span>
-      <select id="upload-cat"><option>Contract</option><option>Template</option><option>Reference</option><option>Report</option><option>Correspondence</option><option>Other</option></select>
-      <button class="btn btn-mint" onclick="confirmUpload()">Upload to Drive</button>
-      <button class="btn" onclick="cancelUpload()">Cancel</button>
-    </div>
-  </div>
-  <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
-    <input type="text" id="file-search" placeholder="Search by name or tag..." oninput="renderFiles()" style="flex:1">
-    <select id="file-cat-filter" onchange="renderFiles()"><option value="">All Categories</option><option>Contract</option><option>Template</option><option>Reference</option><option>Report</option><option>Correspondence</option><option>Other</option></select>
-    <select id="file-acct-filter" onchange="renderFiles()">
-      <option value="">All Accounts</option>
-      <option>office@paulyinc.com</option>
-      <option>sales@thecosmeticformulary.com</option>
-      <option>tcfadmin.rashellklavinger@gmail.com</option>
-    </select>
-    <button class="btn btn-sm btn-mint" onclick="syncDrive()">↻ Sync Drive</button>
-    <span id="drive-sync-status" class="gcal-sync-status"></span>
-  </div>
-  <div class="card" style="overflow:auto">
-    <table class="tbl"><thead><tr><th>Name</th><th>Type</th><th>Category</th><th>Modified</th><th>Owner</th></tr></thead><tbody id="file-tbody"></tbody></table>
-  </div>
-</div>
-</div>
 
-<!-- ══ NOTES ══ -->
-<!-- ══ INVENTORY ══ -->
-<div class="page" id="page-inventory">
-<div class="page-inner">
+  <!-- Inventory sub-tab -->
+  <div id="ops-inventory">
   <div id="inflow-setup-banner" class="conn-banner">
     <div style="flex:1"><div class="conn-banner-label">InFlow — Connect Inventory</div><div class="conn-banner-sub">Enter your InFlow API key from <strong>Settings &rarr; API Access</strong> to sync live stock levels.</div></div>
     <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
@@ -887,12 +841,10 @@ select option { background: var(--s1); }
       </div>
     </div>
   </div>
-</div>
-</div>
+  </div><!-- /ops-inventory -->
 
-<!-- ══ QUICKBOOKS ══ -->
-<div class="page" id="page-finance">
-<div class="page-inner">
+  <!-- QuickBooks sub-tab -->
+  <div id="ops-finance" style="display:none">
   <div id="qb-setup-banner" class="conn-banner">
     <div style="flex:1"><div class="conn-banner-label">QuickBooks — Connect Finance</div><div class="conn-banner-sub">Enter your credentials from <strong>QuickBooks &rarr; Settings &rarr; Developer &rarr; API Keys</strong>.</div></div>
     <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
@@ -943,23 +895,75 @@ select option { background: var(--s1); }
       </div>
     </div>
   </div>
-</div>
-</div>
+  </div><!-- /ops-finance -->
 
-<!-- ══ EXTERNAL LINKS ══ -->
-<div class="page" id="page-links">
+</div>
+</div><!-- /page-operations -->
+
+<!-- ══ WORKSPACE ══ -->
+<div class="page" id="page-workspace">
 <div class="page-inner">
-  <div class="links-controls">
-    <input type="text" id="links-search" placeholder="Search links..." oninput="renderLinks()">
-    <select id="links-cat-filter" onchange="renderLinks()"><option value="">All Categories</option></select>
+  <div style="display:flex;gap:1px;margin-bottom:18px">
+    <button class="cal-toggle-btn active" id="btn-ws-files" onclick="setWorkspaceView('files')">Files</button>
+    <button class="cal-toggle-btn" id="btn-ws-contacts" onclick="setWorkspaceView('contacts')">Contacts</button>
+    <button class="cal-toggle-btn" id="btn-ws-notion" onclick="setWorkspaceView('notion')">Notion</button>
+    <button class="cal-toggle-btn" id="btn-ws-links" onclick="setWorkspaceView('links')">Links</button>
   </div>
-  <div class="card" id="links-container" style="overflow:auto"></div>
-</div>
-</div>
 
-<!-- ══ NOTION ══ -->
-<div class="page" id="page-notion">
-<div class="page-inner">
+  <!-- Files sub-tab -->
+  <div id="ws-files">
+  <div id="drive-connect-bar" class="gcal-connect-bar" style="display:none">
+    <div style="flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--mint)">Google Drive</div><div style="font-size:12px;color:var(--t2)" id="drive-bar-msg">Connect to load recent Drive files.</div></div>
+    <button class="btn btn-mint btn-sm" id="drive-connect-btn" onclick="googleConnect()">Connect Google</button>
+    <button class="btn btn-sm" id="drive-disconnect-btn" onclick="googleDisconnect()" style="display:none">Disconnect</button>
+    <span id="drive-bar-sync-status" class="gcal-sync-status"></span>
+  </div>
+  <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave()" ondrop="handleDrop(event)">
+    <input type="file" id="file-input" multiple style="display:none" onchange="handleFileSelect(event)">
+    <div class="dz-title">Drop files here or click to upload</div>
+    <div class="dz-sub">Files go directly to Google Drive — tag on upload</div>
+  </div>
+  <div id="upload-tag-form" style="display:none" class="card">
+    <div class="card-body" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span id="upload-filename" style="font-size:12px;color:var(--t1);flex:1"></span>
+      <select id="upload-cat"><option>Contract</option><option>Template</option><option>Reference</option><option>Report</option><option>Correspondence</option><option>Other</option></select>
+      <button class="btn btn-mint" onclick="confirmUpload()">Upload to Drive</button>
+      <button class="btn" onclick="cancelUpload()">Cancel</button>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
+    <input type="text" id="file-search" placeholder="Search by name or tag..." oninput="renderFiles()" style="flex:1">
+    <select id="file-cat-filter" onchange="renderFiles()"><option value="">All Categories</option><option>Contract</option><option>Template</option><option>Reference</option><option>Report</option><option>Correspondence</option><option>Other</option></select>
+    <select id="file-acct-filter" onchange="renderFiles()">
+      <option value="">All Accounts</option>
+      <option>office@paulyinc.com</option>
+      <option>sales@thecosmeticformulary.com</option>
+      <option>tcfadmin.rashellklavinger@gmail.com</option>
+    </select>
+    <button class="btn btn-sm btn-mint" onclick="syncDrive()">↻ Sync Drive</button>
+    <span id="drive-sync-status" class="gcal-sync-status"></span>
+  </div>
+  <div class="card" style="overflow:auto">
+    <table class="tbl"><thead><tr><th>Name</th><th>Type</th><th>Category</th><th>Modified</th><th>Owner</th></tr></thead><tbody id="file-tbody"></tbody></table>
+  </div>
+  </div><!-- /ws-files -->
+
+  <!-- Contacts sub-tab -->
+  <div id="ws-contacts" style="display:none">
+  <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center">
+    <input type="text" id="contact-search" placeholder="Search name, company, role..." oninput="renderContacts()" style="flex:1">
+    <select id="cf-company" onchange="renderContacts()"><option value="">All Companies</option></select>
+    <select id="cf-role" onchange="renderContacts()"><option value="">All Roles</option></select>
+    <button class="btn btn-pink" onclick="openModal('modal-contact')">+ Add</button>
+    <button class="btn" onclick="exportContactsCSV()">Export CSV</button>
+  </div>
+  <div class="card" style="overflow:auto">
+    <table class="tbl"><thead><tr><th>Name</th><th>Company</th><th>Role</th><th>Last Contact</th><th>Method</th><th>Notes</th></tr></thead><tbody id="contact-tbody"></tbody></table>
+  </div>
+  </div><!-- /ws-contacts -->
+
+  <!-- Notion sub-tab -->
+  <div id="ws-notion" style="display:none">
   <div class="glw">
     <div style="flex:1">
       <div class="card" style="margin-bottom:14px">
@@ -1019,8 +1023,19 @@ select option { background: var(--s1); }
       </div>
     </div>
   </div>
+  </div><!-- /ws-notion -->
+
+  <!-- Links sub-tab -->
+  <div id="ws-links" style="display:none">
+  <div class="links-controls">
+    <input type="text" id="links-search" placeholder="Search links..." oninput="renderLinks()">
+    <select id="links-cat-filter" onchange="renderLinks()"><option value="">All Categories</option></select>
+  </div>
+  <div class="card" id="links-container" style="overflow:auto"></div>
+  </div><!-- /ws-links -->
+
 </div>
-</div>
+</div><!-- /page-workspace -->
 
 <!-- ══ LEXIE & EMMIE ══ -->
 <div class="page" id="page-lexie">
@@ -1152,6 +1167,26 @@ function showPage(id){
   closeThread(); closeContactPanel();
 }
 
+// ── SUB-TAB TOGGLES ──
+function setCommView(v){
+  document.getElementById('comm-gmail').style.display=v==='gmail'?'block':'none';
+  document.getElementById('comm-alibaba').style.display=v==='alibaba'?'block':'none';
+  document.getElementById('btn-comm-gmail').classList.toggle('active',v==='gmail');
+  document.getElementById('btn-comm-alibaba').classList.toggle('active',v==='alibaba');
+}
+function setOpsView(v){
+  document.getElementById('ops-inventory').style.display=v==='inventory'?'block':'none';
+  document.getElementById('ops-finance').style.display=v==='finance'?'block':'none';
+  document.getElementById('btn-ops-inventory').classList.toggle('active',v==='inventory');
+  document.getElementById('btn-ops-finance').classList.toggle('active',v==='finance');
+}
+function setWorkspaceView(v){
+  ['files','contacts','notion','links'].forEach(t=>{
+    document.getElementById('ws-'+t).style.display=v===t?'block':'none';
+    document.getElementById('btn-ws-'+t).classList.toggle('active',v===t);
+  });
+}
+
 // ── MODALS ──
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
@@ -1167,10 +1202,10 @@ function globalSearch(q){
   if(!q||q.length<2){box.classList.remove('open');return;}
   const ql=q.toLowerCase(); const results=[];
   tasks.forEach(t=>{if((t.name+t.notes).toLowerCase().includes(ql)) results.push({label:t.name,meta:'Task — '+t.project,action:"showPage('tasks')"});});
-  contacts.forEach(c=>{if((c.name+c.company).toLowerCase().includes(ql)) results.push({label:c.name,meta:'Contact — '+c.company,action:"showPage('contacts')"});});
+  contacts.forEach(c=>{if((c.name+c.company).toLowerCase().includes(ql)) results.push({label:c.name,meta:'Contact — '+c.company,action:"showPage('workspace');setWorkspaceView('contacts')"});});
   notes.forEach(n=>{if((n.title+n.body).toLowerCase().includes(ql)) results.push({label:n.title,meta:'Note — '+n.cat,action:"openNote("+n.id+");showPage('tasks')"});});
-  driveFiles.forEach(f=>{if(f.name.toLowerCase().includes(ql)) results.push({label:f.name,meta:'File — '+f.type,action:"showPage('files')"});});
-  externalLinks.forEach(l=>{if((l.title+l.user).toLowerCase().includes(ql)) results.push({label:l.title,meta:'Link — '+l.cat,action:"showPage('links')"});});
+  driveFiles.forEach(f=>{if(f.name.toLowerCase().includes(ql)) results.push({label:f.name,meta:'File — '+f.type,action:"showPage('workspace')"});});
+  externalLinks.forEach(l=>{if((l.title+l.user).toLowerCase().includes(ql)) results.push({label:l.title,meta:'Link — '+l.cat,action:"showPage('workspace');setWorkspaceView('links')"});});
   box.innerHTML=results.slice(0,10).map(r=>`<div class="sr-item" onclick="${r.action};closeSearch()"><div class="sr-label">${escH(r.label)}</div><div class="sr-meta">${escH(r.meta)}</div></div>`).join('')||'<div class="sr-item"><div class="sr-meta">No results found</div></div>';
   box.classList.add('open');
 }
@@ -1938,7 +1973,7 @@ function updateNotionSummary(){
         <span style="font-size:11px;flex:1">${escH(t.title)}</span>
         ${t.due?`<span style="font-size:9px;color:var(--t3)">${t.due}</span>`:''}
       </div>
-    `).join('') + (open.length>5?`<div style="margin-top:6px;font-size:10px;color:var(--t3)">+${open.length-5} more — <a href="#" onclick="showPage('notion');return false" style="color:var(--pink)">View all</a></div>`:'');
+    `).join('') + (open.length>5?`<div style="margin-top:6px;font-size:10px;color:var(--t3)">+${open.length-5} more — <a href="#" onclick="showPage('workspace');setWorkspaceView('notion');return false" style="color:var(--pink)">View all</a></div>`:'');
   }
 }
 
@@ -2155,7 +2190,7 @@ function googleConnect(){
     return !a || !a.connected;
   });
   if(unconnected){ connectAccount(unconnected); }
-  else { showPage('notion'); }
+  else { showPage('workspace'); setWorkspaceView('notion'); }
 }
 
 function disconnectAccount(email){
