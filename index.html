@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Command Center — Rashell Klavinger</title>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <style>
@@ -421,6 +424,11 @@ select option { background: var(--s1); }
 </head>
 <body>
 
+<!-- JS error bar - hidden unless error occurs -->
+<div id="js-error-bar" style="display:none;background:#c03060;color:#fff;font-size:11px;padding:8px 16px;align-items:center;gap:10px;z-index:9999;position:fixed;top:0;left:0;right:0">
+  <span></span>
+  <button onclick="this.parentElement.style.display='none'" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:2px 8px;border-radius:4px;cursor:pointer;margin-left:auto">✕</button>
+</div>
 <header class="hdr">
   <div class="hdr-brand">
     <span>Command Center</span>
@@ -1131,6 +1139,13 @@ select option { background: var(--s1); }
 <div class="modal-overlay" id="modal-le-comp"><div class="modal"><div class="modal-head"><h3>Add Competitor / Inspiration</h3><button class="close-btn" onclick="closeModal('modal-le-comp')">&#x2715;</button></div><div class="modal-body"><div class="form-row"><label class="form-label">Brand Name</label><input type="text" id="le-comp-name"></div><div class="form-row"><label class="form-label">URL</label><input type="url" id="le-comp-url"></div><div class="form-row"><label class="form-label">Notes</label><textarea id="le-comp-notes" rows="2"></textarea></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" onclick="closeModal('modal-le-comp')">Cancel</button><button class="btn btn-mint" onclick="saveLEComp()">Save</button></div></div></div></div>
 
 <script>
+// ── GLOBAL ERROR HANDLER ──
+window.onerror = function(msg, src, line, col, err){
+  const bar = document.getElementById('js-error-bar');
+  if(bar){ bar.style.display='flex'; bar.querySelector('span').textContent='JS Error (line '+line+'): '+msg; }
+  console.error('Global error:', msg, 'line:', line, err);
+  return false;
+};
 // ── CLOCK ──
 function tick(){
   const n=new Date();
