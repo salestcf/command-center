@@ -1566,7 +1566,7 @@ function renderAlibaba(){
   const sp={'Need to Reply':'p-red','Waiting on Supplier':'p-gold','Sent — Awaiting Sample':'p-mint','Negotiating':'p-gold','Resolved':'p-dim','Archived':'p-dim'};
   document.getElementById('ali-tbody').innerHTML=list.length?list.map(a=>{
     const overdue=a.followup&&a.followup<=today&&!['Resolved','Archived'].includes(a.status);
-    return`<tr onclick="openAliModal(${a.id})" style="cursor:pointer" onmouseenter="this.style.background='var(--s2)'" onmouseleave="this.style.background=''"
+    return`<tr onclick="openAliModal(${a.id})" style="cursor:pointer" onmouseenter="this.style.background='var(--s2)'" onmouseleave="this.style.background=''">
       <td style="font-weight:600">${escH(a.supplier)}${a.url?` <a href="${escH(a.url)}" target="_blank" style="color:var(--pink);font-size:10px">↗</a>`:''}</td>
       <td style="color:var(--t3)">${escH(a.company)}</td>
       <td style="max-width:200px">${escH(a.subject)}</td>
