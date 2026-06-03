@@ -444,7 +444,6 @@ select option { background: var(--s1); }
   <nav class="hdr-nav">
     <button class="nav-btn active" onclick="showPage('home')">Home</button>
     <button class="nav-btn" onclick="showPage('tasks')">Tasks</button>
-    <button class="nav-btn" onclick="showPage('inbox')">Inbox</button>
     <button class="nav-btn" onclick="showPage('alibaba')">Alibaba</button>
     <button class="nav-btn" onclick="showPage('calendar')">Calendar</button>
     <button class="nav-btn" onclick="showPage('contacts')">Contacts</button>
@@ -549,6 +548,23 @@ select option { background: var(--s1); }
 <!-- ══ TASKS ══ -->
 <div class="page" id="page-tasks">
 <div class="page-inner">
+
+  <!-- Gmail → Tasks scan panel -->
+  <div id="gmail-tasks-bar" class="conn-bar" style="margin-bottom:12px">
+    <div class="conn-indicator"></div>
+    <span style="font-size:11px;color:var(--mint);font-weight:700;letter-spacing:0.8px;text-transform:uppercase">Gmail → Tasks</span>
+    <span style="font-size:11px;color:var(--t2)" id="gmail-tasks-acct-label">Scan your inbox for action items</span>
+    <span style="margin-left:auto;font-size:10px;color:var(--t3)" id="gmail-tasks-last"></span>
+    <button class="btn btn-sm btn-mint" onclick="scanEmailsForTasks()">Scan Emails</button>
+    <a href="https://mail.google.com" target="_blank" class="btn btn-sm">Open Gmail ↗</a>
+  </div>
+  <div id="gmail-task-suggestions" style="display:none;margin-bottom:14px">
+    <div class="card">
+      <div class="card-head"><h3>Suggested Tasks from Emails</h3><div class="ch-r"><button class="btn btn-sm" onclick="document.getElementById('gmail-task-suggestions').style.display='none'">Dismiss All</button><button class="btn btn-sm btn-mint" onclick="addAllSuggestedTasks()">Add All</button></div></div>
+      <div id="gmail-task-suggestion-list" style="padding:4px 0"></div>
+    </div>
+  </div>
+
   <div class="task-controls">
     <select id="f-project" onchange="renderTasks()"><option value="">All Projects</option></select>
     <select id="f-cat" onchange="renderTasks()"><option value="">All Categories</option><option>Admin</option><option>Scheduling</option><option>Research</option><option>Procurement</option><option>Communications</option><option>Other</option></select>
@@ -1344,6 +1360,107 @@ function deleteTask(id){tasks=tasks.filter(t=>t.id!==id);saveTasks();renderTasks
 function editTask(id){const t=tasks.find(x=>x.id===id);if(!t)return;['t-name','t-project','t-cat','t-status','t-priority','t-due','t-notes'].forEach((fid,i)=>{const keys=['name','project','cat','status','priority','due','notes'];document.getElementById(fid).value=t[keys[i]]||'';});tasks=tasks.filter(x=>x.id!==id);saveTasks();openModal('modal-task');}
 function saveTask(){const name=document.getElementById('t-name').value.trim();if(!name)return;tasks.unshift({id:nextTaskId++,name,project:document.getElementById('t-project').value,cat:document.getElementById('t-cat').value,status:document.getElementById('t-status').value,priority:document.getElementById('t-priority').value,due:document.getElementById('t-due').value,notes:document.getElementById('t-notes').value});saveTasks();renderTasks();closeModal('modal-task');['t-name','t-project','t-due','t-notes'].forEach(id=>document.getElementById(id).value='');}
 function exportTasksCSV(){const h=['Task','Project','Category','Status','Priority','Due','Notes'];const rows=tasks.map(t=>[t.name,t.project,t.cat,t.status,t.priority,t.due,t.notes].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(','));download('tasks.csv',[h.join(','),...rows].join('\n'),'text/csv');}
+
+// ── GMAIL → TASKS SCAN ──
+let _gmailTaskSuggestions=[];
+async function scanEmailsForTasks(){
+  const accounts=getAccountTokens();
+  const lastEl=document.getElementById('gmail-tasks-last');
+  const lblEl=document.getElementById('gmail-tasks-acct-label');
+  if(!accounts.length){
+    // Show connect prompt — reuse existing Google connect flow
+    lastEl.textContent='';
+    lblEl.textContent='Connect Google first (Settings → Google Accounts)';
+    alert('Please connect a Google account first. Go to Settings → Google Accounts.');
+    return;
+  }
+  lastEl.textContent='Scanning…';
+  lblEl.textContent=accounts.map(a=>a.email).join(', ');
+  // Action-item signal words
+  const signals=[/\bplease\s+(reply|respond|confirm|review|send|update|check|complete|follow.?up|approve|sign|schedule)\b/i,/\baction\s+required\b/i,/\bfollow.?up\b/i,/\bcan you\b/i,/\bdo you\b/i,/\bneed you to\b/i,/\breminder\b/i,/\bdeadline\b/i,/\bdue\s+(by|date|on)\b/i,/\basap\b/i,/\burgent\b/i,/\bwaiting\s+on\s+you\b/i,/\bplease\s+let\s+me\s+know\b/i,/\byour\s+approval\b/i,/\bsample\s+request\b/i,/\bquote\s+request\b/i,/\bpurchase\s+order\b/i,/\binvoice\s+attached\b/i,/\bshipment\b/i];
+  const suggestions=[];
+  for(const acc of accounts){
+    try{
+      // Fetch recent inbox threads (up to 30)
+      const r=await fetch('https://www.googleapis.com/gmail/v1/users/me/threads?maxResults=30&labelIds=INBOX',{headers:{'Authorization':'Bearer '+acc.token}});
+      if(!r.ok){handleGoogleAuthError(r,'gmail',acc.email);continue;}
+      const data=await r.json();
+      const threadIds=(data.threads||[]).map(t=>t.id);
+      // Fetch snippets + metadata for each
+      const metas=await Promise.all(threadIds.map(async id=>{
+        const mr=await fetch(`https://www.googleapis.com/gmail/v1/users/me/threads/${id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`,{headers:{'Authorization':'Bearer '+acc.token}});
+        if(!mr.ok)return null;return mr.json();
+      }));
+      for(const t of metas.filter(Boolean)){
+        const msgs=t.messages||[];
+        const latest=msgs[msgs.length-1]||{};
+        const headers=(latest.payload&&latest.payload.headers)||[];
+        const getH=n=>(headers.find(h=>h.name.toLowerCase()===n.toLowerCase())||{}).value||'';
+        const subject=getH('Subject')||'(no subject)';
+        const from=getH('From')||'';
+        const snippet=t.snippet||'';
+        const text=subject+' '+snippet;
+        const matched=signals.some(re=>re.test(text));
+        if(matched){
+          const senderName=from.replace(/<[^>]+>/,'').replace(/"/g,'').trim()||from;
+          suggestions.push({threadId:t.id,account:acc.email,subject,from:senderName,snippet:snippet.slice(0,120),taskName:'Reply: '+subject.slice(0,80),cat:'Communications',priority:'Medium'});
+        }
+      }
+    }catch(e){console.warn('Gmail scan error for',acc.email,e);}
+  }
+  _gmailTaskSuggestions=[...suggestions];
+  lastEl.textContent='Scanned '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  renderTaskSuggestions();
+}
+function renderTaskSuggestions(){
+  const box=document.getElementById('gmail-task-suggestions');
+  const list=document.getElementById('gmail-task-suggestion-list');
+  if(!_gmailTaskSuggestions.length){box.style.display='none';alert('No action-item emails found in your recent inbox.');return;}
+  box.style.display='block';
+  list.innerHTML=_gmailTaskSuggestions.map((s,i)=>`
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border)">
+      <input type="checkbox" id="sug-chk-${i}" checked style="margin-top:3px;flex-shrink:0">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="text" id="sug-name-${i}" value="${escH(s.taskName)}" style="flex:1;min-width:200px;font-size:12px;font-weight:500">
+          <select id="sug-pri-${i}" style="font-size:11px;padding:3px 6px;border-radius:5px;border:1px solid var(--border);background:var(--s2);color:var(--t1)">
+            <option${s.priority==='High'?' selected':''}>High</option>
+            <option${s.priority==='Medium'?' selected':''}>Medium</option>
+            <option${s.priority==='Low'?' selected':''}>Low</option>
+          </select>
+          <input type="date" id="sug-due-${i}" style="font-size:11px;padding:3px 6px;border-radius:5px;border:1px solid var(--border);background:var(--s2);color:var(--t1)">
+        </div>
+        <div style="font-size:10px;color:var(--t3);margin-top:3px"><strong>${escH(s.from)}</strong> · ${escH(s.account)} · ${escH(s.snippet)}</div>
+      </div>
+      <button class="btn btn-sm btn-mint" style="flex-shrink:0;font-size:10px" onclick="addSingleSuggestion(${i})">+ Add</button>
+      <button class="ev-del" style="flex-shrink:0" onclick="_gmailTaskSuggestions.splice(${i},1);renderTaskSuggestions()">&#x2715;</button>
+    </div>`).join('');
+}
+function addSingleSuggestion(i){
+  const s=_gmailTaskSuggestions[i];if(!s)return;
+  const name=document.getElementById('sug-name-'+i).value.trim()||s.taskName;
+  const pri=document.getElementById('sug-pri-'+i).value;
+  const due=document.getElementById('sug-due-'+i).value;
+  tasks.unshift({id:nextTaskId++,name,project:'',cat:s.cat,status:'To Do',priority:pri,due,notes:'From: '+s.from+'\n'+s.snippet});
+  saveTasks();renderTasks();
+  _gmailTaskSuggestions.splice(i,1);renderTaskSuggestions();
+}
+function addAllSuggestedTasks(){
+  _gmailTaskSuggestions.forEach((s,i)=>{
+    const nameEl=document.getElementById('sug-name-'+i);
+    const priEl=document.getElementById('sug-pri-'+i);
+    const dueEl=document.getElementById('sug-due-'+i);
+    const chk=document.getElementById('sug-chk-'+i);
+    if(chk&&!chk.checked)return;
+    const name=(nameEl?nameEl.value.trim():'')||s.taskName;
+    const pri=priEl?priEl.value:s.priority;
+    const due=dueEl?dueEl.value:'';
+    tasks.unshift({id:nextTaskId++,name,project:'',cat:s.cat,status:'To Do',priority:pri,due,notes:'From: '+s.from+'\n'+s.snippet});
+  });
+  saveTasks();renderTasks();
+  _gmailTaskSuggestions=[];
+  document.getElementById('gmail-task-suggestions').style.display='none';
+}
 renderTasks();
 
 // ── CALENDAR ──
