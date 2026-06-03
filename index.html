@@ -843,7 +843,8 @@ select option { background: var(--s1); }
     <span style="font-size:11px;color:var(--mint);font-weight:700;letter-spacing:0.8px;text-transform:uppercase">Connected to InFlow</span>
     <span id="inflow-org-label" style="font-size:11px;color:var(--t2)"></span>
     <span style="margin-left:auto;font-size:10px;color:var(--t3)" id="inflow-last-sync"></span>
-    <button class="btn btn-sm" onclick="syncInFlow()">Sync</button>
+    <label class="btn btn-mint" style="cursor:pointer;font-size:11px;padding:4px 10px" title="Export products CSV from InFlow → Reports → Products, then import here">⬆ Import CSV<input type="file" accept=".csv" style="display:none" onchange="importInflowCSV(this)"></label>
+    <button class="btn btn-sm" onclick="syncInFlow()">Try API Sync</button>
     <button class="btn btn-sm" onclick="disconnectInFlow()">Disconnect</button>
   </div>
   <div class="g5 scorecard" style="margin-bottom:14px">
@@ -1580,6 +1581,52 @@ async function syncInFlow(){
     const bar=document.getElementById('js-error-bar');
     if(bar){bar.style.display='flex';bar.querySelector('span').textContent='InFlow sync error: '+err.message.slice(0,120);}
   }
+}
+function importInflowCSV(input){
+  const file=input.files[0];if(!file)return;
+  const syncEl=document.getElementById('inflow-last-sync');
+  syncEl.textContent='Reading CSV…';
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const lines=e.target.result.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+      // Parse CSV header row (handles quoted fields)
+      function parseCSVRow(row){const res=[];let cur='',inq=false;for(let i=0;i<row.length;i++){const c=row[i];if(c==='"'){if(inq&&row[i+1]==='"'){cur+='"';i++;}else inq=!inq;}else if(c===','&&!inq){res.push(cur.trim());cur='';}else cur+=c;}res.push(cur.trim());return res;}
+      const header=parseCSVRow(lines[0]).map(h=>h.toLowerCase().replace(/[^a-z0-9]/g,''));
+      // Map InFlow CSV column names to our fields
+      // InFlow typical headers: Name, SKU, Category, On Hand, Reorder Point, Unit Cost, Default Location
+      const col=n=>{
+        const aliases={
+          name:['name','productname','product'],
+          sku:['sku','code','productcode','itemnumber'],
+          cat:['category','categoryname','type','producttype'],
+          qty:['onhand','quantityonhand','qty','quantity','stock','stockonhand'],
+          reorder:['reorderpoint','reorderlevel','reorder','reorderqty','minimumstock'],
+          cost:['unitcost','cost','price','unitprice'],
+          location:['defaultlocation','location','bin','warehouse','storagelocation']
+        };
+        for(const a of(aliases[n]||[n])){const i=header.indexOf(a);if(i>=0)return i;}
+        return -1;
+      };
+      const g=(row,n)=>{const i=col(n);return i>=0?(row[i]||''):'';};
+      const mapped=lines.slice(1).filter(l=>l.trim()).map((l,idx)=>{
+        const row=parseCSVRow(l);
+        const name=g(row,'name');if(!name)return null;
+        const qty=parseFloat(g(row,'qty'))||0;
+        const reorder=parseFloat(g(row,'reorder'))||0;
+        const rawCost=g(row,'cost');
+        const cost=rawCost?(rawCost.startsWith('$')?rawCost:'$'+parseFloat(rawCost).toFixed(2)):'';
+        const status=qty===0?'out':qty<=reorder?'low':'ok';
+        return{id:'CSV-'+idx,name,sku:g(row,'sku'),cat:g(row,'cat')||'Other',qty,reorder,cost,location:g(row,'location'),status};
+      }).filter(Boolean);
+      if(!mapped.length){syncEl.textContent='No products found in CSV — check column names';return;}
+      inventory=mapped;nextInvId=Date.now();
+      saveInventory();renderInventory();renderLowStock();renderOrders();
+      syncEl.textContent='Imported ('+mapped.length+' products) from CSV '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+      input.value='';// reset file input
+    }catch(err){syncEl.textContent='CSV import failed: '+err.message.slice(0,80);console.error(err);}
+  };
+  reader.readAsText(file);
 }
 function renderInventory(){
   const q=(document.getElementById('inv-search').value||'').toLowerCase(),fc=document.getElementById('inv-filter-cat').value,fs=document.getElementById('inv-filter-status').value;
