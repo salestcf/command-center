@@ -1507,13 +1507,29 @@ async function syncInFlow(){
   if(!key){alert('No InFlow API key found. Please reconnect.');return;}
   const syncEl=document.getElementById('inflow-last-sync');
   syncEl.textContent='Syncing…';
-  const PROXY='https://corsproxy.io/?';
   const BASE='https://api.inflowinventory.com/v2';
   const headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'};
+  // Try proxies in order until one works
+  const PROXIES=[
+    url=>url,                                                          // direct (works if InFlow allows CORS)
+    url=>'https://api.allorigins.win/raw?url='+encodeURIComponent(url),
+    url=>'https://corsproxy.io/?'+url,                                 // no encoding
+    url=>'https://corsproxy.io/?'+encodeURIComponent(url),
+  ];
+  async function infetch(path){
+    let lastErr;
+    for(const p of PROXIES){
+      try{
+        const r=await fetch(p(BASE+path),{headers});
+        if(r.ok) return r;
+        if(r.status===401||r.status===403) throw new Error('Auth error '+r.status+' — check API key');
+      }catch(e){lastErr=e;}
+    }
+    throw lastErr||new Error('All proxies failed for '+path);
+  }
   try{
     // Fetch products list (up to 500)
-    const r1=await fetch(PROXY+encodeURIComponent(BASE+'/products?pageSize=500'),{headers});
-    if(!r1.ok){const t=await r1.text();throw new Error('Products fetch failed ('+r1.status+'): '+t.slice(0,200));}
+    const r1=await infetch('/products?pageSize=500');
     const d1=await r1.json();
     // InFlow returns { value: [...] } or directly an array
     const products=Array.isArray(d1)?d1:(d1.value||d1.products||d1.data||[]);
@@ -1522,7 +1538,7 @@ async function syncInFlow(){
     // Try to fetch stock levels in one call
     let stockMap={};
     try{
-      const r2=await fetch(PROXY+encodeURIComponent(BASE+'/products/stock?pageSize=500'),{headers});
+      const r2=await infetch('/products/stock?pageSize=500');
       if(r2.ok){
         const d2=await r2.json();
         const stocks=Array.isArray(d2)?d2:(d2.value||d2.products||d2.data||[]);
