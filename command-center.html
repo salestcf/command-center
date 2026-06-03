@@ -868,7 +868,7 @@ select option { background: var(--s1); }
     <span style="font-size:11px;color:var(--mint);font-weight:700;letter-spacing:0.8px;text-transform:uppercase">Connected to InFlow</span>
     <span id="inflow-org-label" style="font-size:11px;color:var(--t2)"></span>
     <span style="margin-left:auto;font-size:10px;color:var(--t3)" id="inflow-last-sync"></span>
-    <label class="btn btn-mint" style="cursor:pointer;font-size:11px;padding:4px 10px" title="Export products CSV from InFlow → Reports → Products, then import here">⬆ Import CSV<input type="file" accept=".csv" style="display:none" onchange="importInflowCSV(this)"></label>
+    <label class="btn btn-mint" style="cursor:pointer;font-size:11px;padding:4px 10px" title="For stock quantities: InFlow → Reports → Stock → Stock Summary → Export CSV. For product list only: Reports → Products → Export CSV.">⬆ Import CSV<input type="file" accept=".csv" style="display:none" onchange="importInflowCSV(this)"></label>
     <button class="btn btn-sm" onclick="syncInFlow()">Try API Sync</button>
     <button class="btn btn-sm" onclick="disconnectInFlow()">Disconnect</button>
   </div>
@@ -1723,13 +1723,13 @@ function importInflowCSV(input){
       // InFlow typical headers: Name, SKU, Category, On Hand, Reorder Point, Unit Cost, Default Location
       const col=n=>{
         const aliases={
-          name:['name','productname','product'],
-          sku:['sku','code','productcode','itemnumber'],
-          cat:['category','categoryname','type','producttype'],
-          qty:['onhand','quantityonhand','qty','quantity','stock','stockonhand'],
-          reorder:['reorderpoint','reorderlevel','reorder','reorderqty','minimumstock'],
-          cost:['unitcost','cost','price','unitprice'],
-          location:['defaultlocation','location','bin','warehouse','storagelocation']
+          name:['name','productname','product','itemname','partname'],
+          sku:['sku','code','productcode','itemnumber','partnumber','itemcode'],
+          cat:['category','categoryname','type','producttype','itemtype','itemcategory'],
+          qty:['onhand','quantityonhand','qtyonhand','totalqty','totalstock','availableqty','available','qty','quantity','stock','stockonhand','instock','currentstock','currentqty','stocklevel','totalavailable','quantityavailable'],
+          reorder:['reorderpoint','reorderlevel','reorder','reorderqty','minimumstock','minstock','minqty','reorderquantity'],
+          cost:['unitcost','cost','price','unitprice','defaultunitprice','averagecost','purchasecost'],
+          location:['defaultlocation','location','bin','warehouse','storagelocation','defaultbin','primarylocation']
         };
         for(const a of(aliases[n]||[n])){const i=header.indexOf(a);if(i>=0)return i;}
         return -1;
@@ -1746,9 +1746,10 @@ function importInflowCSV(input){
         return{id:'CSV-'+idx,name,sku:g(row,'sku'),cat:g(row,'cat')||'Other',qty,reorder,cost,location:g(row,'location'),status};
       }).filter(Boolean);
       if(!mapped.length){syncEl.textContent='No products found in CSV — check column names';return;}
+      const hasQty=col('qty')>=0;
       inventory=mapped;nextInvId=Date.now();
       saveInventory();renderInventory();renderLowStock();renderOrders();
-      syncEl.textContent='Imported ('+mapped.length+' products) from CSV '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+      syncEl.textContent='Imported ('+mapped.length+' products)'+(hasQty?'':' ⚠ No qty column found — use Stock Summary report for quantities')+' '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
       input.value='';// reset file input
     }catch(err){syncEl.textContent='CSV import failed: '+err.message.slice(0,80);console.error(err);}
   };
