@@ -1500,9 +1500,71 @@ let orders=JSON.parse(localStorage.getItem('cc-orders')||'null')||[];
 let nextOrderId=orders.length?Math.max(...orders.map(o=>o.id))+1:1;
 function saveInventory(){localStorage.setItem('cc-inventory',JSON.stringify(inventory));}
 function saveOrders(){localStorage.setItem('cc-orders',JSON.stringify(orders));}
-function connectInFlow(){const key=document.getElementById('inflow-api-key-input').value.trim();if(!key){alert('Enter your InFlow API key.');return;}localStorage.setItem('inflow-key',key);inflowConnected=true;document.getElementById('inflow-setup-banner').style.display='none';document.getElementById('inflow-connected-bar').style.display='flex';document.getElementById('inflow-org-label').textContent='The Cosmetic Formulary';document.getElementById('inflow-last-sync').textContent='Synced '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});renderInventory();renderLowStock();renderOrders();}
+function connectInFlow(){const key=document.getElementById('inflow-api-key-input').value.trim();if(!key){alert('Enter your InFlow API key.');return;}localStorage.setItem('inflow-key',key);inflowConnected=true;document.getElementById('inflow-setup-banner').style.display='none';document.getElementById('inflow-connected-bar').style.display='flex';document.getElementById('inflow-org-label').textContent='The Cosmetic Formulary';document.getElementById('inflow-last-sync').textContent='Connecting…';syncInFlow();}
 function disconnectInFlow(){localStorage.removeItem('inflow-key');inflowConnected=false;document.getElementById('inflow-setup-banner').style.display='flex';document.getElementById('inflow-connected-bar').style.display='none';}
-function syncInFlow(){document.getElementById('inflow-last-sync').textContent='Synced '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});renderInventory();renderLowStock();renderOrders();}
+async function syncInFlow(){
+  const key=localStorage.getItem('inflow-key');
+  if(!key){alert('No InFlow API key found. Please reconnect.');return;}
+  const syncEl=document.getElementById('inflow-last-sync');
+  syncEl.textContent='Syncing…';
+  const PROXY='https://corsproxy.io/?';
+  const BASE='https://api.inflowinventory.com/v2';
+  const headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'};
+  try{
+    // Fetch products list (up to 500)
+    const r1=await fetch(PROXY+encodeURIComponent(BASE+'/products?pageSize=500'),{headers});
+    if(!r1.ok){const t=await r1.text();throw new Error('Products fetch failed ('+r1.status+'): '+t.slice(0,200));}
+    const d1=await r1.json();
+    // InFlow returns { value: [...] } or directly an array
+    const products=Array.isArray(d1)?d1:(d1.value||d1.products||d1.data||[]);
+    if(!products.length){syncEl.textContent='Synced (no products found) '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});return;}
+
+    // Try to fetch stock levels in one call
+    let stockMap={};
+    try{
+      const r2=await fetch(PROXY+encodeURIComponent(BASE+'/products/stock?pageSize=500'),{headers});
+      if(r2.ok){
+        const d2=await r2.json();
+        const stocks=Array.isArray(d2)?d2:(d2.value||d2.products||d2.data||[]);
+        stocks.forEach(s=>{
+          const pid=s.productId||s.id;
+          if(pid) stockMap[pid]={qty:parseFloat(s.quantityOnHand??s.onHand??s.qty??0),reorder:parseFloat(s.reorderPoint??s.reorderLevel??s.reorder??0)};
+        });
+      }
+    }catch(e){/* stock endpoint may not exist, fall through */}
+
+    // Map InFlow product shape → internal shape
+    const mapped=products.map((p,idx)=>{
+      const pid=p.productId||p.id||('IF-'+idx);
+      const sk=stockMap[pid]||{};
+      const qty=parseFloat(sk.qty??p.quantityOnHand??p.onHand??p.qty??0);
+      const reorder=parseFloat(sk.reorder??p.reorderPoint??p.reorderLevel??p.reorder??0);
+      const status=qty===0?'out':qty<=reorder?'low':'ok';
+      return{
+        id:pid,
+        name:p.name||p.productName||'Unnamed',
+        sku:p.sku||p.code||p.productCode||'',
+        cat:p.category||p.categoryName||p.type||'Other',
+        qty,
+        reorder,
+        cost:(p.unitCost!=null?'$'+parseFloat(p.unitCost).toFixed(2):''),
+        location:p.defaultLocation||p.location||p.bin||'',
+        status
+      };
+    });
+    inventory=mapped;
+    nextInvId=Date.now();
+    saveInventory();
+    renderInventory();renderLowStock();renderOrders();
+    syncEl.textContent='Synced ('+mapped.length+' products) '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  }catch(err){
+    console.error('InFlow sync error:',err);
+    syncEl.textContent='Sync failed: '+err.message.slice(0,80);
+    // Optionally show in error bar
+    const bar=document.getElementById('js-error-bar');
+    if(bar){bar.style.display='flex';bar.querySelector('span').textContent='InFlow sync error: '+err.message.slice(0,120);}
+  }
+}
 function renderInventory(){
   const q=(document.getElementById('inv-search').value||'').toLowerCase(),fc=document.getElementById('inv-filter-cat').value,fs=document.getElementById('inv-filter-status').value;
   const list=inventory.filter(i=>(!q||(i.name+i.sku).toLowerCase().includes(q))&&(!fc||i.cat===fc)&&(!fs||i.status===fs));
