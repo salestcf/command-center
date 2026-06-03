@@ -721,6 +721,15 @@ select option { background: var(--s1); }
     <div class="score-item"><div class="sc-label">Resolved</div><div class="sc-val" id="ali-resolved">0</div><div class="sc-sub">closed out</div></div>
   </div>
 
+  <div id="ali-sync-bar" class="conn-bar" style="margin-bottom:12px">
+    <div class="conn-indicator"></div>
+    <span style="font-size:11px;color:var(--pink);font-weight:700;letter-spacing:0.8px;text-transform:uppercase">Alibaba Messages</span>
+    <span style="font-size:11px;color:var(--t2)">message.alibaba.com</span>
+    <span style="margin-left:auto;font-size:10px;color:var(--t3)" id="ali-last-checked"></span>
+    <a href="https://message.alibaba.com" target="_blank" class="btn btn-sm btn-pink" onclick="markAliChecked()">Check Messages ↗</a>
+    <button class="btn btn-sm" onclick="markAliChecked()" title="Mark as reviewed now — updates 'last checked' timestamp">Mark Reviewed</button>
+  </div>
+
   <div class="task-controls" style="margin-bottom:12px">
     <input type="text" id="ali-search" placeholder="Search supplier, subject, notes..." style="flex:1;max-width:260px" oninput="renderAlibaba()">
     <select id="ali-filter-status" onchange="renderAlibaba()">
@@ -746,7 +755,7 @@ select option { background: var(--s1); }
 
   <div class="card" style="overflow:auto">
     <table class="tbl" id="ali-table">
-      <thead><tr><th>Supplier</th><th>Company</th><th>Subject / Item</th><th>Category</th><th>Last Message</th><th>Follow-up</th><th>Status</th><th>Notes</th><th></th></tr></thead>
+      <thead><tr><th>Supplier</th><th>Company</th><th>Subject / Item</th><th>Category</th><th>Last Message</th><th>Follow-up</th><th>Status</th><th>Notes</th><th style="width:90px">Quick Update</th></tr></thead>
       <tbody id="ali-tbody"></tbody>
     </table>
   </div>
@@ -1812,6 +1821,9 @@ let aliConvos=(()=>{const s=localStorage.getItem('cc-alibaba');const p=s?JSON.pa
 let nextAliId=aliConvos.length?Math.max(...aliConvos.map(a=>a.id))+1:1;
 let editingAliId=null;
 function saveAli(){localStorage.setItem('cc-alibaba',JSON.stringify(aliConvos));}
+function markAliChecked(){const t=new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true});localStorage.setItem('ali-last-checked',t);document.getElementById('ali-last-checked').textContent='Last checked: '+t;}
+function quickAliStatus(id,val){const i=aliConvos.findIndex(x=>x.id===id);if(i<0)return;aliConvos[i].status=val;if(val==='Need to Reply'||val==='Negotiating')aliConvos[i].last=new Date().toISOString().slice(0,10);saveAli();renderAlibaba();}
+function quickAliDate(id,val){const i=aliConvos.findIndex(x=>x.id===id);if(i<0)return;aliConvos[i].last=val;saveAli();renderAlibaba();}
 function openAliModal(id){
   editingAliId=id||null;
   const a=id?aliConvos.find(x=>x.id===id)||{}:{};
@@ -1843,19 +1855,22 @@ function renderAlibaba(){
     (!q||(a.supplier+a.company+a.subject+a.notes).toLowerCase().includes(q))&&
     (!fs||a.status===fs)&&(!fc||a.cat===fc));
   const sp={'Need to Reply':'p-red','Waiting on Supplier':'p-gold','Sent — Awaiting Sample':'p-mint','Negotiating':'p-gold','Resolved':'p-dim','Archived':'p-dim'};
+  const statuses=['Need to Reply','Waiting on Supplier','Sent — Awaiting Sample','Negotiating','Resolved','Archived'];
   document.getElementById('ali-tbody').innerHTML=list.length?list.map(a=>{
     const overdue=a.followup&&a.followup<=today&&!['Resolved','Archived'].includes(a.status);
+    const opts=statuses.map(s=>`<option${s===a.status?' selected':''}>${s}</option>`).join('');
     return`<tr onclick="openAliModal(${a.id})" style="cursor:pointer" onmouseenter="this.style.background='var(--s2)'" onmouseleave="this.style.background=''">
-      <td style="font-weight:600">${escH(a.supplier)}${a.url?` <a href="${escH(a.url)}" target="_blank" style="color:var(--pink);font-size:10px">↗</a>`:''}</td>
+      <td style="font-weight:600">${escH(a.supplier)}${a.url?` <a href="${escH(a.url)}" target="_blank" style="color:var(--pink);font-size:10px" onclick="event.stopPropagation()">↗</a>`:''}</td>
       <td style="color:var(--t3)">${escH(a.company)}</td>
       <td style="max-width:200px">${escH(a.subject)}</td>
       <td><span class="pill p-dim" style="font-size:9px">${escH(a.cat)}</span></td>
-      <td style="color:var(--t3);white-space:nowrap">${a.last||'—'}</td>
-      <td style="white-space:nowrap;color:${overdue?'var(--red)':'var(--gold)'};font-weight:${overdue?700:400}">${a.followup||(overdue?'⚠ Overdue':'—')}</td>
+      <td style="color:var(--t3);white-space:nowrap"><input type="date" value="${a.last||''}" style="border:none;background:transparent;color:var(--t3);font-size:11px;width:110px" onclick="event.stopPropagation()" onchange="event.stopPropagation();quickAliDate(${a.id},this.value)"></td>
+      <td style="white-space:nowrap;color:${overdue?'var(--red)':'var(--gold)'};font-weight:${overdue?700:400}">${a.followup||'—'}${overdue?' ⚠':''}</td>
       <td><span class="pill ${sp[a.status]||'p-dim'}">${a.status}</span></td>
-      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t3);font-size:11px">${escH(a.notes||'')}</td>
-      <td style="white-space:nowrap">
-        <button class="ev-del" onclick="event.stopPropagation();deleteAli(${a.id})" title="Delete">&#x2715;</button>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t3);font-size:11px">${escH(a.notes||'')}</td>
+      <td onclick="event.stopPropagation()" style="white-space:nowrap">
+        <select style="font-size:10px;padding:2px 4px;border-radius:5px;border:1px solid var(--border);background:var(--s2);color:var(--t1);max-width:88px" onchange="quickAliStatus(${a.id},this.value)">${opts}</select>
+        <button class="ev-del" onclick="deleteAli(${a.id})" title="Delete" style="margin-left:2px">&#x2715;</button>
       </td>
     </tr>`;
   }).join(''):'<tr><td colspan="9" style="padding:20px;text-align:center;color:var(--t3)">No conversations logged yet. Click + Log Conversation to add one.</td></tr>';
@@ -1867,6 +1882,7 @@ function renderAlibaba(){
   document.getElementById('ali-resolved').textContent=aliConvos.filter(a=>a.status==='Resolved').length;
 }
 renderAlibaba();
+(function(){const t=localStorage.getItem('ali-last-checked');if(t){const el=document.getElementById('ali-last-checked');if(el)el.textContent='Last checked: '+t;}})();
 
 // ── DAILY TRACKER ──
 const SCHEDULE=[
