@@ -1918,36 +1918,45 @@ function renderShipments(data){
   countEl.textContent=data.length;
   const statusColor={Shipped:'var(--mint)',Delivered:'var(--t3)','Order Confirmed':'var(--gold)','Order Received':'var(--pink)'};
   const statusPill={Shipped:'p-mint',Delivered:'p-dim','Order Confirmed':'p-gold','Order Received':'p-pink'};
-  list.innerHTML=data.map(s=>`
-    <div style="padding:12px 16px;border-bottom:1px solid var(--border)">
-      <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
-        <div style="flex:1;min-width:200px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            <span style="font-size:12px;font-weight:600;color:var(--t1)">${escH(s.from)}</span>
-            <span class="pill ${statusPill[s.status]||'p-dim'}" style="font-size:9px">${s.status}</span>
-            <span style="font-size:10px;color:var(--t3);margin-left:auto">${s.date}</span>
+  list.innerHTML=data.map((s,idx)=>`
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:200px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <span style="font-size:12px;font-weight:600;color:var(--t1)">${escH(s.from)}</span>
+              <span class="pill ${statusPill[s.status]||'p-dim'}" style="font-size:9px">${s.status}</span>
+              <span style="font-size:10px;color:var(--t3);margin-left:auto">${s.date}</span>
+            </div>
+            <div style="font-size:11px;color:var(--t2);margin-bottom:4px">${escH(s.subject)}</div>
+            ${s.snippet?`<div style="font-size:10px;color:var(--t3);font-style:italic">${escH(s.snippet)}…</div>`:''}
           </div>
-          <div style="font-size:11px;color:var(--t2);margin-bottom:4px">${escH(s.subject)}</div>
-          ${s.snippet?`<div style="font-size:10px;color:var(--t3);font-style:italic">${escH(s.snippet)}…</div>`:''}
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px;min-width:200px">
-          ${s.tracking.map(t=>`
-            <div style="display:flex;align-items:center;gap:8px">
-              <span style="font-size:10px;font-weight:700;color:var(--mint);min-width:55px">${t.carrier}</span>
-              <code style="font-size:10px;color:var(--t2);background:var(--s2);padding:2px 6px;border-radius:4px;flex:1">${t.number}</code>
-              <a href="${t.url}" target="_blank" class="btn btn-sm" style="font-size:10px;padding:2px 8px;flex-shrink:0">Track ↗</a>
-            </div>`).join('')}
-          ${s.orderNums.map(o=>`
-            <div style="display:flex;align-items:center;gap:8px">
-              <span style="font-size:10px;font-weight:700;color:var(--gold);min-width:55px">Order #</span>
-              <code style="font-size:10px;color:var(--t2);background:var(--s2);padding:2px 6px;border-radius:4px;flex:1">${escH(o)}</code>
-            </div>`).join('')}
-          ${s.eta?`<div style="font-size:10px;color:var(--gold)">📦 ETA: ${escH(s.eta)}</div>`:''}
+          <div style="display:flex;flex-direction:column;gap:6px;min-width:200px">
+            ${s.tracking.map(t=>`
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:10px;font-weight:700;color:var(--mint);min-width:55px">${t.carrier}</span>
+                <code style="font-size:10px;color:var(--t2);background:var(--s2);padding:2px 6px;border-radius:4px;flex:1">${t.number}</code>
+                <a href="${t.url}" target="_blank" class="btn btn-sm" style="font-size:10px;padding:2px 8px;flex-shrink:0">Track ↗</a>
+              </div>`).join('')}
+            ${s.orderNums.map(o=>`
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:10px;font-weight:700;color:var(--gold);min-width:55px">Order #</span>
+                <code style="font-size:10px;color:var(--t2);background:var(--s2);padding:2px 6px;border-radius:4px;flex:1">${escH(o)}</code>
+              </div>`).join('')}
+            ${s.eta?`<div style="font-size:10px;color:var(--gold)">📦 ETA: ${escH(s.eta)}</div>`:''}
+          </div>
         </div>
       </div>
+      <button class="ev-del" onclick="deleteShipment(${idx})" title="Remove this entry" style="flex-shrink:0;margin-top:2px">&#x2715;</button>
     </div>`).join('');
 }
 
+function deleteShipment(idx){
+  const s=JSON.parse(localStorage.getItem('cc-shipments')||'[]');
+  s.splice(idx,1);
+  localStorage.setItem('cc-shipments',JSON.stringify(s));
+  renderShipments(s);
+}
 function clearShipments(){
   localStorage.removeItem('cc-shipments');
   document.getElementById('shipments-panel').style.display='none';
