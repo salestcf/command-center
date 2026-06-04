@@ -872,6 +872,30 @@ select option { background: var(--s1); }
     <button class="btn btn-sm" onclick="syncInFlow()">Try API Sync</button>
     <button class="btn btn-sm" onclick="disconnectInFlow()">Disconnect</button>
   </div>
+
+  <!-- Supplier Email Scanner bar -->
+  <div class="conn-bar" style="margin-bottom:12px">
+    <div class="conn-indicator"></div>
+    <span style="font-size:11px;color:var(--mint);font-weight:700;letter-spacing:0.8px;text-transform:uppercase">Supplier Emails</span>
+    <span style="font-size:11px;color:var(--t2)">Scan Gmail for orders, tracking &amp; shipments</span>
+    <span style="margin-left:auto;font-size:10px;color:var(--t3)" id="supplier-scan-last"></span>
+    <button class="btn btn-sm btn-mint" onclick="scanSupplierEmails()">Scan Emails</button>
+  </div>
+
+  <!-- Incoming Shipments panel -->
+  <div id="shipments-panel" style="display:none;margin-bottom:14px">
+    <div class="card">
+      <div class="card-head">
+        <h3>Incoming Shipments &amp; Orders</h3>
+        <div class="ch-r">
+          <span id="shipments-count" class="pill p-mint">0</span>
+          <button class="btn btn-sm" onclick="clearShipments()">Clear</button>
+        </div>
+      </div>
+      <div id="shipments-list"></div>
+    </div>
+  </div>
+
   <div class="g5 scorecard" style="margin-bottom:14px">
     <div class="score-item"><div class="sc-label">Total Products</div><div class="sc-val mint" id="inv-total">0</div><div class="sc-sub">in catalog</div></div>
     <div class="score-item"><div class="sc-label">Low Stock</div><div class="sc-val gold" id="inv-low">0</div><div class="sc-sub">below reorder</div></div>
@@ -1777,6 +1801,157 @@ function saveOrder(){const num=document.getElementById('o-num').value.trim();if(
 function exportInventoryCSV(){const h=['Name','SKU','Category','On Hand','Reorder','Status','Cost','Location'];const rows=inventory.map(i=>[i.name,i.sku,i.cat,i.qty,i.reorder,i.status,i.cost,i.location].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));download('inventory.csv',[h.join(','),...rows].join('\n'),'text/csv');}
 if(inflowConnected){document.getElementById('inflow-setup-banner').style.display='none';document.getElementById('inflow-connected-bar').style.display='flex';document.getElementById('inflow-org-label').textContent='The Cosmetic Formulary';document.getElementById('inflow-last-sync').textContent='Session start';}
 renderInventory();renderLowStock();renderOrders();
+(function(){const s=localStorage.getItem('cc-shipments');const t=localStorage.getItem('supplier-scan-last');if(t){const el=document.getElementById('supplier-scan-last');if(el)el.textContent='Last scanned: '+t;}if(s){const d=JSON.parse(s);if(d&&d.length)renderShipments(d);}})();
+
+// ── SUPPLIER EMAIL SCANNER ──
+const CARRIER_PATTERNS=[
+  {name:'UPS',      re:/\b(1Z[A-Z0-9]{16})\b/gi,          url:'https://www.ups.com/track?tracknum='},
+  {name:'FedEx',    re:/\b([0-9]{12}|[0-9]{15}|[0-9]{20}|[0-9]{22})\b/g, url:'https://www.fedex.com/fedextrack/?trknbr='},
+  {name:'USPS',     re:/\b(9[2345][0-9]{18,20}|94[0-9]{18}|92[0-9]{18})\b/g, url:'https://tools.usps.com/go/TrackConfirmAction?tLabels='},
+  {name:'DHL',      re:/\b([0-9]{10})\b/g,                 url:'https://www.dhl.com/en/express/tracking.html?AWB='},
+  {name:'China Post',re:/\b([A-Z]{2}[0-9]{9}[A-Z]{2})\b/g,url:'https://parcelsapp.com/en/tracking/'},
+  {name:'4PX',      re:/\b(4PX[0-9A-Z]{10,})\b/gi,        url:'https://track.4px.com/#/result/0/'},
+  {name:'Yanwen',   re:/\b(UG[0-9]{9}YP|YW[0-9]{10})\b/gi,url:'https://parcelsapp.com/en/tracking/'},
+];
+const ORDER_RE=/\b(?:order|po|purchase order|order #?|p\.?o\.? #?)\s*[:#]?\s*([A-Z0-9][A-Z0-9\-]{3,20})\b/gi;
+const ETA_RE=/(?:estimated|arrival|deliver(?:y|ed)?|eta|expected|arrive[sd]?)\s*(?:by|on|:)?\s*([A-Za-z]+\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s*\d{0,4}|\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)/gi;
+
+function extractTracking(text){
+  const found=[];
+  for(const c of CARRIER_PATTERNS){
+    const re=new RegExp(c.re.source,c.re.flags);
+    let m;
+    while((m=re.exec(text))!==null){
+      const num=m[1];
+      // Skip short number sequences that are likely not tracking (prices, dates, etc.)
+      if(c.name==='FedEx'&&num.length<12) continue;
+      if(c.name==='DHL'&&(num.startsWith('0')||num.length!==10)) continue;
+      if(!found.find(f=>f.number===num)) found.push({carrier:c.name,number:num,url:c.url+num});
+    }
+  }
+  return found;
+}
+function extractOrderNums(text){
+  const nums=[];let m;const re=new RegExp(ORDER_RE.source,ORDER_RE.flags);
+  while((m=re.exec(text))!==null){if(!nums.includes(m[1]))nums.push(m[1]);}
+  return nums;
+}
+function extractETA(text){
+  const re=new RegExp(ETA_RE.source,ETA_RE.flags);const m=re.exec(text);
+  return m?m[1].trim():'';
+}
+
+async function scanSupplierEmails(){
+  const accounts=getAccountTokens();
+  const lastEl=document.getElementById('supplier-scan-last');
+  if(!accounts.length){alert('Please connect a Google account first. Go to Settings → Google Accounts.');return;}
+  lastEl.textContent='Scanning…';
+
+  // Gmail search query targeting supplier/shipping emails
+  const query=encodeURIComponent('(tracking OR "tracking number" OR "has shipped" OR "has been shipped" OR "order confirmation" OR "order confirmed" OR "purchase order" OR "your order" OR dispatched OR shipment OR "out for delivery" OR "on its way" OR "delivery notification" OR "shipped via" OR "order #" OR "po #") newer_than:60d');
+
+  const results=[];
+
+  for(const acc of accounts){
+    try{
+      // Search Gmail
+      const sr=await fetch(`https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=50&q=${query}`,{headers:{'Authorization':'Bearer '+acc.token}});
+      if(!sr.ok){handleGoogleAuthError(sr,'gmail',acc.email);continue;}
+      const sd=await sr.json();
+      const msgIds=(sd.messages||[]).map(m=>m.id);
+      if(!msgIds.length) continue;
+
+      // Fetch each message (metadata + snippet)
+      const msgs=await Promise.all(msgIds.map(async id=>{
+        const r=await fetch(`https://www.googleapis.com/gmail/v1/users/me/messages/${id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`,{headers:{'Authorization':'Bearer '+acc.token}});
+        if(!r.ok)return null;return r.json();
+      }));
+
+      for(const msg of msgs.filter(Boolean)){
+        const headers=(msg.payload&&msg.payload.headers)||[];
+        const getH=n=>(headers.find(h=>h.name.toLowerCase()===n)||{}).value||'';
+        const subject=getH('subject')||'(no subject)';
+        const from=getH('from')||'';
+        const dateStr=getH('date')||'';
+        const snippet=msg.snippet||'';
+        const fullText=subject+' '+snippet;
+
+        const tracking=extractTracking(fullText);
+        const orderNums=extractOrderNums(fullText);
+        const eta=extractETA(fullText);
+
+        // Only include if we found something useful
+        if(!tracking.length&&!orderNums.length) continue;
+
+        const senderName=from.replace(/<[^>]+>/,'').replace(/"/g,'').trim()||from;
+        let dateLabel='';
+        try{const d=new Date(dateStr);dateLabel=d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(_){}
+
+        // Determine status from subject/snippet
+        let status='Order Received';
+        if(/shipped|dispatched|on its way|in transit|out for delivery/i.test(fullText)) status='Shipped';
+        if(/delivered|delivery complete/i.test(fullText)) status='Delivered';
+        if(/order confirm/i.test(fullText)&&!/ship/i.test(fullText)) status='Order Confirmed';
+
+        results.push({id:msg.id,account:acc.email,from:senderName,subject:subject.slice(0,80),snippet:snippet.slice(0,120),date:dateLabel,tracking,orderNums,eta,status});
+      }
+    }catch(e){console.warn('Supplier scan error for',acc.email,e);}
+  }
+
+  // Dedupe by message id
+  const seen=new Set();
+  const unique=results.filter(r=>{if(seen.has(r.id))return false;seen.add(r.id);return true;});
+  // Sort newest first (by array order — Gmail returns newest first)
+  localStorage.setItem('cc-shipments',JSON.stringify(unique));
+  const t=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  localStorage.setItem('supplier-scan-last',t);
+  lastEl.textContent='Last scanned: '+t;
+  renderShipments(unique);
+}
+
+function renderShipments(data){
+  const panel=document.getElementById('shipments-panel');
+  const list=document.getElementById('shipments-list');
+  const countEl=document.getElementById('shipments-count');
+  if(!data||!data.length){panel.style.display='none';return;}
+  panel.style.display='block';
+  countEl.textContent=data.length;
+  const statusColor={Shipped:'var(--mint)',Delivered:'var(--t3)','Order Confirmed':'var(--gold)','Order Received':'var(--pink)'};
+  const statusPill={Shipped:'p-mint',Delivered:'p-dim','Order Confirmed':'p-gold','Order Received':'p-pink'};
+  list.innerHTML=data.map(s=>`
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:600;color:var(--t1)">${escH(s.from)}</span>
+            <span class="pill ${statusPill[s.status]||'p-dim'}" style="font-size:9px">${s.status}</span>
+            <span style="font-size:10px;color:var(--t3);margin-left:auto">${s.date}</span>
+          </div>
+          <div style="font-size:11px;color:var(--t2);margin-bottom:4px">${escH(s.subject)}</div>
+          ${s.snippet?`<div style="font-size:10px;color:var(--t3);font-style:italic">${escH(s.snippet)}…</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;min-width:200px">
+          ${s.tracking.map(t=>`
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:10px;font-weight:700;color:var(--mint);min-width:55px">${t.carrier}</span>
+              <code style="font-size:10px;color:var(--t2);background:var(--s2);padding:2px 6px;border-radius:4px;flex:1">${t.number}</code>
+              <a href="${t.url}" target="_blank" class="btn btn-sm" style="font-size:10px;padding:2px 8px;flex-shrink:0">Track ↗</a>
+            </div>`).join('')}
+          ${s.orderNums.map(o=>`
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:10px;font-weight:700;color:var(--gold);min-width:55px">Order #</span>
+              <code style="font-size:10px;color:var(--t2);background:var(--s2);padding:2px 6px;border-radius:4px;flex:1">${escH(o)}</code>
+            </div>`).join('')}
+          ${s.eta?`<div style="font-size:10px;color:var(--gold)">📦 ETA: ${escH(s.eta)}</div>`:''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function clearShipments(){
+  localStorage.removeItem('cc-shipments');
+  document.getElementById('shipments-panel').style.display='none';
+}
 
 // ── QUICKBOOKS ──
 let qbConnected=!!localStorage.getItem('qb-key');
