@@ -1132,6 +1132,49 @@ select option { background: var(--s1); }
         <div id="win-log-list"></div>
       </div>
 
+      <!-- Forms & Templates -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-head"><h3>📄 Forms &amp; Templates</h3></div>
+        <div style="padding:10px 14px;display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+            <span style="font-size:16px">📋</span>
+            <div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--t1)">Client Intake Form</div><div style="font-size:10px;color:var(--t3)">New client onboarding — captures all project requirements</div></div>
+            <button class="btn btn-sm btn-pink" onclick="openFormModal('intake')">Open Form</button>
+            <button class="btn btn-sm" onclick="printForm('intake')">Print / PDF</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+            <span style="font-size:16px">🧪</span>
+            <div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--t1)">Formula Request Brief</div><div style="font-size:10px;color:var(--t3)">Captures formula specs, actives, restrictions, targets</div></div>
+            <button class="btn btn-sm btn-pink" onclick="openFormModal('formula')">Open Form</button>
+            <button class="btn btn-sm" onclick="printForm('formula')">Print / PDF</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+            <span style="font-size:16px">🧴</span>
+            <div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--t1)">Sample Feedback Form</div><div style="font-size:10px;color:var(--t3)">Client reviews sample — ratings, changes, approval</div></div>
+            <button class="btn btn-sm btn-pink" onclick="openFormModal('sample')">Open Form</button>
+            <button class="btn btn-sm" onclick="printForm('sample')">Print / PDF</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+            <span style="font-size:16px">🏭</span>
+            <div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--t1)">Supplier Onboarding Form</div><div style="font-size:10px;color:var(--t3)">New vendor info — contacts, MOQ, lead time, certifications</div></div>
+            <button class="btn btn-sm btn-pink" onclick="openFormModal('supplier')">Open Form</button>
+            <button class="btn btn-sm" onclick="printForm('supplier')">Print / PDF</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+            <span style="font-size:16px">✅</span>
+            <div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--t1)">Project Close-Out Checklist</div><div style="font-size:10px;color:var(--t3)">Ensures nothing is missed before marking a project complete</div></div>
+            <button class="btn btn-sm btn-pink" onclick="openFormModal('closeout')">Open Form</button>
+            <button class="btn btn-sm" onclick="printForm('closeout')">Print / PDF</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+            <span style="font-size:16px">📅</span>
+            <div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--t1)">Weekly Operations Review</div><div style="font-size:10px;color:var(--t3)">Friday check-in — what happened, what's next, blockers</div></div>
+            <button class="btn btn-sm btn-pink" onclick="openFormModal('weekly')">Open Form</button>
+            <button class="btn btn-sm" onclick="printForm('weekly')">Print / PDF</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Metrics Detail -->
       <div class="card">
         <div class="card-head"><h3>📊 Operations Metrics</h3><div class="ch-r"><button class="btn btn-sm" onclick="renderOpsMetrics()">↻ Refresh</button></div></div>
@@ -1172,6 +1215,190 @@ select option { background: var(--s1); }
   </div>
 </div>
 </div>
+
+<!-- ══ FORM MODALS ══ -->
+<div class="modal-overlay" id="modal-form-intake"><div class="modal" style="max-width:640px;max-height:90vh;overflow-y:auto">
+  <div class="modal-head"><h3>📋 Client Intake Form — The Cosmetic Formulary</h3><button class="close-btn" onclick="closeModal('modal-form-intake')">&#x2715;</button></div>
+  <div class="modal-body">
+    <div style="background:var(--pink-bg);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:var(--t2)">Complete this form for every new client. Once submitted, the client will be added to your Clients pipeline automatically.</div>
+    <div style="font-size:11px;font-weight:700;color:var(--pink);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Contact Information</div>
+    <div class="g2"><div class="form-row"><label class="form-label">Client Full Name *</label><input type="text" id="if-name" placeholder="First Last"></div><div class="form-row"><label class="form-label">Brand / Company Name</label><input type="text" id="if-brand" placeholder="Brand name (if different)"></div></div>
+    <div class="g2"><div class="form-row"><label class="form-label">Email *</label><input type="email" id="if-email" placeholder="email@domain.com"></div><div class="form-row"><label class="form-label">Phone</label><input type="tel" id="if-phone" placeholder="(000) 000-0000"></div></div>
+    <div class="g2"><div class="form-row"><label class="form-label">Instagram / Website</label><input type="text" id="if-social" placeholder="@handle or website URL"></div><div class="form-row"><label class="form-label">How did you hear about us?</label><select id="if-referral"><option>Instagram</option><option>Referral</option><option>Google</option><option>Existing Client</option><option>Event / Class</option><option>Other</option></select></div></div>
+    <div style="font-size:11px;font-weight:700;color:var(--pink);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">Project Overview</div>
+    <div class="g2"><div class="form-row"><label class="form-label">Project Type *</label><select id="if-type"><option>Custom Formula</option><option>Private Label</option><option>Formula Consultation</option><option>Reformulation</option><option>Class / Event</option></select></div><div class="form-row"><label class="form-label">Product Category *</label><select id="if-cat"><option>Skincare</option><option>Haircare</option><option>Body Care</option><option>Makeup / Color</option><option>Fragrance</option><option>Nail</option><option>Other</option></select></div></div>
+    <div class="form-row"><label class="form-label">Product Description *</label><textarea id="if-desc" rows="3" placeholder="Describe the product you want to create. Include product type, intended use, target skin/hair type, desired feel/texture/finish…"></textarea></div>
+    <div class="form-row"><label class="form-label">Key Ingredients / Actives Requested</label><textarea id="if-actives" rows="2" placeholder="e.g. Hyaluronic Acid, Vitamin C 15%, Niacinamide, Retinol — or 'clean ingredients only'"></textarea></div>
+    <div class="form-row"><label class="form-label">Ingredients to Avoid / Restrictions</label><textarea id="if-avoid" rows="2" placeholder="e.g. No silicones, no parabens, no fragrance, must be vegan, gluten-free, halal…"></textarea></div>
+    <div style="font-size:11px;font-weight:700;color:var(--pink);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">Certifications &amp; Compliance</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="if-vegan"> Vegan</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="if-cf"> Cruelty-Free</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="if-organic"> Organic / Natural</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="if-gf"> Gluten-Free</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="if-halal"> Halal</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="if-ecocert"> EcoCert</label>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--pink);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">Business Details</div>
+    <div class="g2"><div class="form-row"><label class="form-label">Target Market / Consumer</label><input type="text" id="if-market" placeholder="e.g. Women 30-50, sensitive skin, luxury segment"></div><div class="form-row"><label class="form-label">Retail Price Target</label><input type="text" id="if-price" placeholder="e.g. $35-55 retail"></div></div>
+    <div class="g2"><div class="form-row"><label class="form-label">Expected Order Quantity (MOQ)</label><input type="text" id="if-moq" placeholder="e.g. 500 units, 1,000 units"></div><div class="form-row"><label class="form-label">Budget Range</label><select id="if-budget"><option>Under $1,000</option><option>$1,000 – $2,500</option><option>$2,500 – $5,000</option><option>$5,000 – $10,000</option><option>$10,000+</option><option>TBD / Flexible</option></select></div></div>
+    <div class="g2"><div class="form-row"><label class="form-label">Desired Timeline</label><select id="if-timeline"><option>ASAP (rush)</option><option>4–6 weeks</option><option>6–10 weeks</option><option>3–6 months</option><option>Flexible</option></select></div><div class="form-row"><label class="form-label">Packaging Preference</label><input type="text" id="if-packaging" placeholder="e.g. Glass dropper 30ml, airless pump, we source our own"></div></div>
+    <div class="form-row"><label class="form-label">Do you have an existing formula or benchmark product?</label><textarea id="if-benchmark" rows="2" placeholder="e.g. We want something similar to X product, here is an existing INCI list…"></textarea></div>
+    <div class="form-row"><label class="form-label">Additional Notes / Questions</label><textarea id="if-notes" rows="2" placeholder="Anything else we should know…"></textarea></div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border)">
+    <button class="btn" onclick="closeModal('modal-form-intake')">Cancel</button>
+    <button class="btn btn-sm" onclick="printForm('intake')">🖨 Print / Save PDF</button>
+    <button class="btn btn-pink" onclick="submitIntakeForm()">Save &amp; Add to Clients →</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="modal-form-formula"><div class="modal" style="max-width:620px;max-height:90vh;overflow-y:auto">
+  <div class="modal-head"><h3>🧪 Formula Request Brief — TCF</h3><button class="close-btn" onclick="closeModal('modal-form-formula')">&#x2715;</button></div>
+  <div class="modal-body">
+    <div style="background:var(--mint-bg);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:var(--t2)">Complete this brief before formulation begins. This document guides the formulator and prevents scope creep.</div>
+    <div class="g2"><div class="form-row"><label class="form-label">Client Name *</label><input type="text" id="fb-client" placeholder="Client name"></div><div class="form-row"><label class="form-label">Formula Working Title *</label><input type="text" id="fb-title" placeholder="e.g. Hydrating HA Serum v1"></div></div>
+    <div class="g2"><div class="form-row"><label class="form-label">Product Type</label><input type="text" id="fb-type" placeholder="e.g. Water-based serum, oil cleanser, cream moisturizer"></div><div class="form-row"><label class="form-label">Date</label><input type="date" id="fb-date"></div></div>
+    <div style="font-size:11px;font-weight:700;color:var(--mint);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">Sensory &amp; Performance Profile</div>
+    <div class="g2"><div class="form-row"><label class="form-label">Desired Texture / Consistency</label><select id="fb-texture"><option>Light / Watery</option><option>Gel</option><option>Lotion</option><option>Cream</option><option>Thick / Rich</option><option>Balm / Butter</option><option>Oil</option><option>Foam / Mousse</option><option>Powder</option></select></div><div class="form-row"><label class="form-label">Skin Feel / Finish</label><select id="fb-finish"><option>Matte</option><option>Satin</option><option>Dewy / Glow</option><option>No residue</option><option>Dry-touch</option><option>Occlusive</option><option>Absorbs quickly</option></select></div></div>
+    <div class="g2"><div class="form-row"><label class="form-label">Fragrance</label><select id="fb-frag"><option>Fragrance-free</option><option>Light / subtle</option><option>Specific fragrance (see notes)</option><option>Client to provide</option></select></div><div class="form-row"><label class="form-label">Color / Appearance</label><input type="text" id="fb-color" placeholder="e.g. Clear, white, soft pink, gold shimmer"></div></div>
+    <div class="form-row"><label class="form-label">pH Target Range</label><input type="text" id="fb-ph" placeholder="e.g. 4.5–5.5 for skin-compatible, 5.5–7 for rinse-off"></div>
+    <div style="font-size:11px;font-weight:700;color:var(--mint);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">Ingredient Specifications</div>
+    <div class="form-row"><label class="form-label">Key Actives / Functional Ingredients (REQUIRED)</label><textarea id="fb-actives" rows="3" placeholder="List each active, desired % if known, function&#10;e.g. Hyaluronic Acid 1% – hydration; Niacinamide 5% – brightening; Vitamin C (Ascorbic Acid) 15% – antioxidant"></textarea></div>
+    <div class="form-row"><label class="form-label">Emollients / Skin-feel Ingredients</label><textarea id="fb-emollients" rows="2" placeholder="e.g. Jojoba oil, Squalane, Shea butter, Dimethicone (if allowed)"></textarea></div>
+    <div class="form-row"><label class="form-label">Preservative System Preference</label><select id="fb-preserv"><option>Standard (Phenoxyethanol-based)</option><option>Natural / Minimalist</option><option>Broad spectrum (challenge tested)</option><option>No preference — formulator's choice</option></select></div>
+    <div class="form-row"><label class="form-label">Ingredients to EXCLUDE</label><textarea id="fb-exclude" rows="2" placeholder="e.g. No silicones, no SLS, no parabens, no mineral oil, no alcohol denat."></textarea></div>
+    <div style="font-size:11px;font-weight:700;color:var(--mint);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">Stability &amp; Compliance</div>
+    <div class="g2"><div class="form-row"><label class="form-label">Stability Requirements</label><select id="fb-stability"><option>Standard (room temp, 6 months)</option><option>Accelerated stability testing required</option><option>Freeze-thaw testing required</option><option>Long-term (12+ months)</option></select></div><div class="form-row"><label class="form-label">Regulatory Market</label><select id="fb-market"><option>USA (FDA cosmetic)</option><option>Canada (Health Canada)</option><option>EU (EC No 1223/2009)</option><option>Multiple markets</option><option>TBD</option></select></div></div>
+    <div class="form-row"><label class="form-label">Certifications Required</label><input type="text" id="fb-certs" placeholder="e.g. COSMOS Organic, Leaping Bunny, NSF, Halal — or None"></div>
+    <div class="form-row"><label class="form-label">Benchmark / Reference Products</label><textarea id="fb-benchmark" rows="2" placeholder="Products whose performance this should match or exceed. Include INCI lists if available."></textarea></div>
+    <div class="form-row"><label class="form-label">Additional Notes for Formulator</label><textarea id="fb-notes" rows="2" placeholder="Special considerations, timeline constraints, budget per kg targets…"></textarea></div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border)">
+    <button class="btn" onclick="closeModal('modal-form-formula')">Cancel</button>
+    <button class="btn btn-sm" onclick="printForm('formula')">🖨 Print / Save PDF</button>
+    <button class="btn btn-mint" onclick="saveGenericForm('formula')">Save Brief</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="modal-form-sample"><div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto">
+  <div class="modal-head"><h3>🧴 Sample Feedback Form — TCF</h3><button class="close-btn" onclick="closeModal('modal-form-sample')">&#x2715;</button></div>
+  <div class="modal-body">
+    <div class="g2"><div class="form-row"><label class="form-label">Client Name</label><input type="text" id="sf-client" placeholder="Client name"></div><div class="form-row"><label class="form-label">Formula / Project</label><input type="text" id="sf-project" placeholder="e.g. HA Serum v1"></div></div>
+    <div class="g2"><div class="form-row"><label class="form-label">Sample Version #</label><input type="text" id="sf-version" placeholder="e.g. Sample 1, Revision 2"></div><div class="form-row"><label class="form-label">Date Received by Client</label><input type="date" id="sf-date"></div></div>
+    <div style="font-size:11px;font-weight:700;color:var(--pink);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">Ratings (1 = Poor, 5 = Excellent)</div>
+    <div class="g2">
+      <div class="form-row"><label class="form-label">Overall Impression</label><select id="sf-overall"><option>5 – Love it</option><option>4 – Good, minor tweaks</option><option>3 – Okay, needs work</option><option>2 – Disappointing</option><option>1 – Does not meet brief</option></select></div>
+      <div class="form-row"><label class="form-label">Texture / Consistency</label><select id="sf-texture"><option>5 – Perfect</option><option>4 – Good</option><option>3 – Acceptable</option><option>2 – Too thick/thin</option><option>1 – Wrong entirely</option></select></div>
+    </div>
+    <div class="g2">
+      <div class="form-row"><label class="form-label">Scent / Fragrance</label><select id="sf-scent"><option>5 – Perfect</option><option>4 – Good</option><option>3 – Neutral</option><option>2 – Too strong/weak</option><option>1 – Unacceptable</option><option>N/A – Fragrance free</option></select></div>
+      <div class="form-row"><label class="form-label">Skin Feel / Absorption</label><select id="sf-feel"><option>5 – Perfect</option><option>4 – Good</option><option>3 – Acceptable</option><option>2 – Too greasy/dry</option><option>1 – Not as described</option></select></div>
+    </div>
+    <div class="g2">
+      <div class="form-row"><label class="form-label">Color / Appearance</label><select id="sf-color"><option>5 – Perfect</option><option>4 – Good</option><option>3 – Acceptable</option><option>2 – Off</option><option>1 – Wrong</option></select></div>
+      <div class="form-row"><label class="form-label">Packaging Compatibility</label><select id="sf-pkg"><option>5 – Perfect fit</option><option>4 – Good</option><option>3 – Workable</option><option>2 – Some issues</option><option>1 – Incompatible</option><option>N/A</option></select></div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--pink);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">Feedback Detail</div>
+    <div class="form-row"><label class="form-label">What did you LIKE about this sample?</label><textarea id="sf-likes" rows="2" placeholder="Be specific — what worked well?"></textarea></div>
+    <div class="form-row"><label class="form-label">What needs to CHANGE?</label><textarea id="sf-changes" rows="3" placeholder="List all requested changes clearly. e.g. Thicker texture, reduce fragrance by 50%, add more shimmer…"></textarea></div>
+    <div class="form-row"><label class="form-label">Additional Notes</label><textarea id="sf-notes" rows="2" placeholder="Any other feedback, questions, or context…"></textarea></div>
+    <div style="font-size:11px;font-weight:700;color:var(--pink);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">Decision</div>
+    <div class="form-row"><label class="form-label">Sample Status *</label>
+      <select id="sf-status" style="font-size:12px;padding:6px 10px;border-radius:7px;border:1px solid var(--border);width:100%;background:var(--s1)">
+        <option>✅ Approved — proceed to final formula</option>
+        <option>🔄 Approved with minor changes — no re-sample needed</option>
+        <option>🔁 Revision required — new sample needed</option>
+        <option>⛔ Rejected — restart from brief</option>
+      </select>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border)">
+    <button class="btn" onclick="closeModal('modal-form-sample')">Cancel</button>
+    <button class="btn btn-sm" onclick="printForm('sample')">🖨 Print / Save PDF</button>
+    <button class="btn btn-pink" onclick="saveGenericForm('sample')">Save Feedback</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="modal-form-supplier"><div class="modal" style="max-width:580px;max-height:90vh;overflow-y:auto">
+  <div class="modal-head"><h3>🏭 Supplier Onboarding Form — TCF</h3><button class="close-btn" onclick="closeModal('modal-form-supplier')">&#x2715;</button></div>
+  <div class="modal-body">
+    <div style="font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Company Information</div>
+    <div class="g2"><div class="form-row"><label class="form-label">Company Name *</label><input type="text" id="sup-company" placeholder="Full legal company name"></div><div class="form-row"><label class="form-label">Country</label><input type="text" id="sup-country" placeholder="e.g. China, USA, Germany"></div></div>
+    <div class="g2"><div class="form-row"><label class="form-label">Primary Contact Name</label><input type="text" id="sup-contact" placeholder="Sales rep / account manager"></div><div class="form-row"><label class="form-label">Contact Email</label><input type="email" id="sup-email" placeholder="contact@supplier.com"></div></div>
+    <div class="g2"><div class="form-row"><label class="form-label">WhatsApp / WeChat</label><input type="text" id="sup-wechat" placeholder="For Alibaba suppliers"></div><div class="form-row"><label class="form-label">Website / Alibaba Store</label><input type="url" id="sup-url" placeholder="https://..."></div></div>
+    <div style="font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">Products &amp; Capabilities</div>
+    <div class="form-row"><label class="form-label">Products / Materials Supplied *</label><textarea id="sup-products" rows="2" placeholder="e.g. Glass dropper bottles 15ml-100ml, custom label printing, HDPE containers"></textarea></div>
+    <div class="g2"><div class="form-row"><label class="form-label">Minimum Order Qty (MOQ)</label><input type="text" id="sup-moq" placeholder="e.g. 500 pcs per SKU"></div><div class="form-row"><label class="form-label">Lead Time</label><input type="text" id="sup-lead" placeholder="e.g. 25-35 days after deposit"></div></div>
+    <div class="g2"><div class="form-row"><label class="form-label">Sample Policy</label><input type="text" id="sup-sample" placeholder="e.g. Free samples, $50 refundable, DHL charges apply"></div><div class="form-row"><label class="form-label">Payment Terms</label><select id="sup-payment"><option>30% deposit / 70% before shipping</option><option>50/50</option><option>100% upfront</option><option>Net 30</option><option>PayPal / Wire only</option><option>Alibaba Trade Assurance</option></select></div></div>
+    <div style="font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">Quality &amp; Certifications</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="sup-iso"> ISO 9001</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="sup-gmp"> GMP Certified</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="sup-fda"> FDA Registered</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="sup-cosmos"> COSMOS/Ecocert</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" id="sup-ta"> Alibaba Trade Assurance</label>
+    </div>
+    <div class="form-row"><label class="form-label">Notes / How We Found Them</label><textarea id="sup-notes" rows="2" placeholder="Alibaba search terms used, who referred them, initial impression…"></textarea></div>
+    <div class="form-row"><label class="form-label">Initial Rating (1-5)</label><select id="sup-rating"><option>5 – Excellent</option><option>4 – Good</option><option>3 – Average</option><option>2 – Poor</option><option>1 – Do not use</option></select></div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border)">
+    <button class="btn" onclick="closeModal('modal-form-supplier')">Cancel</button>
+    <button class="btn btn-sm" onclick="printForm('supplier')">🖨 Print / Save PDF</button>
+    <button class="btn btn-pink" onclick="submitSupplierForm()">Save &amp; Add to Contacts →</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="modal-form-closeout"><div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto">
+  <div class="modal-head"><h3>✅ Project Close-Out Checklist — TCF</h3><button class="close-btn" onclick="closeModal('modal-form-closeout')">&#x2715;</button></div>
+  <div class="modal-body">
+    <div class="g2"><div class="form-row"><label class="form-label">Client Name</label><input type="text" id="co-client" placeholder="Client name"></div><div class="form-row"><label class="form-label">Project / Formula</label><input type="text" id="co-project" placeholder="Project name"></div></div>
+    <div class="g2"><div class="form-row"><label class="form-label">Completion Date</label><input type="date" id="co-date"></div><div class="form-row"><label class="form-label">Final Invoice Amount</label><input type="text" id="co-amount" placeholder="$0.00"></div></div>
+    <div style="font-size:11px;font-weight:700;color:var(--mint);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 10px">Deliverables Checklist</div>
+    <label style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer"><input type="checkbox" id="co-check-0" style="margin-top:2px;flex-shrink:0"> Final formula INCI list provided to client</label>
+    <label style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer"><input type="checkbox" id="co-check-1" style="margin-top:2px;flex-shrink:0"> Formula spec sheet / batch record saved to Drive</label>
+    <label style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer"><input type="checkbox" id="co-check-2" style="margin-top:2px;flex-shrink:0"> All sample versions documented and archived</label>
+    <label style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer"><input type="checkbox" id="co-check-3" style="margin-top:2px;flex-shrink:0"> Final packaging specs confirmed and on file</label>
+    <label style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer"><input type="checkbox" id="co-check-4" style="margin-top:2px;flex-shrink:0"> Certificate of Analysis (CoA) obtained if required</label>
+    <label style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer"><input type="checkbox" id="co-check-5" style="margin-top:2px;flex-shrink:0"> Safety Data Sheet (SDS) provided if applicable</label>
+    <label style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer"><input type="checkbox" id="co-check-6" style="margin-top:2px;flex-shrink:0"> Final invoice sent and payment confirmed</label>
+    <label style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer"><input type="checkbox" id="co-check-7" style="margin-top:2px;flex-shrink:0"> Client signed off on final formula (email/written confirmation)</label>
+    <label style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer"><input type="checkbox" id="co-check-8" style="margin-top:2px;flex-shrink:0"> Project folder organized and saved to Drive</label>
+    <label style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;cursor:pointer"><input type="checkbox" id="co-check-9" style="margin-top:2px;flex-shrink:0"> Client briefed on storage, shelf life, and usage instructions</label>
+    <div style="font-size:11px;font-weight:700;color:var(--mint);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">Post-Project</div>
+    <div class="form-row"><label class="form-label">Client Feedback / Testimonial (optional)</label><textarea id="co-feedback" rows="2" placeholder="Any positive feedback worth logging as a win…"></textarea></div>
+    <div class="form-row"><label class="form-label">Lessons Learned / Process Notes</label><textarea id="co-lessons" rows="2" placeholder="What went well? What would you do differently? Any SOP updates needed?"></textarea></div>
+    <div class="form-row"><label class="form-label">Retainer / Follow-up Opportunity?</label><select id="co-retainer"><option>No — project complete</option><option>Yes — offered retainer, awaiting response</option><option>Yes — retainer confirmed</option><option>Follow-up in 60 days for next project</option></select></div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border)">
+    <button class="btn" onclick="closeModal('modal-form-closeout')">Cancel</button>
+    <button class="btn btn-sm" onclick="printForm('closeout')">🖨 Print / Save PDF</button>
+    <button class="btn btn-mint" onclick="saveGenericForm('closeout')">Save Close-Out</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="modal-form-weekly"><div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto">
+  <div class="modal-head"><h3>📅 Weekly Operations Review</h3><button class="close-btn" onclick="closeModal('modal-form-weekly')">&#x2715;</button></div>
+  <div class="modal-body">
+    <div class="g2"><div class="form-row"><label class="form-label">Week of</label><input type="date" id="wr-date"></div><div class="form-row"><label class="form-label">Reviewed by</label><input type="text" id="wr-name" value="Rashell"></div></div>
+    <div style="font-size:11px;font-weight:700;color:var(--pink);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">This Week — What Happened</div>
+    <div class="form-row"><label class="form-label">✅ Completed / Accomplished</label><textarea id="wr-wins" rows="3" placeholder="List everything completed this week — tasks, client milestones, supplier orders, invoices collected…"></textarea></div>
+    <div class="form-row"><label class="form-label">🚧 Still In Progress</label><textarea id="wr-wip" rows="2" placeholder="What's ongoing and where does it stand?"></textarea></div>
+    <div class="form-row"><label class="form-label">🚨 Issues / Problems Encountered</label><textarea id="wr-issues" rows="2" placeholder="What went wrong or got stuck? How was it handled?"></textarea></div>
+    <div style="font-size:11px;font-weight:700;color:var(--pink);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">Next Week — Plan</div>
+    <div class="form-row"><label class="form-label">🎯 Top 3 Priorities Next Week</label><textarea id="wr-priorities" rows="3" placeholder="1. \n2. \n3. "></textarea></div>
+    <div class="form-row"><label class="form-label">📞 Follow-ups / Outreach Needed</label><textarea id="wr-followups" rows="2" placeholder="Clients to contact, suppliers to chase, invoices to follow up…"></textarea></div>
+    <div class="form-row"><label class="form-label">⚠️ Risks / Blockers to Flag</label><textarea id="wr-risks" rows="2" placeholder="Anything that could become a problem if not addressed?"></textarea></div>
+    <div style="font-size:11px;font-weight:700;color:var(--pink);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">Metrics Snapshot</div>
+    <div class="g2"><div class="form-row"><label class="form-label">Active Client Projects</label><input type="number" id="wr-clients" placeholder="0"></div><div class="form-row"><label class="form-label">Outstanding Invoices ($)</label><input type="text" id="wr-invoices" placeholder="$0.00"></div></div>
+    <div class="form-row"><label class="form-label">Win to Log This Week?</label><textarea id="wr-win" rows="2" placeholder="Any achievement worth adding to your Win Log?"></textarea></div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border)">
+    <button class="btn" onclick="closeModal('modal-form-weekly')">Cancel</button>
+    <button class="btn btn-sm" onclick="printForm('weekly')">🖨 Print / Save PDF</button>
+    <button class="btn btn-pink" onclick="saveWeeklyReview()">Save Review</button>
+  </div>
+</div></div>
 
 <!-- Win Log Modal -->
 <div class="modal-overlay" id="modal-win"><div class="modal" style="max-width:500px">
@@ -1933,9 +2160,16 @@ let wins=JSON.parse(localStorage.getItem('cc-wins')||'[]');
 let nextWinId=wins.length?Math.max(...wins.map(w=>w.id))+1:1;
 let editingWinId=null;
 let sops=JSON.parse(localStorage.getItem('cc-sops')||'null')||[
-  {id:1,title:'New Client Onboarding',cat:'Client Onboarding',owner:'Rashell',updated:'2026-06-05',steps:'1. Receive inquiry — log in Clients tab immediately\n2. Send Customer Intake Form within 24 hours\n3. Create client folder in Google Drive\n4. Log first contact date + set follow-up for 3 days\n5. Once intake received — create Sourcing Master from template\n6. Brief formulator with client requirements\n7. Set stage to "Formulating" in Clients tab\n8. Schedule check-in for 2 weeks',notes:'Intake form link: Customer Intake Form — The Cosmetic Formulary.pdf'},
-  {id:2,title:'Supplier Follow-up Process',cat:'Supplier Communication',owner:'Rashell',updated:'2026-06-05',steps:'1. Check Alibaba tab daily for threads marked "Need to Reply"\n2. Any thread with no reply in 3 days — send follow-up\n3. Any thread with no reply in 5 days — mark cold, escalate\n4. For orders: confirm tracking number within 2 days of expected ship date\n5. Log all supplier contacts with last message date',notes:'Cold threshold: 5 days. Always CC office@paulyinc.com on important threads.'},
-  {id:3,title:'Invoice & Payment Follow-up',cat:'Invoice Process',owner:'Rashell',updated:'2026-06-05',steps:'1. Invoice sent — log in QuickBooks tab with due date\n2. Day 1 past due: send polite payment reminder email\n3. Day 7 past due: follow up by phone or second email\n4. Day 14 past due: escalate to principal\n5. Mark invoice status in Clients tab and QuickBooks tab\n6. Log any payment received same day it arrives',notes:'Check invoice status every Monday morning as part of weekly review.'},
+  {id:1,title:'New Client Onboarding',cat:'Client Onboarding',owner:'Rashell',updated:'2026-06-05',steps:'1. Receive inquiry via email, Alibaba, or referral — log immediately in Clients tab with stage "Lead"\n2. Reply within 24 hours — acknowledge, show professionalism\n3. Send Client Intake Form (Forms tab in Ops Hub) within same business day\n4. Create client folder in Google Drive: /Clients/[ClientName]/\n5. Sub-folders: Formulas, Samples, Packaging, Invoices, Communications\n6. Once intake received — review requirements, note budget, timeline, product category\n7. Create Sourcing Master from template and share with formulator\n8. Brief formulator on client vision, target customer, and must-have ingredients/actives\n9. Set Clients tab stage to "Formulating"\n10. Log first contact date and set 3-day follow-up reminder in Calendar\n11. Schedule first check-in call for 2 weeks out\n12. Add client to weekly review radar if high-value or on tight timeline',notes:'Priority response window: 24 hours. Use Client Intake Form to get all info before starting formula work. High-value clients (>$5k) get same-day response.'},
+  {id:2,title:'Formula Development Process',cat:'Formulation',owner:'Rashell',updated:'2026-06-05',steps:'1. Receive completed Formula Request Brief from client or formulator\n2. Confirm all required info: product type, skin type, actives, certifications needed (vegan, cruelty-free, etc.)\n3. Create formula project in Drive: /Clients/[Name]/Formulas/v1/\n4. Source required raw materials — check existing inventory first, then Alibaba/suppliers\n5. Request supplier quotes for any new ingredients\n6. Build BOM (Bill of Materials) with estimated unit cost\n7. Share formula concept with client before lab work begins — get written approval\n8. Track formula development milestones in Clients tab notes\n9. Once first batch ready — send sample with Sample Feedback Form\n10. Collect feedback, iterate — max 3 rounds included in standard contract\n11. On final approval — complete formula spec sheet and INCI list\n12. Archive all formula versions in Drive, update Clients tab to "Sample Review" or "Approved"',notes:'Never start sourcing without written (email) client confirmation on formula direction. Each iteration round should be logged with date and client feedback in Clients tab.'},
+  {id:3,title:'Sample Review & Approval',cat:'Formulation',owner:'Rashell',updated:'2026-06-05',steps:'1. Sample is ready — notify client immediately, confirm shipping address\n2. Ship sample via tracked carrier — log tracking number in Shipment Tracker (Inventory tab)\n3. Send Sample Feedback Form (Forms tab in Ops Hub) with the sample or by email\n4. Set 5-day follow-up reminder — if no response, follow up once by email, once by phone\n5. Receive completed feedback form — review all scores and comments carefully\n6. Score 8+/10 across all categories = proceed to finalization\n7. Score below 8 = schedule revision call with formulator, document requested changes\n8. Process max 3 revision rounds per contract; additional rounds are billable\n9. Final approval = get written sign-off from client (email confirmation acceptable)\n10. Update Clients tab stage to "Approved" or "Finalizing"\n11. File completed feedback form in Drive: /Clients/[Name]/Samples/\n12. Flag any unusually difficult reformulation as a lesson learned in Close-Out Checklist',notes:'Always request written approval — verbal is not sufficient. Keep all sample feedback for QC reference. If client ghosted after receiving sample, escalate to 14-day follow-up protocol.'},
+  {id:4,title:'Supplier Communication & Ordering',cat:'Supplier Communication',owner:'Rashell',updated:'2026-06-05',steps:'1. Check Alibaba Messages tab every morning (daily task, first 15 min of day)\n2. Triage messages: mark each as Waiting/In Progress/Need to Reply/Complete\n3. Any thread with no reply from supplier within 3 business days — send follow-up message\n4. Any thread with no reply within 5 business days — flag as Cold, consider alternate supplier\n5. For new orders: confirm product specs, MOQ, unit price, lead time, and payment terms in writing before placing\n6. Request PI (Proforma Invoice) for all orders over $500\n7. After payment: confirm receipt with supplier and request ship date within 3 days\n8. Once shipped: request tracking number within 24 hours of ship date\n9. Log tracking number in Inventory tab Shipment Tracker immediately\n10. Monitor delivery — follow up if no tracking movement for 7+ days\n11. On delivery: inspect goods, confirm against PO, log in inventory\n12. Log any quality issues immediately — notify supplier with photos within 48 hours',notes:'Cold threshold: 5 business days no response. Always get order confirmations in writing. For first-time suppliers: request sample before bulk order. Preferred payment: Alibaba Trade Assurance only.'},
+  {id:5,title:'Invoice & Payment Collection',cat:'Finance',owner:'Rashell',updated:'2026-06-05',steps:'1. Invoice is issued — log in QuickBooks tab immediately with: client, amount, issue date, due date\n2. Update Clients tab with invoice status and amount\n3. Day 0: Invoice sent — confirm client received it\n4. Day 1 past due: Send friendly payment reminder email (template: "Payment Reminder — TCF Invoice #XXX")\n5. Day 7 past due: Follow up by phone OR second email — be firm but professional\n6. Day 14 past due: Escalate to principal — provide full paper trail of communications\n7. Day 30 past due: Flag for potential collections review\n8. When payment received: mark paid in QuickBooks tab AND Clients tab same day\n9. Log any successful collection after dispute in Win Log\n10. Run invoice audit every Monday: review all open invoices, flag anything 7+ days past due',notes:'Never skip the Day 1 reminder — early follow-up dramatically improves collection rate. Check invoice status every Monday morning as first item in weekly review. Goal: zero invoices past 30 days.'},
+  {id:6,title:'Alibaba Sourcing Process',cat:'Supplier Communication',owner:'Rashell',updated:'2026-06-05',steps:'1. Receive sourcing request — confirm exact product specs, target unit cost, needed quantity\n2. Search Alibaba for 3-5 qualified suppliers minimum (do not rely on single source)\n3. Evaluate suppliers: Trade Assurance required, min 2yr history, verified badge preferred\n4. Contact all shortlisted suppliers with identical RFQ message (use RFQ template)\n5. Request: unit price at target MOQ, sample availability, lead time, payment terms\n6. Receive quotes — create comparison sheet (Supplier, Price, MOQ, Lead Time, Notes)\n7. Order samples from top 2-3 suppliers before committing to bulk\n8. Review samples against spec — document findings in Sample Feedback Form\n9. Negotiate: use competing quotes as leverage, target 10-15% below initial quote\n10. Select winner — confirm all terms in writing via Alibaba message thread\n11. Place order via Alibaba Trade Assurance only\n12. Monitor through delivery — track in Inventory tab Shipment Tracker',notes:'Never place bulk order without sample testing. Always use Trade Assurance. Maintain a shortlist of backup suppliers for each critical ingredient/material category.'},
+  {id:7,title:'Weekly Operations Review',cat:'Operations',owner:'Rashell',updated:'2026-06-05',steps:'1. Every Monday morning — open Weekly Operations Review form (Forms tab in Ops Hub)\n2. Review all active client projects — update stages in Clients tab\n3. Audit open invoices — flag anything 7+ days overdue, initiate follow-up\n4. Check Alibaba tab — flag threads needing reply, any orders overdue\n5. Review Inventory tab shipments — any delays or issues?\n6. Review this week\'s calendar — any deadlines, client calls, or supplier commitments?\n7. Write Top 3 Priorities for the week — put in Weekly Review form\n8. Identify risks and blockers — anything that could derail the week?\n9. Complete Weekly Operations Review form — save it\n10. If any win worth logging — add to Win Log before closing review\n11. Send brief summary to principal if any urgent items flagged\n12. Set all necessary follow-up reminders in Calendar before ending review',notes:'Target: Monday review complete by 10am. Never skip — this is the single highest-leverage habit for staying ahead. Review should take 20-30 min max.'},
+  {id:8,title:'Project Close-Out Process',cat:'Client Onboarding',owner:'Rashell',updated:'2026-06-05',steps:'1. Client has approved final formula — initiate close-out\n2. Open Project Close-Out Checklist (Forms tab in Ops Hub) — complete every line item\n3. Provide client with: final INCI list, formula spec sheet, batch record, storage/shelf life instructions\n4. Obtain CoA (Certificate of Analysis) from lab or supplier if required by client\n5. Provide SDS (Safety Data Sheet) if client requests — required for most retail\n6. Confirm final invoice has been sent and payment terms are clear\n7. Get written sign-off from client on final formula\n8. Organize project folder in Drive — archive all versions, clean up\n9. Update Clients tab stage to "Complete"\n10. Ask for testimonial or Google review — do this while relationship is warm\n11. Discuss retainer or next project — plant the seed before closing\n12. Log any wins from this project in Win Log\n13. Complete Close-Out form — save it and file in Drive /Clients/[Name]/',notes:'Do not mark complete until payment is confirmed. The close-out call is your best sales call — always mention next project possibilities. Testimonials have outsized marketing value — ask every time.'},
+  {id:9,title:'Daily Operations Checklist',cat:'Operations',owner:'Rashell',updated:'2026-06-05',steps:'MORNING (first 30 min):\n1. Check Alibaba Messages — triage, reply, update status flags\n2. Check email — flag anything needing action today\n3. Review Daily Briefing on dashboard homepage — note any alerts\n4. Check today\'s calendar — confirm all commitments\n5. Scan Inventory Shipment Tracker — any deliveries expected today?\n\nMID-DAY:\n6. Follow up on any outstanding client communications\n7. Check QuickBooks tab for any invoices due today or overdue\n8. Update any Clients tab stages if project milestones hit\n\nEND OF DAY:\n9. Process any pending tasks — if not done today, reschedule with purpose\n10. Set tomorrow\'s top 3 in Task Manager\n11. Flag anything unresolved for next morning',notes:'The Alibaba morning check is non-negotiable — suppliers in China are +12-15 hrs ahead. Morning is the best window to catch and respond to their business day.'},
+  {id:10,title:'New Supplier Onboarding',cat:'Supplier Communication',owner:'Rashell',updated:'2026-06-05',steps:'1. Identify supplier via Alibaba search, referral, or trade show\n2. Complete Supplier Onboarding Form (Forms tab in Ops Hub)\n3. Verify: Trade Assurance status, years on Alibaba, transaction history, verified badge\n4. Request: company profile, product catalog, certifications (ISO, GMP, etc.)\n5. For ingredient suppliers: request COA and MSDS/SDS for relevant products\n6. Place sample order before any bulk commitment — non-negotiable for new suppliers\n7. Evaluate sample: quality, packaging, label accuracy, matches specs\n8. Document evaluation in Sample Feedback Form\n9. Negotiate terms: pricing, MOQ, lead time, payment, reorder process\n10. Add to Contacts tab with all supplier details\n11. Rate supplier performance after first full order\n12. Tag as Preferred, Backup, or Trial in Contacts notes',notes:'Never skip sample testing for new suppliers. Minimum 3 supplier options per product category — single-source dependency is a major operations risk. File all supplier certs in Drive.'},
 ];
 let nextSOPId=sops.length?Math.max(...sops.map(s=>s.id))+1:1;
 let editingSOPId=null;
@@ -1981,6 +2215,203 @@ function saveSOP(){
   saveSOPs();renderSOPs();closeModal('modal-sop');
 }
 function deleteSOP(id){if(!confirm('Delete this SOP?'))return;sops=sops.filter(s=>s.id!==id);saveSOPs();renderSOPs();}
+
+// ── FORMS & TEMPLATES ──
+function openFormModal(type){
+  // Reset form fields before opening
+  const resets = {
+    intake:   ['if-name','if-brand','if-email','if-phone','if-social','if-market','if-price','if-moq','if-packaging','if-benchmark','if-notes','if-actives','if-avoid','if-desc'],
+    formula:  ['fb-client','fb-title','fb-type','fb-date','fb-color','fb-ph','fb-actives','fb-emollients','fb-exclude','fb-certs','fb-benchmark','fb-notes'],
+    sample:   ['sf-client','sf-project','sf-version','sf-date','sf-likes','sf-changes','sf-notes'],
+    supplier: ['sup-company','sup-country','sup-contact','sup-email','sup-wechat','sup-url','sup-products','sup-moq','sup-lead','sup-sample','sup-notes'],
+    closeout: ['co-client','co-project','co-date','co-amount','co-feedback','co-lessons'],
+    weekly:   ['wr-date','wr-name','wr-wins','wr-wip','wr-issues','wr-priorities','wr-followups','wr-risks','wr-clients','wr-invoices','wr-win'],
+  };
+  (resets[type]||[]).forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  // Reset checkboxes in closeout
+  if(type==='closeout'){for(let i=0;i<10;i++){const cb=document.getElementById('co-check-'+i);if(cb)cb.checked=false;}}
+  // Pre-fill weekly date
+  if(type==='weekly'){const el=document.getElementById('wr-date');if(el)el.value=new Date().toISOString().slice(0,10);}
+  // Pre-fill closeout date
+  if(type==='closeout'){const el=document.getElementById('co-date');if(el)el.value=new Date().toISOString().slice(0,10);}
+  openModal('modal-form-'+type);
+}
+
+function printForm(type){
+  const el=document.getElementById('modal-form-'+type);
+  if(!el) return;
+  const title = {intake:'Client Intake Form',formula:'Formula Request Brief',sample:'Sample Feedback Form',supplier:'Supplier Onboarding Form',closeout:'Project Close-Out Checklist',weekly:'Weekly Operations Review'}[type]||'Form';
+  const content = el.querySelector('.modal-body');
+  if(!content) return;
+  // Serialize current form values into a printable snapshot
+  const clone = content.cloneNode(true);
+  // Replace inputs/selects/textareas with their values as text spans
+  clone.querySelectorAll('input[type="text"],input[type="email"],input[type="tel"],input[type="url"],input[type="date"],input[type="number"]').forEach(inp=>{
+    const span=document.createElement('span');
+    span.style.cssText='display:block;min-height:22px;border-bottom:1px solid #ccc;padding:2px 0;font-size:12px;color:#111';
+    span.textContent=inp.value||'';
+    inp.parentNode.replaceChild(span,inp);
+  });
+  clone.querySelectorAll('textarea').forEach(ta=>{
+    const span=document.createElement('span');
+    span.style.cssText='display:block;min-height:40px;border-bottom:1px solid #ccc;white-space:pre-wrap;padding:2px 0;font-size:12px;color:#111';
+    span.textContent=ta.value||'';
+    ta.parentNode.replaceChild(span,ta);
+  });
+  clone.querySelectorAll('select').forEach(sel=>{
+    const span=document.createElement('span');
+    span.style.cssText='display:block;padding:2px 0;font-size:12px;color:#111;font-weight:600';
+    span.textContent=sel.options[sel.selectedIndex]?sel.options[sel.selectedIndex].text:'';
+    sel.parentNode.replaceChild(span,sel);
+  });
+  const pw=window.open('','_blank','width=800,height=900');
+  pw.document.write(`<!DOCTYPE html><html><head><title>${title} — TCF</title>
+<style>
+  body{font-family:Georgia,serif;max-width:700px;margin:40px auto;padding:0 30px;color:#111}
+  h1{font-size:18px;border-bottom:2px solid #c04070;padding-bottom:8px;margin-bottom:20px;color:#c04070}
+  h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#a06090;margin:20px 0 8px;font-family:sans-serif}
+  .form-label{font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:#888;display:block;margin-top:14px;font-family:sans-serif}
+  label{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid #eee;font-size:12px}
+  @media print{body{margin:20px}}
+</style></head><body>
+<h1>${title} — The Cosmetic Formulary</h1>
+<p style="font-size:11px;color:#888;margin-bottom:20px">Printed: ${new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
+${clone.innerHTML}
+</body></html>`);
+  pw.document.close();
+  pw.focus();
+  setTimeout(()=>pw.print(),400);
+}
+
+function submitIntakeForm(){
+  const name=document.getElementById('if-name').value.trim();
+  if(!name){alert('Client name is required.');return;}
+  const brand=document.getElementById('if-brand').value.trim()||name;
+  const email=document.getElementById('if-email').value.trim();
+  const phone=document.getElementById('if-phone').value.trim();
+  const products=document.getElementById('if-desc').value.trim();
+  const timeline_el=document.getElementById('if-timeline');
+  const timeline=timeline_el?timeline_el.options[timeline_el.selectedIndex].text:'';
+  const budget_el=document.getElementById('if-budget');
+  const budgetRange=budget_el?budget_el.options[budget_el.selectedIndex].text:'';
+  const notes=document.getElementById('if-notes').value.trim();
+  // Build new client entry
+  const newClient={
+    id: Date.now(),
+    name: brand||name,
+    contact: name,
+    email: email,
+    phone: phone,
+    stage: 'Lead',
+    invoice: 'None',
+    amount: budget||budgetRange||'',
+    products: products,
+    notes: (timeline?'Timeline: '+timeline+'\n':'')+(notes||''),
+    followup: new Date(Date.now()+3*86400000).toISOString().slice(0,10),
+    created: new Date().toISOString().slice(0,10),
+  };
+  clients.unshift(newClient);
+  localStorage.setItem('cc-clients',JSON.stringify(clients));
+  closeModal('modal-form-intake');
+  // Navigate to clients tab
+  showPage('clients');
+  alert('✅ "'+newClient.name+'" added to the Clients tab as a new Lead!');
+}
+
+function submitSupplierForm(){
+  const company=document.getElementById('sup-company').value.trim();
+  if(!company){alert('Company name is required.');return;}
+  const name=document.getElementById('sup-contact').value.trim();
+  const country=document.getElementById('sup-country').value.trim();
+  const email=document.getElementById('sup-email').value.trim();
+  const phone=document.getElementById('sup-wechat').value.trim();
+  const website=document.getElementById('sup-url').value.trim();
+  const products=document.getElementById('sup-products').value.trim();
+  const moq=document.getElementById('sup-moq').value.trim();
+  const payment_el=document.getElementById('sup-payment');
+  const payment=payment_el?payment_el.options[payment_el.selectedIndex].text:'';
+  const certs=['sup-iso','sup-gmp','sup-fda','sup-cosmos','sup-ta'].filter(id=>{const cb=document.getElementById(id);return cb&&cb.checked;}).map(id=>document.getElementById(id).labels[0]?document.getElementById(id).labels[0].textContent.trim():id).join(', ');
+  const notes=document.getElementById('sup-notes').value.trim();
+  // Add to contacts
+  const newContact={
+    id: Date.now(),
+    name: name||company,
+    company: company,
+    email: email,
+    phone: phone,
+    website: website,
+    type: 'Supplier',
+    country: country,
+    notes: (products?'Products: '+products+'\n':'')+(moq?'MOQ: '+moq+'\n':'')+(payment?'Payment: '+payment+'\n':'')+(certs?'Certs: '+certs+'\n':'')+(notes||''),
+  };
+  contacts.push(newContact);
+  localStorage.setItem('cc-contacts',JSON.stringify(contacts));
+  closeModal('modal-form-supplier');
+  showPage('contacts');
+  alert('✅ "'+newContact.company+'" added to your Contacts!');
+}
+
+function saveGenericForm(type){
+  const labels={formula:'Formula Request Brief',sample:'Sample Feedback',closeout:'Project Close-Out'};
+  // Gather key fields for a confirmation
+  let summary='';
+  if(type==='formula'){
+    const client=document.getElementById('fb-client').value.trim();
+    const product=document.getElementById('fb-title').value.trim();
+    if(!client&&!product){alert('Please fill in at least the client name and formula title.');return;}
+    summary=(client||'Unknown Client')+' — '+(product||'Formula Request');
+  } else if(type==='sample'){
+    const client=document.getElementById('sf-client').value.trim();
+    const formula=document.getElementById('sf-project').value.trim();
+    summary=(client||'Unknown Client')+' — '+(formula||'Sample Feedback');
+  } else if(type==='closeout'){
+    const client=document.getElementById('co-client').value.trim();
+    const project=document.getElementById('co-project').value.trim();
+    if(!client){alert('Client name is required.');return;}
+    summary=(client||'Unknown Client')+' — '+(project||'Close-Out');
+    // Check if any win-worthy note to log
+    const feedback=document.getElementById('co-feedback').value.trim();
+    if(feedback){
+      // Auto-offer to add to Win Log
+      if(confirm('🏆 Client feedback noted! Add "'+client+' project close-out" to your Win Log?')){
+        wins.unshift({id:nextWinId++,title:'Completed project: '+(project||'Formula')+ ' for '+(client||'client'),cat:'Client Win',date:new Date().toISOString().slice(0,10),impact:feedback,notes:''});
+        saveWins();
+      }
+    }
+  }
+  // Save to localStorage archive
+  const archive=JSON.parse(localStorage.getItem('cc-form-archive')||'[]');
+  const formEl=document.getElementById('modal-form-'+type);
+  const inputs={};
+  if(formEl){
+    formEl.querySelectorAll('input,select,textarea').forEach(el=>{if(el.id)inputs[el.id]=el.type==='checkbox'?el.checked:el.value;});
+  }
+  archive.unshift({type,label:labels[type]||type,summary,date:new Date().toISOString().slice(0,10),data:inputs});
+  localStorage.setItem('cc-form-archive',JSON.stringify(archive.slice(0,200)));
+  closeModal('modal-form-'+type);
+  alert('✅ '+(labels[type]||'Form')+' saved'+(summary?' for '+summary:'')+'!');
+}
+
+function saveWeeklyReview(){
+  const weekOf=document.getElementById('wr-date').value||new Date().toISOString().slice(0,10);
+  const wins_text=document.getElementById('wr-wins').value.trim();
+  const priorities=document.getElementById('wr-priorities').value.trim();
+  const winNote=document.getElementById('wr-win').value.trim();
+  // Save to archive
+  const archive=JSON.parse(localStorage.getItem('cc-form-archive')||'[]');
+  const formEl=document.getElementById('modal-form-weekly');
+  const inputs={};
+  if(formEl) formEl.querySelectorAll('input,select,textarea').forEach(el=>{if(el.id)inputs[el.id]=el.value;});
+  archive.unshift({type:'weekly',label:'Weekly Operations Review',summary:'Week of '+weekOf,date:weekOf,data:inputs});
+  localStorage.setItem('cc-form-archive',JSON.stringify(archive.slice(0,200)));
+  // Auto-log win if provided
+  if(winNote){
+    wins.unshift({id:nextWinId++,title:winNote,cat:'Operations Win',date:weekOf,impact:wins_text.slice(0,120)||'',notes:'From weekly review'});
+    saveWins();
+  }
+  closeModal('modal-form-weekly');
+  alert('✅ Weekly Review saved for '+weekOf+(winNote?' — Win logged!':'')+'!');
+}
 
 let expandedSOP=null;
 function renderSOPs(){
