@@ -451,6 +451,7 @@ select option { background: var(--s1); }
     <button class="nav-btn" onclick="showPage('files')">Files</button>
     <button class="nav-btn" onclick="showPage('inventory')">Inventory</button>
     <button class="nav-btn" onclick="showPage('finance')">QuickBooks</button>
+    <button class="nav-btn" onclick="showPage('ops')">Ops Hub</button>
     <button class="nav-btn mint-tab" onclick="showPage('links')">External Links</button>
     <button class="nav-btn" onclick="showPage('notion')">Notion</button>
     <button class="nav-btn lexie-tab" onclick="showPage('lexie')">Lexie &amp; Emmie</button>
@@ -1106,6 +1107,129 @@ select option { background: var(--s1); }
 </div>
 
 <!-- ══ EXTERNAL LINKS ══ -->
+<!-- ══ OPS HUB ══ -->
+<div class="page" id="page-ops">
+<div class="page-inner">
+
+  <!-- Metrics row -->
+  <div class="g4 scorecard" style="margin-bottom:14px" id="ops-metrics-cards">
+    <div class="score-item"><div class="sc-label">Pipeline Value</div><div class="sc-val mint" id="ops-pipeline">$0</div><div class="sc-sub">active client projects</div></div>
+    <div class="score-item"><div class="sc-label">Outstanding Invoices</div><div class="sc-val red" id="ops-outstanding">$0</div><div class="sc-sub">unpaid / overdue</div></div>
+    <div class="score-item"><div class="sc-label">Retainer MRR</div><div class="sc-val pink" id="ops-mrr">$0</div><div class="sc-sub">monthly recurring</div></div>
+    <div class="score-item"><div class="sc-label">Wins This Month</div><div class="sc-val gold" id="ops-wins-count">0</div><div class="sc-sub">logged achievements</div></div>
+  </div>
+
+  <div class="glw">
+    <div>
+
+      <!-- Win Log -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-head">
+          <h3>🏆 Win Log</h3>
+          <div class="ch-r"><button class="btn btn-sm btn-pink" onclick="openWinModal()">+ Log Win</button></div>
+        </div>
+        <div style="padding:8px 14px;font-size:10px;color:var(--t3);border-bottom:1px solid var(--border);font-style:italic">Every problem solved, system built, invoice recovered, supplier secured — log it. This is your promotion case.</div>
+        <div id="win-log-list"></div>
+      </div>
+
+      <!-- Metrics Detail -->
+      <div class="card">
+        <div class="card-head"><h3>📊 Operations Metrics</h3><div class="ch-r"><button class="btn btn-sm" onclick="renderOpsMetrics()">↻ Refresh</button></div></div>
+        <div id="ops-metrics-detail" style="padding:4px 0"></div>
+      </div>
+
+    </div>
+    <div>
+
+      <!-- Proactive Radar -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-head"><h3>📡 Proactive Radar</h3><div class="ch-r"><span style="font-size:10px;color:var(--t3)">next 7 days</span></div></div>
+        <div style="padding:8px 14px;font-size:10px;color:var(--t3);border-bottom:1px solid var(--border);font-style:italic">Things that aren't urgent yet — but will be soon.</div>
+        <div id="ops-radar-list"></div>
+      </div>
+
+      <!-- SOPs Library -->
+      <div class="card">
+        <div class="card-head">
+          <h3>📋 SOPs</h3>
+          <div class="ch-r">
+            <select id="sop-filter" onchange="renderSOPs()" style="font-size:10px;padding:3px 6px;border-radius:5px;border:1px solid var(--border);background:var(--s2);color:var(--t1)">
+              <option value="">All Categories</option>
+              <option>Client Onboarding</option>
+              <option>Supplier Communication</option>
+              <option>Invoice Process</option>
+              <option>Order Management</option>
+              <option>Inventory</option>
+              <option>General Operations</option>
+            </select>
+            <button class="btn btn-sm btn-mint" onclick="openSOPModal()">+ New SOP</button>
+          </div>
+        </div>
+        <div id="sop-list"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Win Log Modal -->
+<div class="modal-overlay" id="modal-win"><div class="modal" style="max-width:500px">
+  <div class="modal-head"><h3 id="win-modal-title">Log a Win</h3><button class="close-btn" onclick="closeModal('modal-win')">&#x2715;</button></div>
+  <div class="modal-body">
+    <div class="form-row"><label class="form-label">What did you accomplish? *</label><input type="text" id="win-title" placeholder="e.g. Recovered $1,200 overdue invoice from Meredith"></div>
+    <div class="g2">
+      <div class="form-row"><label class="form-label">Category</label>
+        <select id="win-cat">
+          <option>Problem Solved</option>
+          <option>System Built</option>
+          <option>Process Improved</option>
+          <option>Client Win</option>
+          <option>Supplier Win</option>
+          <option>Cost Saved</option>
+          <option>Time Saved</option>
+          <option>Revenue Recovered</option>
+          <option>Risk Prevented</option>
+        </select>
+      </div>
+      <div class="form-row"><label class="form-label">Date</label><input type="date" id="win-date"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Impact (quantify if possible)</label><input type="text" id="win-impact" placeholder="e.g. Saved 3 hrs/week, recovered $1,200, prevented supplier delay"></div>
+    <div class="form-row"><label class="form-label">Details / Context</label><textarea id="win-notes" rows="2" placeholder="What was the situation? What did you do? What was the result?"></textarea></div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border)">
+    <button class="btn" onclick="closeModal('modal-win')">Cancel</button>
+    <button class="btn btn-pink" onclick="saveWin()">Save Win</button>
+  </div>
+</div></div>
+
+<!-- SOP Modal -->
+<div class="modal-overlay" id="modal-sop"><div class="modal" style="max-width:580px">
+  <div class="modal-head"><h3 id="sop-modal-title">New SOP</h3><button class="close-btn" onclick="closeModal('modal-sop')">&#x2715;</button></div>
+  <div class="modal-body">
+    <div class="g2">
+      <div class="form-row"><label class="form-label">SOP Title *</label><input type="text" id="sop-title" placeholder="e.g. New Client Onboarding Checklist"></div>
+      <div class="form-row"><label class="form-label">Category</label>
+        <select id="sop-cat">
+          <option>Client Onboarding</option>
+          <option>Supplier Communication</option>
+          <option>Invoice Process</option>
+          <option>Order Management</option>
+          <option>Inventory</option>
+          <option>General Operations</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row"><label class="form-label">Owner</label><input type="text" id="sop-owner" placeholder="e.g. Rashell" value="Rashell"></div>
+    <div class="form-row"><label class="form-label">Steps / Process (one step per line)</label><textarea id="sop-steps" rows="8" placeholder="1. Send client intake form within 24hrs of inquiry&#10;2. Log client in the Clients tab&#10;3. Create sourcing master from template&#10;4. …"></textarea></div>
+    <div class="form-row"><label class="form-label">Notes</label><textarea id="sop-notes" rows="2" placeholder="Tools used, exceptions, tips…"></textarea></div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border)">
+    <button class="btn" onclick="closeModal('modal-sop')">Cancel</button>
+    <button class="btn btn-mint" onclick="saveSOP()">Save SOP</button>
+  </div>
+</div></div>
+
 <div class="page" id="page-links">
 <div class="page-inner">
   <div class="links-controls">
@@ -1328,6 +1452,8 @@ function showPage(id){
     if(b.onclick&&b.onclick.toString().includes("'"+id+"'")) b.classList.add('active');
   });
   closeThread(); closeContactPanel();
+  if(id==='ops') renderOpsHub();
+  if(id==='clients') renderClients();
 }
 
 // ── MODALS ──
@@ -1801,6 +1927,208 @@ function renderClients(){
 }
 function exportClientsCSV(){const h=['Client','Brand','Project','Type','Stage','Next Action','Follow-up','Invoice','Amount','Last Contact','Notes'];const rows=clients.map(c=>[c.name,c.brand,c.project,c.type,c.stage,c.nextAction,c.followup,c.invoice,c.amount,c.last,c.notes].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(','));download('clients.csv',[h.join(','),...rows].join('\n'),'text/csv');}
 renderClients();
+
+// ── OPS HUB ──
+let wins=JSON.parse(localStorage.getItem('cc-wins')||'[]');
+let nextWinId=wins.length?Math.max(...wins.map(w=>w.id))+1:1;
+let editingWinId=null;
+let sops=JSON.parse(localStorage.getItem('cc-sops')||'null')||[
+  {id:1,title:'New Client Onboarding',cat:'Client Onboarding',owner:'Rashell',updated:'2026-06-05',steps:'1. Receive inquiry — log in Clients tab immediately\n2. Send Customer Intake Form within 24 hours\n3. Create client folder in Google Drive\n4. Log first contact date + set follow-up for 3 days\n5. Once intake received — create Sourcing Master from template\n6. Brief formulator with client requirements\n7. Set stage to "Formulating" in Clients tab\n8. Schedule check-in for 2 weeks',notes:'Intake form link: Customer Intake Form — The Cosmetic Formulary.pdf'},
+  {id:2,title:'Supplier Follow-up Process',cat:'Supplier Communication',owner:'Rashell',updated:'2026-06-05',steps:'1. Check Alibaba tab daily for threads marked "Need to Reply"\n2. Any thread with no reply in 3 days — send follow-up\n3. Any thread with no reply in 5 days — mark cold, escalate\n4. For orders: confirm tracking number within 2 days of expected ship date\n5. Log all supplier contacts with last message date',notes:'Cold threshold: 5 days. Always CC office@paulyinc.com on important threads.'},
+  {id:3,title:'Invoice & Payment Follow-up',cat:'Invoice Process',owner:'Rashell',updated:'2026-06-05',steps:'1. Invoice sent — log in QuickBooks tab with due date\n2. Day 1 past due: send polite payment reminder email\n3. Day 7 past due: follow up by phone or second email\n4. Day 14 past due: escalate to principal\n5. Mark invoice status in Clients tab and QuickBooks tab\n6. Log any payment received same day it arrives',notes:'Check invoice status every Monday morning as part of weekly review.'},
+];
+let nextSOPId=sops.length?Math.max(...sops.map(s=>s.id))+1:1;
+let editingSOPId=null;
+function saveWins(){localStorage.setItem('cc-wins',JSON.stringify(wins));}
+function saveSOPs(){localStorage.setItem('cc-sops',JSON.stringify(sops));}
+
+function openWinModal(id){
+  editingWinId=id||null;
+  const w=id?wins.find(x=>x.id===id)||{}:{};
+  document.getElementById('win-modal-title').textContent=id?'Edit Win':'Log a Win';
+  document.getElementById('win-title').value=w.title||'';
+  document.getElementById('win-cat').value=w.cat||'Problem Solved';
+  document.getElementById('win-date').value=w.date||new Date().toISOString().slice(0,10);
+  document.getElementById('win-impact').value=w.impact||'';
+  document.getElementById('win-notes').value=w.notes||'';
+  openModal('modal-win');
+}
+function saveWin(){
+  const title=document.getElementById('win-title').value.trim();if(!title)return;
+  const obj={id:editingWinId||nextWinId++,title,cat:document.getElementById('win-cat').value,date:document.getElementById('win-date').value,impact:document.getElementById('win-impact').value,notes:document.getElementById('win-notes').value};
+  if(editingWinId){const i=wins.findIndex(x=>x.id===editingWinId);if(i>-1)wins[i]=obj;else wins.unshift(obj);}
+  else wins.unshift(obj);
+  saveWins();renderOpsHub();closeModal('modal-win');
+}
+function deleteWin(id){wins=wins.filter(w=>w.id!==id);saveWins();renderOpsHub();}
+
+function openSOPModal(id){
+  editingSOPId=id||null;
+  const s=id?sops.find(x=>x.id===id)||{}:{};
+  document.getElementById('sop-modal-title').textContent=id?'Edit SOP':'New SOP';
+  document.getElementById('sop-title').value=s.title||'';
+  document.getElementById('sop-cat').value=s.cat||'General Operations';
+  document.getElementById('sop-owner').value=s.owner||'Rashell';
+  document.getElementById('sop-steps').value=s.steps||'';
+  document.getElementById('sop-notes').value=s.notes||'';
+  openModal('modal-sop');
+}
+function saveSOP(){
+  const title=document.getElementById('sop-title').value.trim();if(!title)return;
+  const obj={id:editingSOPId||nextSOPId++,title,cat:document.getElementById('sop-cat').value,owner:document.getElementById('sop-owner').value,updated:new Date().toISOString().slice(0,10),steps:document.getElementById('sop-steps').value,notes:document.getElementById('sop-notes').value};
+  if(editingSOPId){const i=sops.findIndex(x=>x.id===editingSOPId);if(i>-1)sops[i]=obj;else sops.unshift(obj);}
+  else sops.unshift(obj);
+  saveSOPs();renderSOPs();closeModal('modal-sop');
+}
+function deleteSOP(id){if(!confirm('Delete this SOP?'))return;sops=sops.filter(s=>s.id!==id);saveSOPs();renderSOPs();}
+
+let expandedSOP=null;
+function renderSOPs(){
+  const fc=document.getElementById('sop-filter').value;
+  const list=sops.filter(s=>!fc||s.cat===fc);
+  const catColor={'Client Onboarding':'var(--pink)','Supplier Communication':'var(--gold)','Invoice Process':'var(--mint)','Order Management':'var(--t2)','Inventory':'var(--t2)','General Operations':'var(--t3)'};
+  document.getElementById('sop-list').innerHTML=list.map(s=>`
+    <div style="border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer" onclick="expandedSOP=expandedSOP===${s.id}?null:${s.id};renderSOPs()">
+        <span style="font-size:11px;font-weight:700;flex:1;color:var(--t1)">${escH(s.title)}</span>
+        <span class="pill p-dim" style="font-size:9px;background:none;border:1px solid var(--border);color:${catColor[s.cat]||'var(--t3)'}">${s.cat}</span>
+        <span style="font-size:10px;color:var(--t3)">${s.owner} · ${s.updated}</span>
+        <button class="btn btn-sm" style="font-size:10px" onclick="event.stopPropagation();openSOPModal(${s.id})">Edit</button>
+        <button class="ev-del" onclick="event.stopPropagation();deleteSOP(${s.id})">&#x2715;</button>
+        <span style="font-size:10px;color:var(--t3)">${expandedSOP===s.id?'▲':'▼'}</span>
+      </div>
+      ${expandedSOP===s.id?`<div style="padding:0 14px 14px;background:var(--bg);border-top:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--t1);white-space:pre-line;line-height:1.8;padding-top:10px">${escH(s.steps)}</div>
+        ${s.notes?`<div style="margin-top:8px;padding:8px 10px;background:var(--s2);border-radius:6px;font-size:10px;color:var(--t3);font-style:italic">${escH(s.notes)}</div>`:''}
+      </div>`:''}
+    </div>`).join('')||'<div style="padding:14px;font-size:11px;color:var(--t3)">No SOPs yet. Click + New SOP to document your first process.</div>';
+}
+
+function renderOpsMetrics(){
+  const today=new Date().toISOString().slice(0,10);
+  // Pipeline value — sum of all active client amounts
+  const pipeline=clients.filter(c=>!['Closed','Delivered'].includes(c.stage)).reduce((sum,c)=>{
+    const n=parseFloat((c.amount||'').replace(/[^0-9.]/g,''))||0;return sum+n;},0);
+  const outstanding=clients.filter(c=>['Invoiced','Overdue','Partial'].includes(c.invoice)).reduce((sum,c)=>{
+    const n=parseFloat((c.amount||'').replace(/[^0-9.]/g,''))||0;return sum+n;},0);
+  const mrr=clients.filter(c=>c.retainer).reduce((sum,c)=>{
+    const n=parseFloat((c.retainer||'').replace(/[^0-9.]/g,''))||0;return sum+n;},0);
+  const thisMonth=new Date().toISOString().slice(0,7);
+  const winsThisMonth=wins.filter(w=>w.date&&w.date.startsWith(thisMonth)).length;
+
+  document.getElementById('ops-pipeline').textContent='$'+pipeline.toLocaleString();
+  document.getElementById('ops-outstanding').textContent='$'+outstanding.toLocaleString();
+  document.getElementById('ops-mrr').textContent=mrr?'$'+mrr.toLocaleString()+'/mo':'$0';
+  document.getElementById('ops-wins-count').textContent=winsThisMonth;
+
+  // Metrics detail breakdown
+  const overdueClients=clients.filter(c=>c.invoice==='Overdue');
+  const activeClients=clients.filter(c=>!['Closed','On Hold'].includes(c.stage));
+  const followupDue=clients.filter(c=>c.followup&&c.followup<=today&&c.stage!=='Closed');
+  const aliNeedReply=aliConvos.filter(a=>a.status==='Need to Reply');
+  const aliCold=aliConvos.filter(a=>{if(['Resolved','Archived'].includes(a.status))return false;if(!a.last)return false;return(new Date()-new Date(a.last))/(86400000)>=5;});
+  const lowItems=inventory.filter(i=>['low','out'].includes(i.status));
+  const inTransitOrders=orders.filter(o=>['In Transit','Pending','Ordered'].includes(o.status));
+
+  const rows=[
+    {label:'Active client projects',val:activeClients.length,status:activeClients.length>0?'mint':'dim',note:activeClients.slice(0,3).map(c=>c.name).join(', ')},
+    {label:'Client follow-ups due',val:followupDue.length,status:followupDue.length>0?'red':'mint',note:followupDue.slice(0,2).map(c=>c.name+' ('+c.followup+')').join(', ')},
+    {label:'Overdue invoices',val:overdueClients.length,status:overdueClients.length>0?'red':'mint',note:overdueClients.map(c=>c.name+' '+c.amount).join(', ')},
+    {label:'Alibaba threads needing reply',val:aliNeedReply.length,status:aliNeedReply.length>0?'red':'mint',note:aliNeedReply.slice(0,2).map(a=>a.supplier).join(', ')},
+    {label:'Alibaba threads gone cold (5+ days)',val:aliCold.length,status:aliCold.length>0?'gold':'mint',note:aliCold.slice(0,2).map(a=>a.supplier).join(', ')},
+    {label:'Inventory items low/out of stock',val:lowItems.length,status:lowItems.length>0?'gold':'mint',note:lowItems.slice(0,3).map(i=>i.name).join(', ')},
+    {label:'Orders in transit',val:inTransitOrders.length,status:'mint',note:inTransitOrders.slice(0,2).map(o=>o.num||o.vendor).join(', ')},
+    {label:'Wins logged this month',val:winsThisMonth,status:winsThisMonth>0?'mint':'dim',note:wins.filter(w=>w.date&&w.date.startsWith(thisMonth)).slice(0,2).map(w=>w.title).join(', ')},
+  ];
+  const sc={red:'var(--red)',gold:'var(--gold)',mint:'var(--mint)',dim:'var(--t3)'};
+  document.getElementById('ops-metrics-detail').innerHTML=rows.map(r=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:9px 16px;border-bottom:1px solid var(--border)">
+      <div style="width:8px;height:8px;border-radius:50%;background:${sc[r.status]};flex-shrink:0"></div>
+      <div style="flex:1;font-size:12px;color:var(--t1)">${r.label}</div>
+      <div style="font-weight:700;color:${sc[r.status]};font-size:13px;min-width:24px;text-align:right">${r.val}</div>
+      ${r.note?`<div style="font-size:10px;color:var(--t3);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(r.note)}</div>`:''}
+    </div>`).join('');
+}
+
+function renderOpsRadar(){
+  const today=new Date();
+  const in7=new Date(today.getTime()+7*86400000).toISOString().slice(0,10);
+  const todayStr=today.toISOString().slice(0,10);
+  const items=[];
+
+  // Tasks due in next 7 days (not yet overdue)
+  tasks.filter(t=>t.due&&t.due>todayStr&&t.due<=in7&&t.status!=='Done').forEach(t=>{
+    const days=Math.round((new Date(t.due)-today)/86400000);
+    items.push({icon:'📌',text:`Task due in ${days} day${days!==1?'s':''}: "${t.name}"`,sub:t.due,action:"showPage('tasks')",urgency:days<=2?'red':'gold'});
+  });
+  // Client follow-ups coming up
+  clients.filter(c=>c.followup&&c.followup>todayStr&&c.followup<=in7&&c.stage!=='Closed').forEach(c=>{
+    const days=Math.round((new Date(c.followup)-today)/86400000);
+    items.push({icon:'👤',text:`Client follow-up in ${days} day${days!==1?'s':''}: ${c.name} — ${c.project}`,sub:c.nextAction||'',action:"showPage('clients')",urgency:days<=2?'red':'gold'});
+  });
+  // Alibaba follow-ups coming up
+  aliConvos.filter(a=>a.followup&&a.followup>todayStr&&a.followup<=in7&&!['Resolved','Archived'].includes(a.status)).forEach(a=>{
+    const days=Math.round((new Date(a.followup)-today)/86400000);
+    items.push({icon:'💬',text:`Alibaba follow-up in ${days} day${days!==1?'s':''}: ${a.supplier}`,sub:a.subject||'',action:"showPage('alibaba')",urgency:days<=2?'red':'gold'});
+  });
+  // Threads approaching cold threshold (3-4 days old, not yet 5)
+  aliConvos.filter(a=>{
+    if(['Resolved','Archived'].includes(a.status)||!a.last)return false;
+    const days=(today-new Date(a.last))/86400000;
+    return days>=3&&days<5;
+  }).forEach(a=>{
+    items.push({icon:'❄️',text:`Alibaba thread going cold in ~${Math.round(5-(today-new Date(a.last))/86400000)} day${1?'s':''}: ${a.supplier}`,sub:'Last contact: '+a.last,action:"showPage('alibaba')",urgency:'gold'});
+  });
+  // Invoices with upcoming due dates
+  qbInvoices.filter(i=>i.due&&i.due>todayStr&&i.due<=in7&&i.status==='Open').forEach(i=>{
+    const days=Math.round((new Date(i.due)-today)/86400000);
+    items.push({icon:'🧾',text:`Invoice due in ${days} day${days!==1?'s':''}: ${i.client} — ${i.amount}`,sub:'Due '+i.due,action:"showPage('finance')",urgency:days<=2?'red':'gold'});
+  });
+
+  const el=document.getElementById('ops-radar-list');
+  if(!items.length){el.innerHTML='<div style="padding:14px;font-size:11px;color:var(--t3)">✅ Nothing coming up in the next 7 days.</div>';return;}
+  items.sort((a,b)=>a.urgency==='red'&&b.urgency!=='red'?-1:1);
+  const uc={red:'var(--red)',gold:'var(--gold)'};
+  el.innerHTML=items.map(it=>`
+    <div onclick="${it.action}" style="display:flex;align-items:flex-start;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;border-left:3px solid ${uc[it.urgency]||'var(--border)'}" onmouseenter="this.style.background='var(--s2)'" onmouseleave="this.style.background=''">
+      <span style="font-size:13px;flex-shrink:0">${it.icon}</span>
+      <div>
+        <div style="font-size:12px;color:var(--t1);font-weight:500">${escH(it.text)}</div>
+        ${it.sub?`<div style="font-size:10px;color:var(--t3);margin-top:2px">${escH(it.sub)}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function renderWinLog(){
+  const catColor={'Problem Solved':'var(--mint)','System Built':'var(--pink)','Process Improved':'var(--gold)','Client Win':'var(--mint)','Supplier Win':'var(--gold)','Cost Saved':'var(--gold)','Time Saved':'var(--mint)','Revenue Recovered':'var(--pink)','Risk Prevented':'var(--red)'};
+  const el=document.getElementById('win-log-list');
+  if(!wins.length){el.innerHTML='<div style="padding:16px;font-size:11px;color:var(--t3)">No wins logged yet. Every problem solved counts — log your first win.</div>';return;}
+  el.innerHTML=wins.map(w=>`
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:11px 16px;border-bottom:1px solid var(--border)">
+      <div style="width:8px;height:8px;border-radius:50%;background:${catColor[w.cat]||'var(--t3)'};flex-shrink:0;margin-top:4px"></div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+          <span style="font-size:12px;font-weight:700;color:var(--t1)">${escH(w.title)}</span>
+          <span style="font-size:9px;color:${catColor[w.cat]||'var(--t3)'};font-weight:700;text-transform:uppercase;letter-spacing:0.6px">${w.cat}</span>
+        </div>
+        ${w.impact?`<div style="font-size:11px;color:var(--mint);font-weight:500;margin-bottom:2px">Impact: ${escH(w.impact)}</div>`:''}
+        ${w.notes?`<div style="font-size:10px;color:var(--t3)">${escH(w.notes)}</div>`:''}
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:10px;color:var(--t3);margin-bottom:4px">${w.date||''}</div>
+        <button class="btn btn-sm" style="font-size:9px" onclick="openWinModal(${w.id})">Edit</button>
+        <button class="ev-del" onclick="deleteWin(${w.id})" style="margin-left:4px">&#x2715;</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderOpsHub(){
+  renderOpsMetrics();
+  renderOpsRadar();
+  renderWinLog();
+  renderSOPs();
+}
+renderOpsHub();
 
 // ── FILES ──
 let driveFiles=JSON.parse(localStorage.getItem('cc-files')||'null')||[
