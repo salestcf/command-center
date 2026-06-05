@@ -3328,13 +3328,14 @@ function generateBriefing(){
   if(openInv.length) items.push({level:'mint',icon:'🧾',text:`${openInv.length} open invoice${openInv.length>1?'s':''} pending payment`,action:"showPage('quickbooks')"});
 
   // ── Calendar events today (local + Google Calendar) ──
-  const todayEvts=[...(calEvents[today]||[]),...gcalEvents.filter(e=>e.date===today)];
+  const _gcal=typeof gcalEvents!=='undefined'?gcalEvents:[];
+  const todayEvts=[...(calEvents[today]||[]),..._gcal.filter(e=>e.date===today)];
   if(todayEvts.length) items.push({level:'mint',icon:'📆',text:`${todayEvts.length} calendar event${todayEvts.length>1?'s':''} today: ${todayEvts.map(e=>e.title).join(', ')}`,action:"showPage('calendar')"});
 
   // ── Upcoming GCal events (next 3 days) ──
   const soonDate=new Date(); soonDate.setDate(soonDate.getDate()+3);
   const soonStr=soonDate.toISOString().slice(0,10);
-  const upcomingEvts=gcalEvents.filter(e=>e.date>today&&e.date<=soonStr);
+  const upcomingEvts=_gcal.filter(e=>e.date>today&&e.date<=soonStr);
   if(upcomingEvts.length) items_soon.push({level:'mint',icon:'📅',text:`${upcomingEvts.length} calendar event${upcomingEvts.length>1?'s':''} in the next 3 days`,action:"showPage('calendar')"});
 
   // ── Pending orders in transit ──
