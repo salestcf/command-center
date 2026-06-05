@@ -495,10 +495,19 @@ select option { background: var(--s1); }
     </div>
   </div>
 
+  <div id="quick-actions-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+    <button class="btn btn-sm btn-pink" onclick="openModal('modal-task')">+ New Task</button>
+    <button class="btn btn-sm" style="background:rgba(192,136,10,0.12);color:var(--gold);border-color:var(--gold)" onclick="openWinModal()">🏆 Log Win</button>
+    <button class="btn btn-sm" style="background:rgba(236,72,153,0.10);color:var(--pink);border-color:var(--pink)" onclick="openFormModal('intake')">👤 New Client</button>
+    <button class="btn btn-sm" style="background:rgba(99,102,241,0.10);color:#818cf8;border-color:#818cf8" onclick="openFormModal('weekly')">📋 Weekly Review</button>
+    <button class="btn btn-sm btn-mint" onclick="scanEmailsForTasks()">📧 Scan Emails</button>
+    <button class="btn btn-sm" style="background:rgba(42,170,136,0.10);color:var(--mint);border-color:var(--mint)" onclick="syncAll()">↻ Sync All</button>
+  </div>
+
   <div class="g5 scorecard" style="margin-bottom:14px">
     <div class="score-item"><div class="sc-label">Urgent Tasks</div><div class="sc-val red" id="h-urgent">0</div><div class="sc-sub">need action now</div></div>
-    <div class="score-item"><div class="sc-label">Unread Email</div><div class="sc-val pink" id="h-unread">1</div><div class="sc-sub">in inbox</div></div>
-    <div class="score-item"><div class="sc-label">Pending Replies</div><div class="sc-val gold" id="h-pending">4</div><div class="sc-sub">logged</div></div>
+    <div class="score-item"><div class="sc-label">Unread Email</div><div class="sc-val pink" id="h-unread">0</div><div class="sc-sub">in inbox</div></div>
+    <div class="score-item"><div class="sc-label">Pending Replies</div><div class="sc-val gold" id="h-pending">—</div><div class="sc-sub">logged</div></div>
     <div class="score-item"><div class="sc-label">Low Stock Items</div><div class="sc-val red" id="h-lowstock">0</div><div class="sc-sub">below reorder</div></div>
     <div class="score-item"><div class="sc-label">Open Invoices</div><div class="sc-val pink" id="h-invoices">0</div><div class="sc-sub">unpaid</div></div>
   </div>
@@ -3270,11 +3279,18 @@ function generateBriefing(){
   const today=now.toISOString().slice(0,10);
   const hour=now.getHours();
   const items=[];
+  const items_soon=[];
 
-  // Greeting
-  const greetEl=document.querySelector('#page-home > .page-inner > div > div:first-child');
+  // ── Update greeting header ──
   const timeGreet=hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';
   const greetDiv=document.getElementById('home-date');
+  if(greetDiv){
+    const wdays=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const mons=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const dayName=wdays[now.getDay()];
+    const monName=mons[now.getMonth()];
+    greetDiv.innerHTML=`<span style="font-size:13px;font-weight:700;color:var(--t1)">${timeGreet}, Rashell</span>`;
+  }
 
   // ── Tasks due today or overdue ──
   const overdueTasks=tasks.filter(t=>t.due&&t.due<today&&t.status!=='Done');
@@ -3311,31 +3327,124 @@ function generateBriefing(){
   if(overdueInv.length) items.push({level:'red',icon:'💸',text:`${overdueInv.length} overdue invoice${overdueInv.length>1?'s':''}: ${overdueInv.slice(0,2).map(i=>i.client).join(', ')}`,action:"showPage('quickbooks')"});
   if(openInv.length) items.push({level:'mint',icon:'🧾',text:`${openInv.length} open invoice${openInv.length>1?'s':''} pending payment`,action:"showPage('quickbooks')"});
 
-  // ── Calendar events today ──
-  const todayEvts=(calEvents[today]||[]);
+  // ── Calendar events today (local + Google Calendar) ──
+  const todayEvts=[...(calEvents[today]||[]),...gcalEvents.filter(e=>e.date===today)];
   if(todayEvts.length) items.push({level:'mint',icon:'📆',text:`${todayEvts.length} calendar event${todayEvts.length>1?'s':''} today: ${todayEvts.map(e=>e.title).join(', ')}`,action:"showPage('calendar')"});
+
+  // ── Upcoming GCal events (next 3 days) ──
+  const soonDate=new Date(); soonDate.setDate(soonDate.getDate()+3);
+  const soonStr=soonDate.toISOString().slice(0,10);
+  const upcomingEvts=gcalEvents.filter(e=>e.date>today&&e.date<=soonStr);
+  if(upcomingEvts.length) items_soon.push({level:'mint',icon:'📅',text:`${upcomingEvts.length} calendar event${upcomingEvts.length>1?'s':''} in the next 3 days`,action:"showPage('calendar')"});
 
   // ── Pending orders in transit ──
   const inTransit=orders.filter(o=>['In Transit','Pending','Ordered'].includes(o.status));
   if(inTransit.length) items.push({level:'mint',icon:'🚚',text:`${inTransit.length} order${inTransit.length>1?'s':''} in transit / pending`,action:"showPage('inventory')"});
 
+  // ── Gmail intelligence ──
+  const unreadThreads=threads.filter(t=>t.unread);
+  if(unreadThreads.length){
+    const oldest=unreadThreads[unreadThreads.length-1];
+    items.push({level:'gold',icon:'📬',text:`${unreadThreads.length} unread email${unreadThreads.length>1?'s':''} — oldest from ${oldest.sender}`,action:"showPage('inbox')"});
+  }
+  let gmailCount=0;
+  // Known client emails
+  const clientNames=(clients||[]).map(c=>(c.name||'').toLowerCase()).filter(Boolean);
+  const clientContacts=(clients||[]).map(c=>(c.contact||'').toLowerCase()).filter(Boolean);
+  for(const t of unreadThreads){
+    if(gmailCount>=6) break;
+    const senderLow=(t.sender||'').toLowerCase();
+    const fromLow=(t.from||'').toLowerCase();
+    const isClient=clientNames.some(n=>senderLow.includes(n)||fromLow.includes(n))||clientContacts.some(n=>senderLow.includes(n)||fromLow.includes(n));
+    if(isClient){
+      items.push({level:'red',icon:'👤',text:`Unread email from ${t.sender}: ${t.subject}`,action:"showPage('inbox')"});
+      gmailCount++;
+    }
+  }
+  for(const t of unreadThreads){
+    if(gmailCount>=6) break;
+    const hay=(t.subject+' '+(t.snip||'')).toLowerCase();
+    if(/invoice|payment|overdue|past due/.test(hay)){
+      items.push({level:'gold',icon:'💸',text:`Payment-related email from ${t.sender}: ${t.subject}`,action:"showPage('inbox')"});
+      gmailCount++;
+    } else if(/tracking|shipped|delivery|order|dispatch/.test(hay)){
+      items.push({level:'mint',icon:'📦',text:`Shipping update from ${t.sender}: ${t.subject}`,action:"showPage('inbox')"});
+      gmailCount++;
+    } else if(/urgent|asap|follow up|following up|checking in/.test(hay)){
+      items.push({level:'gold',icon:'⚠️',text:`Flagged email: ${t.subject}`,action:"showPage('inbox')"});
+      gmailCount++;
+    }
+  }
+
+  // ── Client staleness detection ──
+  const activeClients=(clients||[]).filter(c=>!['Closed','Complete','Delivered'].includes(c.stage||''));
+  let clientCount=0;
+  for(const c of activeClients){
+    if(clientCount>=4) break;
+    // Follow-up due
+    if(c.followup&&c.followup<=today){
+      items.push({level:'gold',icon:'📞',text:`Follow-up due: ${c.name}`,action:"showPage('clients')"});
+      clientCount++;
+      continue;
+    }
+    // Stale stage (14+ days)
+    const created=c.lastUpdated||c.created;
+    if(created){
+      const daysSince=(now-new Date(created))/(1000*60*60*24);
+      if(daysSince>=14){
+        items.push({level:'gold',icon:'🔶',text:`${c.name} hasn't moved stages in 14+ days — check in`,action:"showPage('clients')"});
+        clientCount++;
+      }
+    }
+  }
+
+  // ── Coming Up This Week (items_soon) ──
+  const week7=new Date(); week7.setDate(week7.getDate()+7);
+  const week7Str=week7.toISOString().slice(0,10);
+  const soonTasks=tasks.filter(t=>t.due&&t.due>today&&t.due<=week7Str&&t.status!=='Done');
+  if(soonTasks.length) items_soon.push({level:'mint',icon:'📌',text:`${soonTasks.length} task${soonTasks.length>1?'s':''} due this week: ${soonTasks.slice(0,3).map(t=>t.name).join(', ')}${soonTasks.length>3?'…':''}`,action:"showPage('tasks')"});
+  const soonInv=qbInvoices.filter(i=>i.due&&i.due>today&&i.due<=week7Str&&['Open','Overdue'].includes(i.status));
+  if(soonInv.length) items_soon.push({level:'mint',icon:'🧾',text:`${soonInv.length} invoice${soonInv.length>1?'s':''} due this week`,action:"showPage('quickbooks')"});
+  const soonFollowup=(clients||[]).filter(c=>c.followup&&c.followup>today&&c.followup<=week7Str&&!['Closed','Complete','Delivered'].includes(c.stage||''));
+  if(soonFollowup.length) items_soon.push({level:'mint',icon:'📞',text:`${soonFollowup.length} client follow-up${soonFollowup.length>1?'s':''} due this week: ${soonFollowup.slice(0,2).map(c=>c.name).join(', ')}`,action:"showPage('clients')"});
+
+  // ── Update scorecard ──
+  const urgentCount=urgentTasks.length+overdueTasks.length;
+  const sc_urgent=document.getElementById('h-urgent');
+  const sc_unread=document.getElementById('h-unread');
+  const sc_lowstock=document.getElementById('h-lowstock');
+  const sc_invoices=document.getElementById('h-invoices');
+  if(sc_urgent) sc_urgent.textContent=urgentCount;
+  if(sc_unread) sc_unread.textContent=unreadThreads.length;
+  if(sc_lowstock) sc_lowstock.textContent=(outStock.length+lowStock.length);
+  if(sc_invoices) sc_invoices.textContent=qbInvoices.filter(i=>['Open','Overdue'].includes(i.status)).length;
+
   // Render
   const body=document.getElementById('briefing-body');
   const ts=document.getElementById('briefing-timestamp');
-  ts.textContent='· '+now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  const wdays2=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const mons2=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const totalItems=items.length+items_soon.length;
+  ts.innerHTML=`· ${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true})} &nbsp;<span style="color:var(--t3);font-weight:400">Today is ${wdays2[now.getDay()]}, ${mons2[now.getMonth()]} ${now.getDate()} · ${totalItems} item${totalItems!==1?'s':''} need your attention</span>`;
   localStorage.setItem('cc-briefing',JSON.stringify({items,ts:now.toISOString()}));
 
-  if(!items.length){
+  if(!items.length && !items_soon.length){
     body.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:6px 0"><span style="font-size:18px">✅</span><span style="color:var(--mint);font-weight:600">You're all clear — no urgent items right now.</span></div>`;
     return;
   }
   const levelColor={red:'var(--red)',gold:'var(--gold)',mint:'var(--mint)'};
   const levelBg={red:'rgba(220,38,38,0.06)',gold:'rgba(192,136,10,0.07)',mint:'rgba(42,170,136,0.07)'};
-  body.innerHTML=items.map(it=>`
+  const renderItem=(it)=>`
     <div onclick="${it.action}" style="display:flex;align-items:flex-start;gap:10px;padding:7px 10px;margin:3px 0;border-radius:7px;cursor:pointer;background:${levelBg[it.level]};border-left:3px solid ${levelColor[it.level]};transition:opacity 0.15s" onmouseenter="this.style.opacity='0.8'" onmouseleave="this.style.opacity='1'">
       <span style="font-size:14px;flex-shrink:0;margin-top:1px">${it.icon}</span>
       <span style="font-size:12px;color:var(--t1);line-height:1.5">${escH(it.text)}</span>
-    </div>`).join('');
+    </div>`;
+  let html=items.map(renderItem).join('');
+  if(items_soon.length){
+    html+=`<div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:0.7px;padding:8px 10px 4px">Coming Up This Week</div>`;
+    html+=items_soon.map(renderItem).join('');
+  }
+  body.innerHTML=html;
 }
 function renderHome(){
   // Actions
@@ -3358,6 +3467,9 @@ function renderHome(){
     </div>`).join('')||'<div style="font-size:11px;color:var(--t3);padding:8px 0">No urgent items. You\'re on top of it. ✨</div>';
   document.getElementById('action-count').textContent=urgent.length+' urgent';
   document.getElementById('h-urgent').textContent=urgent.length;
+  document.getElementById('h-unread').textContent=threads.filter(t=>t.unread).length;
+  document.getElementById('h-lowstock').textContent=inventory.filter(i=>['low','out'].includes(i.status)).length;
+  document.getElementById('h-invoices').textContent=qbInvoices.filter(i=>['Open','Overdue'].includes(i.status)).length;
   // Activity feed
   document.getElementById('activity-feed').innerHTML=(activityFeed.length
     ? activityFeed.map((f,i)=>`<div class="feed-item" style="display:flex;align-items:flex-start;gap:8px"><div class="feed-dot" style="background:${f.color};margin-top:4px;flex-shrink:0"></div><div class="feed-content" style="flex:1"><div class="feed-title">${escH(f.text)}</div><div class="feed-time">${f.time}</div></div><button class="ev-del" onclick="deleteActivity(${i})" title="Remove" style="opacity:0.4;flex-shrink:0">&#x2715;</button></div>`)
@@ -3814,6 +3926,7 @@ async function syncGCal(){
     const syncTime = now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
     if(statusEl) statusEl.textContent = 'Last synced: '+syncTime;
     renderCal();
+    generateBriefing();
   } catch(e){
     console.error('GCal sync error:', e);
     if(statusEl) statusEl.textContent = 'Sync failed: '+e.message;
@@ -3936,6 +4049,7 @@ async function syncGmail(){
     const localThreads = JSON.parse(localStorage.getItem('cc-threads')||'[]').filter(t=>!t.id.startsWith('gmail_placeholder'));
     threads = [...allThreads, ...localThreads];
     renderThreads();
+    generateBriefing();
 
     const syncTime = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
     if(statusEl) statusEl.textContent = 'Last synced: '+syncTime;
