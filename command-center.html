@@ -480,6 +480,19 @@ select option { background: var(--s1); }
     </div>
   </div>
 
+  <!-- Daily Briefing -->
+  <div id="daily-briefing-card" style="margin-bottom:14px;border-radius:var(--radius);border:1.5px solid var(--border2);background:var(--s1);overflow:hidden">
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--pink-bg);border-bottom:1px solid var(--border)">
+      <span style="font-size:15px">📋</span>
+      <span style="font-size:12px;font-weight:800;color:var(--pink);letter-spacing:0.6px;text-transform:uppercase">Daily Briefing</span>
+      <span id="briefing-timestamp" style="font-size:10px;color:var(--t3);margin-left:4px"></span>
+      <button class="btn btn-sm btn-pink" style="margin-left:auto;font-size:10px" onclick="generateBriefing()">↻ Refresh</button>
+    </div>
+    <div id="briefing-body" style="padding:10px 16px;font-size:12px;color:var(--t2);line-height:1.7">
+      <span style="color:var(--t3)">Generating your briefing…</span>
+    </div>
+  </div>
+
   <div class="g5 scorecard" style="margin-bottom:14px">
     <div class="score-item"><div class="sc-label">Urgent Tasks</div><div class="sc-val red" id="h-urgent">0</div><div class="sc-sub">need action now</div></div>
     <div class="score-item"><div class="sc-label">Unread Email</div><div class="sc-val pink" id="h-unread">1</div><div class="sc-sub">in inbox</div></div>
@@ -2283,6 +2296,78 @@ function saveClientProject(){
 }
 
 function changeStatusFromHome(id,status){const t=tasks.find(x=>x.id===id);if(!t)return;t.status=status;saveTasks();renderTasks();renderHome();}
+function generateBriefing(){
+  const now=new Date();
+  const today=now.toISOString().slice(0,10);
+  const hour=now.getHours();
+  const items=[];
+
+  // Greeting
+  const greetEl=document.querySelector('#page-home > .page-inner > div > div:first-child');
+  const timeGreet=hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';
+  const greetDiv=document.getElementById('home-date');
+
+  // ── Tasks due today or overdue ──
+  const overdueTasks=tasks.filter(t=>t.due&&t.due<today&&t.status!=='Done');
+  const todayTasks=tasks.filter(t=>t.due===today&&t.status!=='Done');
+  const urgentTasks=tasks.filter(t=>t.status==='Urgent'&&t.status!=='Done');
+  if(urgentTasks.length) items.push({level:'red',icon:'🚨',text:`${urgentTasks.length} urgent task${urgentTasks.length>1?'s':''}: ${urgentTasks.slice(0,2).map(t=>t.name).join(', ')}${urgentTasks.length>2?'…':''}`,action:"showPage('tasks')"});
+  if(overdueTasks.length) items.push({level:'red',icon:'⏰',text:`${overdueTasks.length} overdue task${overdueTasks.length>1?'s':''}: ${overdueTasks.slice(0,2).map(t=>t.name).join(', ')}${overdueTasks.length>2?'…':''}`,action:"showPage('tasks')"});
+  if(todayTasks.length) items.push({level:'gold',icon:'📌',text:`${todayTasks.length} task${todayTasks.length>1?'s':''} due today: ${todayTasks.slice(0,2).map(t=>t.name).join(', ')}${todayTasks.length>2?'…':''}`,action:"showPage('tasks')"});
+
+  // ── Inventory low/out ──
+  const outStock=inventory.filter(i=>i.status==='out');
+  const lowStock=inventory.filter(i=>i.status==='low');
+  if(outStock.length) items.push({level:'red',icon:'📦',text:`${outStock.length} item${outStock.length>1?'s':''} out of stock: ${outStock.slice(0,2).map(i=>i.name).join(', ')}${outStock.length>2?'…':''}`,action:"showPage('inventory')"});
+  if(lowStock.length) items.push({level:'gold',icon:'📉',text:`${lowStock.length} item${lowStock.length>1?'s':''} running low: ${lowStock.slice(0,2).map(i=>i.name).join(', ')}${lowStock.length>2?'…':''}`,action:"showPage('inventory')"});
+
+  // ── Alibaba threads needing reply or going cold ──
+  const aliReply=aliConvos.filter(a=>a.status==='Need to Reply');
+  const aliCold=aliConvos.filter(a=>{
+    if(['Resolved','Archived'].includes(a.status))return false;
+    if(!a.last)return false;
+    const d=new Date(a.last),diff=(now-d)/(1000*60*60*24);
+    return diff>=5;
+  });
+  if(aliReply.length) items.push({level:'red',icon:'💬',text:`${aliReply.length} Alibaba supplier${aliReply.length>1?'s':''} need${aliReply.length===1?'s':''} a reply: ${aliReply.slice(0,2).map(a=>a.supplier).join(', ')}`,action:"showPage('alibaba')"});
+  if(aliCold.length) items.push({level:'gold',icon:'❄️',text:`${aliCold.length} Alibaba thread${aliCold.length>1?'s':''} gone cold (5+ days): ${aliCold.slice(0,2).map(a=>a.supplier).join(', ')}`,action:"showPage('alibaba')"});
+
+  // ── Alibaba follow-ups due ──
+  const aliDue=aliConvos.filter(a=>a.followup&&a.followup<=today&&!['Resolved','Archived'].includes(a.status));
+  if(aliDue.length) items.push({level:'gold',icon:'📅',text:`${aliDue.length} Alibaba follow-up${aliDue.length>1?'s':''} due: ${aliDue.slice(0,2).map(a=>a.supplier).join(', ')}`,action:"showPage('alibaba')"});
+
+  // ── Overdue invoices (QuickBooks) ──
+  const overdueInv=qbInvoices.filter(i=>i.status==='Overdue');
+  const openInv=qbInvoices.filter(i=>i.status==='Open');
+  if(overdueInv.length) items.push({level:'red',icon:'💸',text:`${overdueInv.length} overdue invoice${overdueInv.length>1?'s':''}: ${overdueInv.slice(0,2).map(i=>i.client).join(', ')}`,action:"showPage('quickbooks')"});
+  if(openInv.length) items.push({level:'mint',icon:'🧾',text:`${openInv.length} open invoice${openInv.length>1?'s':''} pending payment`,action:"showPage('quickbooks')"});
+
+  // ── Calendar events today ──
+  const todayEvts=(calEvents[today]||[]);
+  if(todayEvts.length) items.push({level:'mint',icon:'📆',text:`${todayEvts.length} calendar event${todayEvts.length>1?'s':''} today: ${todayEvts.map(e=>e.title).join(', ')}`,action:"showPage('calendar')"});
+
+  // ── Pending orders in transit ──
+  const inTransit=orders.filter(o=>['In Transit','Pending','Ordered'].includes(o.status));
+  if(inTransit.length) items.push({level:'mint',icon:'🚚',text:`${inTransit.length} order${inTransit.length>1?'s':''} in transit / pending`,action:"showPage('inventory')"});
+
+  // Render
+  const body=document.getElementById('briefing-body');
+  const ts=document.getElementById('briefing-timestamp');
+  ts.textContent='· '+now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  localStorage.setItem('cc-briefing',JSON.stringify({items,ts:now.toISOString()}));
+
+  if(!items.length){
+    body.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:6px 0"><span style="font-size:18px">✅</span><span style="color:var(--mint);font-weight:600">You're all clear — no urgent items right now.</span></div>`;
+    return;
+  }
+  const levelColor={red:'var(--red)',gold:'var(--gold)',mint:'var(--mint)'};
+  const levelBg={red:'rgba(220,38,38,0.06)',gold:'rgba(192,136,10,0.07)',mint:'rgba(42,170,136,0.07)'};
+  body.innerHTML=items.map(it=>`
+    <div onclick="${it.action}" style="display:flex;align-items:flex-start;gap:10px;padding:7px 10px;margin:3px 0;border-radius:7px;cursor:pointer;background:${levelBg[it.level]};border-left:3px solid ${levelColor[it.level]};transition:opacity 0.15s" onmouseenter="this.style.opacity='0.8'" onmouseleave="this.style.opacity='1'">
+      <span style="font-size:14px;flex-shrink:0;margin-top:1px">${it.icon}</span>
+      <span style="font-size:12px;color:var(--t1);line-height:1.5">${escH(it.text)}</span>
+    </div>`).join('');
+}
 function renderHome(){
   // Actions
   const urgent=tasks.filter(t=>t.status==='Urgent'||t.priority==='High'&&t.status!=='Done');
@@ -2314,6 +2399,14 @@ function renderHome(){
   document.getElementById('home-clients').innerHTML=clientProjects.map((c,i)=>`<div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px;position:relative;cursor:pointer" onclick="openClientModal(${i})"><button class="ev-del" onclick="event.stopPropagation();deleteClient(${i})" title="Remove" style="position:absolute;top:8px;right:8px;opacity:0.4">&#x2715;</button><div style="font-size:13px;font-weight:700;margin-bottom:2px;padding-right:20px">${escH(c.name)}</div><div style="font-size:10px;color:var(--pink);font-weight:600;margin-bottom:2px">${escH(c.project)}</div>${c.status?`<div style="font-size:9px;color:${stColors[c.status]||'var(--t3)'};font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px">${c.status}</div>`:'<div style="margin-bottom:8px"></div>'}<div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:${c.p}%;background:linear-gradient(90deg,var(--pink),var(--mint));border-radius:3px;transition:width 0.3s"></div></div><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:10px;color:var(--t3)">${c.p}% complete</div><div style="font-size:9px;color:var(--t3);font-style:italic">click to edit</div></div>${c.notes?`<div style="font-size:10px;color:var(--t3);margin-top:6px;padding-top:6px;border-top:1px solid var(--border);line-height:1.5">${escH(c.notes)}</div>`:''}</div>`).join('')+`<div style="display:flex;align-items:center;justify-content:center;height:80px;background:var(--bg);border:1px dashed var(--border2);border-radius:var(--radius);cursor:pointer;font-size:11px;color:var(--t3)" onclick="openClientModal()">+ Add Client Project</div>`;
 }
 renderHome();
+// Auto-generate briefing on load + update greeting
+(function(){
+  const h=new Date().getHours();
+  const greet=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  const greetEl=document.querySelector('#page-home .page-inner > div > div:first-child');
+  if(greetEl) greetEl.textContent=greet+', Rashell';
+  generateBriefing();
+})();
 
 // ══════════════════════════════════════════
 // NOTION INTEGRATION
