@@ -453,7 +453,7 @@ select option { background: var(--s1); }
     <button class="nav-btn" onclick="showPage('finance')">QuickBooks</button>
     <button class="nav-btn" onclick="showPage('ops')">Ops Hub</button>
     <button class="nav-btn mint-tab" onclick="showPage('links')">External Links</button>
-    <button class="nav-btn" onclick="showPage('notion')">Notion</button>
+    <button class="nav-btn" onclick="showPage('notion')">Settings</button>
     <button class="nav-btn lexie-tab" onclick="showPage('lexie')">Lexie &amp; Emmie</button>
   </nav>
 
@@ -589,6 +589,8 @@ select option { background: var(--s1); }
     </div>
   </div>
 
+  <div id="task-stats-bar" style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap"></div>
+
   <div class="task-controls">
     <select id="f-project" onchange="renderTasks()"><option value="">All Projects</option></select>
     <select id="f-cat" onchange="renderTasks()"><option value="">All Categories</option><option>Admin</option><option>Scheduling</option><option>Research</option><option>Procurement</option><option>Communications</option><option>Other</option></select>
@@ -673,8 +675,8 @@ select option { background: var(--s1); }
         </div>
       </div>
       <div class="card">
-        <div class="card-head"><h3>Notion — Open Tasks</h3><div class="ch-r"><button class="btn btn-sm btn-pink" onclick="notionSync()">↻ Sync</button></div></div>
-        <div class="card-body" id="notion-inbox-preview" style="font-size:11px;color:var(--t3)">Loading…</div>
+        <div class="card-head"><h3>Open Tasks</h3><div class="ch-r"><button class="btn btn-sm btn-pink" onclick="showPage('tasks')">View All →</button></div></div>
+        <div class="card-body" id="notion-inbox-preview" style="font-size:11px;color:var(--t3)">—</div>
       </div>
     </div>
   </div>
@@ -1490,63 +1492,88 @@ select option { background: var(--s1); }
 <div class="page" id="page-notion">
 <div class="page-inner">
   <div class="glw">
+
+    <!-- Google Integration -->
     <div style="flex:1">
       <div class="card" style="margin-bottom:14px">
-        <div class="card-head">
-          <h3>Notion — Tasks Tracker</h3>
-          <div class="ch-r">
-            <button class="btn btn-sm btn-pink" onclick="notionSync()" id="notion-sync-btn">↻ Sync Now</button>
-          </div>
-        </div>
-        <div class="card-body">
-          <div id="notion-status" style="font-size:11px;color:var(--t3);margin-bottom:12px"></div>
-          <div id="notion-filters" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-            <button class="btn btn-sm active" id="nf-all" onclick="setNotionFilter('all')">All</button>
-            <button class="btn btn-sm" id="nf-inprogress" onclick="setNotionFilter('In progress')">In Progress</button>
-            <button class="btn btn-sm" id="nf-notstarted" onclick="setNotionFilter('Not started')">Not Started</button>
-            <button class="btn btn-sm" id="nf-done" onclick="setNotionFilter('Done')">Done</button>
-          </div>
-          <div style="overflow:auto">
-            <table class="tbl">
-              <thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Due Date</th></tr></thead>
-              <tbody id="notion-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div style="width:300px;flex-shrink:0">
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-head"><h3>⚙ Notion Settings</h3></div>
-        <div class="card-body">
-          <div style="font-size:11px;color:var(--t3);margin-bottom:10px">Your integration token is stored only in your browser (localStorage). It is never sent to GitHub or any third party.</div>
-          <label style="font-size:11px;font-weight:600;color:var(--t2);display:block;margin-bottom:5px">Integration Token</label>
-          <input type="password" id="notion-token-input" placeholder="ntn_..." style="width:100%;margin-bottom:8px;font-size:11px" />
-          <label style="font-size:11px;font-weight:600;color:var(--t2);display:block;margin-bottom:5px">Database ID</label>
-          <input type="text" id="notion-db-input" placeholder="Database ID" style="width:100%;margin-bottom:10px;font-size:11px" />
-          <button class="btn btn-pink btn-sm" onclick="saveNotionSettings()" style="width:100%">Save &amp; Sync</button>
-          <button class="btn btn-sm" onclick="clearNotionSettings()" style="width:100%;margin-top:6px">Clear Saved Token</button>
-        </div>
-      </div>
-      <div class="card" style="margin-bottom:14px">
-        <div class="card-head"><h3>Summary</h3></div>
-        <div class="card-body" id="notion-summary" style="font-size:12px;line-height:1.8;color:var(--t2)">—</div>
-      </div>
-      <div class="card">
         <div class="card-head"><h3>Google Integration</h3></div>
         <div class="card-body">
-          <div style="font-size:11px;color:var(--t3);margin-bottom:10px">Your Client ID is stored only in your browser (localStorage). It is never sent to GitHub or any third party.</div>
-          <label style="font-size:11px;font-weight:600;color:var(--t2);display:block;margin-bottom:5px">Google Client ID</label>
+          <div style="font-size:11px;color:var(--t3);margin-bottom:12px">All credentials are stored only in your browser (localStorage). Nothing is sent to GitHub or any third party.</div>
+          <label style="font-size:11px;font-weight:600;color:var(--t2);display:block;margin-bottom:5px">Google OAuth Client ID</label>
           <input type="text" id="google-client-id-input" placeholder="xxxxxxxxx.apps.googleusercontent.com" style="width:100%;margin-bottom:8px;font-size:11px" />
-          <button class="btn btn-mint btn-sm" onclick="saveGoogleClientId()" style="width:100%;margin-bottom:12px">Save Client ID</button>
-          <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t2);margin-bottom:8px;padding-bottom:6px;border-top:1px solid var(--border);padding-top:10px">Google Accounts</div>
-          <div id="google-accounts-panel"></div>
-          <div style="font-size:10px;color:var(--t3);line-height:1.6;border-top:1px solid var(--border);padding-top:10px;margin-top:10px">
-            <strong>Setup:</strong> Go to <a href="https://console.cloud.google.com" target="_blank" style="color:var(--mint)">console.cloud.google.com</a> &rarr; APIs &amp; Services &rarr; Credentials &rarr; Create OAuth 2.0 Client ID (Web Application). Add <strong>https://salestcf.github.io</strong> as an authorized JavaScript origin. Enable Calendar, Gmail, and Drive APIs.
+          <button class="btn btn-mint btn-sm" onclick="saveGoogleClientId()" style="margin-bottom:14px">Save Client ID</button>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t2);margin-bottom:8px;padding-top:10px;border-top:1px solid var(--border)">Connected Accounts</div>
+          <div id="google-accounts-panel" style="margin-bottom:12px"></div>
+          <div style="font-size:10px;color:var(--t3);line-height:1.7;padding:10px;background:var(--s2);border-radius:6px">
+            <strong>Setup:</strong> Go to <a href="https://console.cloud.google.com" target="_blank" style="color:var(--mint)">console.cloud.google.com</a> → APIs &amp; Services → Credentials → Create OAuth 2.0 Client ID (Web Application). Add <strong>https://salestcf.github.io</strong> as an authorized JavaScript origin. Enable Calendar, Gmail, and Drive APIs.
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending API Integrations -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-head"><h3>Pending Integrations</h3></div>
+        <div class="card-body">
+          <div style="font-size:11px;color:var(--t3);margin-bottom:14px">These integrations are ready to activate once API keys are available.</div>
+
+          <!-- Shopify -->
+          <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span style="font-size:13px">🛍</span>
+              <span style="font-size:12px;font-weight:700;color:var(--t1)">Shopify</span>
+              <span class="pill" style="background:var(--gold-bg);color:var(--gold);font-size:9px">Waiting on API Key</span>
+            </div>
+            <div style="font-size:11px;color:var(--t3);margin-bottom:8px">Will add order volume, revenue, and fulfillment alerts to the Daily Briefing.</div>
+            <label style="font-size:11px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px">Shopify API Key</label>
+            <input type="password" id="shopify-api-key-input" placeholder="shpat_..." style="width:100%;margin-bottom:6px;font-size:11px" />
+            <button class="btn btn-sm" onclick="alert('Shopify integration coming soon — paste your key here when ready.')">Save Key</button>
+          </div>
+
+          <!-- Anthropic / Lexie -->
+          <div style="padding:12px 0">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span style="font-size:13px">🤖</span>
+              <span style="font-size:12px;font-weight:700;color:var(--t1)">Lexie (AI Assistant)</span>
+              <span class="pill" style="background:var(--gold-bg);color:var(--gold);font-size:9px">Waiting on API Key</span>
+            </div>
+            <div style="font-size:11px;color:var(--t3);margin-bottom:8px">Powers the Lexie AI chat tab — ask questions, draft emails, get summaries.</div>
+            <label style="font-size:11px;font-weight:600;color:var(--t2);display:block;margin-bottom:4px">Anthropic API Key</label>
+            <input type="password" id="anthropic-api-key-input" placeholder="sk-ant-..." style="width:100%;margin-bottom:6px;font-size:11px" />
+            <button class="btn btn-sm" onclick="saveLexieKey()">Save Key</button>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Right sidebar: Data & Dashboard -->
+    <div style="width:300px;flex-shrink:0">
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-head"><h3>Dashboard Data</h3></div>
+        <div class="card-body">
+          <div style="font-size:11px;color:var(--t3);margin-bottom:12px">All data is stored in your browser's localStorage. Export a full backup or clear data below.</div>
+          <button class="btn btn-sm btn-mint" onclick="exportAllData()" style="width:100%;margin-bottom:8px">⬇ Export All Data (JSON)</button>
+          <button class="btn btn-sm" onclick="importAllData()" style="width:100%;margin-bottom:8px">⬆ Import Data (JSON)</button>
+          <button class="btn btn-sm" style="width:100%;color:var(--red);border-color:var(--red)" onclick="if(confirm('Clear ALL dashboard data? This cannot be undone.')){localStorage.clear();location.reload();}">⚠ Clear All Data</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-head"><h3>About</h3></div>
+        <div class="card-body" style="font-size:11px;color:var(--t3);line-height:1.8">
+          <div><strong style="color:var(--t2)">TCF Command Center</strong></div>
+          <div>The Cosmetic Formulary</div>
+          <div style="margin-top:6px">Built for: Rashell Klavinger</div>
+          <div>EA / Operations</div>
+          <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">
+            <a href="https://github.com/salestcf/command-center" target="_blank" style="color:var(--mint)">GitHub Repo ↗</a>
+          </div>
+          <div style="margin-top:4px">
+            <a href="https://salestcf.github.io/command-center/" target="_blank" style="color:var(--mint)">Live URL ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 </div>
@@ -1850,6 +1877,26 @@ function renderTasks(){
   ps.innerHTML='<option value="">All Projects</option>'+projects.map(p=>`<option ${p===cv?'selected':''}>${escH(p)}</option>`).join('');
   document.getElementById('h-urgent').textContent=tasks.filter(t=>t.status==='Urgent'&&!['Done'].includes(t.status)).length;
   const ac=document.getElementById('action-count');if(ac) ac.textContent=tasks.filter(t=>t.status==='Urgent').length+' urgent';
+  renderTaskStats();
+  renderQuickTaskPreview();
+}
+function renderTaskStats(){
+  const bar=document.getElementById('task-stats-bar');if(!bar)return;
+  const today=new Date().toISOString().slice(0,10);
+  const urgent=tasks.filter(t=>t.status==='Urgent').length;
+  const inprog=tasks.filter(t=>t.status==='In Progress').length;
+  const dueToday=tasks.filter(t=>t.due===today&&t.status!=='Done').length;
+  const done=tasks.filter(t=>t.status==='Done').length;
+  const total=tasks.length;
+  const stat=(label,val,color)=>`<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--s2);border-radius:8px;border:1px solid var(--border)"><span style="font-size:16px;font-weight:800;color:${color}">${val}</span><span style="font-size:10px;color:var(--t3);line-height:1.3">${label}</span></div>`;
+  bar.innerHTML=stat('Urgent',urgent,'var(--red)')+stat('In Progress',inprog,'var(--mint)')+stat('Due Today',dueToday,'var(--gold)')+stat('Done',done,'var(--t3)')+`<div style="margin-left:auto;font-size:10px;color:var(--t3);align-self:center">${total} total tasks</div>`;
+}
+function renderQuickTaskPreview(){
+  const el=document.getElementById('notion-inbox-preview');if(!el)return;
+  const open=tasks.filter(t=>t.status!=='Done').sort((a,b)=>{const o={Urgent:0,'In Progress':1,'To Do':2,Blocked:3};return(o[a.status]||9)-(o[b.status]||9);});
+  if(!open.length){el.innerHTML='<span style="color:var(--mint)">✓ No open tasks!</span>';return;}
+  const sc={'Urgent':'var(--red)','In Progress':'var(--mint)','To Do':'var(--t3)','Blocked':'var(--gold)'};
+  el.innerHTML=open.slice(0,6).map(t=>`<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="font-size:9px;padding:2px 6px;border-radius:10px;background:var(--s2);color:${sc[t.status]||'var(--t3)'};font-weight:700;flex-shrink:0;white-space:nowrap">${t.status}</span><span style="font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(t.name)}</span>${t.due?`<span style="font-size:9px;color:var(--t3);flex-shrink:0">${t.due}</span>`:''}</div>`).join('')+(open.length>6?`<div style="margin-top:6px;font-size:10px;color:var(--t3)">+${open.length-6} more</div>`:'');
 }
 function toggleTaskExpand(id){const r=document.getElementById('te-'+id),a=document.getElementById('ta-'+id),o=r.style.display==='table-row';r.style.display=o?'none':'table-row';a.textContent=o?'▶':'▼';}
 function changeStatus(id,v){if(!v)return;const t=tasks.find(x=>x.id===id);if(t){t.status=v;saveTasks();renderTasks();}}
@@ -4182,6 +4229,40 @@ function checkAutoSync(){
   if(lastDate !== today || lastSlot !== slot){
     syncAll();
   }
+}
+
+// ── SETTINGS PAGE HELPERS ──
+function saveLexieKey(){
+  const key=(document.getElementById('anthropic-api-key-input').value||'').trim();
+  if(!key){alert('Please paste your Anthropic API key.');return;}
+  localStorage.setItem('cc-anthropic-key',key);
+  document.getElementById('anthropic-api-key-input').value='';
+  alert('✅ Anthropic API key saved. Lexie is ready to activate.');
+}
+function exportAllData(){
+  const keys=['cc-tasks','cc-clients','cc-contacts','cc-inventory','cc-orders','cc-qb','cc-alibaba','cc-sops','cc-wins','cc-files','cc-notes','cc-cal','cc-reminders'];
+  const data={exported:new Date().toISOString(),version:'1.0'};
+  keys.forEach(k=>{const v=localStorage.getItem(k);if(v)try{data[k]=JSON.parse(v);}catch{data[k]=v;}});
+  download('tcf-command-center-backup-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(data,null,2),'application/json');
+}
+function importAllData(){
+  const input=document.createElement('input');input.type='file';input.accept='.json';
+  input.onchange=e=>{
+    const file=e.target.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      try{
+        const data=JSON.parse(ev.target.result);
+        const keys=['cc-tasks','cc-clients','cc-contacts','cc-inventory','cc-orders','cc-qb','cc-alibaba','cc-sops','cc-wins','cc-files','cc-notes','cc-cal','cc-reminders'];
+        let count=0;
+        keys.forEach(k=>{if(data[k]){localStorage.setItem(k,JSON.stringify(data[k]));count++;}});
+        alert(`✅ Imported ${count} data sets. Reloading dashboard…`);
+        location.reload();
+      }catch(err){alert('Import failed: '+err.message);}
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 }
 
 // ── INIT GOOGLE ON PAGE LOAD ──
