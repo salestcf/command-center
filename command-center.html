@@ -3326,8 +3326,8 @@ function generateBriefing(){
   // ── Overdue invoices (QuickBooks) ──
   const overdueInv=qbInvoices.filter(i=>i.status==='Overdue');
   const openInv=qbInvoices.filter(i=>i.status==='Open');
-  if(overdueInv.length) items.push({level:'red',icon:'💸',text:`${overdueInv.length} overdue invoice${overdueInv.length>1?'s':''}: ${overdueInv.slice(0,2).map(i=>i.client).join(', ')}`,action:"showPage('quickbooks')"});
-  if(openInv.length) items.push({level:'mint',icon:'🧾',text:`${openInv.length} open invoice${openInv.length>1?'s':''} pending payment`,action:"showPage('quickbooks')"});
+  if(overdueInv.length) items.push({level:'red',icon:'💸',text:`${overdueInv.length} overdue invoice${overdueInv.length>1?'s':''}: ${overdueInv.slice(0,2).map(i=>i.client).join(', ')}`,action:"showPage('finance')"});
+  if(openInv.length) items.push({level:'mint',icon:'🧾',text:`${openInv.length} open invoice${openInv.length>1?'s':''} pending payment`,action:"showPage('finance')"});
 
   // ── Calendar events today (local + Google Calendar) ──
   const todayEvts=[...(calEvents[today]||[]),...gcalEvents.filter(e=>e.date===today)];
@@ -3347,7 +3347,7 @@ function generateBriefing(){
   const unreadThreads=threads.filter(t=>t.unread);
   if(unreadThreads.length){
     const oldest=unreadThreads[unreadThreads.length-1];
-    items.push({level:'gold',icon:'📬',text:`${unreadThreads.length} unread email${unreadThreads.length>1?'s':''} — oldest from ${oldest.sender}`,action:"showPage('inbox')"});
+    items.push({level:'gold',icon:'📬',text:`${unreadThreads.length} unread email${unreadThreads.length>1?'s':''} — oldest from ${oldest.sender}`,action:"showPage('tasks')"});
   }
   let gmailCount=0;
   // Known client emails
@@ -3359,7 +3359,7 @@ function generateBriefing(){
     const fromLow=(t.from||'').toLowerCase();
     const isClient=clientNames.some(n=>senderLow.includes(n)||fromLow.includes(n))||clientContacts.some(n=>senderLow.includes(n)||fromLow.includes(n));
     if(isClient){
-      items.push({level:'red',icon:'👤',text:`Unread email from ${t.sender}: ${t.subject}`,action:"showPage('inbox')"});
+      items.push({level:'red',icon:'👤',text:`Unread email from ${t.sender}: ${t.subject}`,action:"showPage('tasks')"});
       gmailCount++;
     }
   }
@@ -3367,13 +3367,13 @@ function generateBriefing(){
     if(gmailCount>=6) break;
     const hay=(t.subject+' '+(t.snip||'')).toLowerCase();
     if(/invoice|payment|overdue|past due/.test(hay)){
-      items.push({level:'gold',icon:'💸',text:`Payment-related email from ${t.sender}: ${t.subject}`,action:"showPage('inbox')"});
+      items.push({level:'gold',icon:'💸',text:`Payment-related email from ${t.sender}: ${t.subject}`,action:"showPage('tasks')"});
       gmailCount++;
     } else if(/tracking|shipped|delivery|order|dispatch/.test(hay)){
-      items.push({level:'mint',icon:'📦',text:`Shipping update from ${t.sender}: ${t.subject}`,action:"showPage('inbox')"});
+      items.push({level:'mint',icon:'📦',text:`Shipping update from ${t.sender}: ${t.subject}`,action:"showPage('tasks')"});
       gmailCount++;
     } else if(/urgent|asap|follow up|following up|checking in/.test(hay)){
-      items.push({level:'gold',icon:'⚠️',text:`Flagged email: ${t.subject}`,action:"showPage('inbox')"});
+      items.push({level:'gold',icon:'⚠️',text:`Flagged email: ${t.subject}`,action:"showPage('tasks')"});
       gmailCount++;
     }
   }
@@ -3406,7 +3406,7 @@ function generateBriefing(){
   const soonTasks=tasks.filter(t=>t.due&&t.due>today&&t.due<=week7Str&&t.status!=='Done');
   if(soonTasks.length) items_soon.push({level:'mint',icon:'📌',text:`${soonTasks.length} task${soonTasks.length>1?'s':''} due this week: ${soonTasks.slice(0,3).map(t=>t.name).join(', ')}${soonTasks.length>3?'…':''}`,action:"showPage('tasks')"});
   const soonInv=qbInvoices.filter(i=>i.due&&i.due>today&&i.due<=week7Str&&['Open','Overdue'].includes(i.status));
-  if(soonInv.length) items_soon.push({level:'mint',icon:'🧾',text:`${soonInv.length} invoice${soonInv.length>1?'s':''} due this week`,action:"showPage('quickbooks')"});
+  if(soonInv.length) items_soon.push({level:'mint',icon:'🧾',text:`${soonInv.length} invoice${soonInv.length>1?'s':''} due this week`,action:"showPage('finance')"});
   const soonFollowup=(clients||[]).filter(c=>c.followup&&c.followup>today&&c.followup<=week7Str&&!['Closed','Complete','Delivered'].includes(c.stage||''));
   if(soonFollowup.length) items_soon.push({level:'mint',icon:'📞',text:`${soonFollowup.length} client follow-up${soonFollowup.length>1?'s':''} due this week: ${soonFollowup.slice(0,2).map(c=>c.name).join(', ')}`,action:"showPage('clients')"});
 
