@@ -446,6 +446,7 @@ select option { background: var(--s1); }
     <button class="nav-btn" onclick="showPage('tasks')">Tasks</button>
     <button class="nav-btn" onclick="showPage('alibaba')">Alibaba</button>
     <button class="nav-btn" onclick="showPage('calendar')">Calendar</button>
+    <button class="nav-btn" onclick="showPage('clients')">Clients</button>
     <button class="nav-btn" onclick="showPage('contacts')">Contacts</button>
     <button class="nav-btn" onclick="showPage('files')">Files</button>
     <button class="nav-btn" onclick="showPage('inventory')">Inventory</button>
@@ -790,6 +791,93 @@ select option { background: var(--s1); }
   </div>
 </div>
 </div>
+
+<!-- ══ CLIENTS ══ -->
+<div class="page" id="page-clients">
+<div class="page-inner">
+
+  <div class="g4 scorecard" style="margin-bottom:14px">
+    <div class="score-item"><div class="sc-label">Active Projects</div><div class="sc-val mint" id="cl-active">0</div><div class="sc-sub">in progress</div></div>
+    <div class="score-item"><div class="sc-label">Awaiting Approval</div><div class="sc-val gold" id="cl-approval">0</div><div class="sc-sub">samples / review</div></div>
+    <div class="score-item"><div class="sc-label">Follow-up Due</div><div class="sc-val red" id="cl-followup">0</div><div class="sc-sub">action needed</div></div>
+    <div class="score-item"><div class="sc-label">Retainer Clients</div><div class="sc-val pink" id="cl-retainer">0</div><div class="sc-sub">recurring revenue</div></div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+    <input type="text" id="cl-search" placeholder="Search client, project, formula…" style="flex:1;min-width:200px" oninput="renderClients()">
+    <select id="cl-filter-stage" onchange="renderClients()" style="min-width:140px">
+      <option value="">All Stages</option>
+      <option>Inquiry</option>
+      <option>Intake</option>
+      <option>Formulating</option>
+      <option>Sample Sent</option>
+      <option>Awaiting Approval</option>
+      <option>Revision</option>
+      <option>Final Formula</option>
+      <option>In Production</option>
+      <option>Delivered</option>
+      <option>Retainer</option>
+      <option>On Hold</option>
+      <option>Closed</option>
+    </select>
+    <select id="cl-filter-type" onchange="renderClients()">
+      <option value="">All Types</option>
+      <option>Custom Formula</option>
+      <option>Private Label</option>
+      <option>Retainer</option>
+      <option>Class / Event</option>
+      <option>Consultation</option>
+    </select>
+    <button class="btn btn-pink" onclick="openClientLifecycleModal()">+ New Client</button>
+    <button class="btn btn-sm" onclick="exportClientsCSV()" style="margin-left:auto">Export</button>
+  </div>
+
+  <!-- Pipeline kanban-style row -->
+  <div class="card" style="margin-bottom:14px;overflow:auto">
+    <div style="display:flex;gap:6px;padding:12px;min-width:900px">
+      <div style="flex:1;min-width:110px;text-align:center;font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--t3);padding-bottom:6px;border-bottom:2px solid var(--border)">Inquiry</div>
+      <div style="flex:1;min-width:110px;text-align:center;font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--t3);padding-bottom:6px;border-bottom:2px solid var(--gold)">Formulating</div>
+      <div style="flex:1;min-width:110px;text-align:center;font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--t3);padding-bottom:6px;border-bottom:2px solid var(--pink)">Sample / Review</div>
+      <div style="flex:1;min-width:110px;text-align:center;font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--t3);padding-bottom:6px;border-bottom:2px solid var(--mint)">Final / Production</div>
+      <div style="flex:1;min-width:110px;text-align:center;font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--t3);padding-bottom:6px;border-bottom:2px solid #8b5cf6">Delivered</div>
+      <div style="flex:1;min-width:110px;text-align:center;font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--t3);padding-bottom:6px;border-bottom:2px solid var(--pink)">Retainer</div>
+    </div>
+    <div id="cl-pipeline" style="display:flex;gap:6px;padding:8px 12px 12px;min-width:900px;min-height:80px;align-items:flex-start"></div>
+  </div>
+
+  <!-- Full client table -->
+  <div class="card" style="overflow:auto">
+    <table class="tbl" id="cl-table">
+      <thead><tr><th>Client</th><th>Project / Formula</th><th>Type</th><th>Stage</th><th>Next Action</th><th>Follow-up</th><th>Invoice</th><th>Last Contact</th><th>Notes</th><th></th></tr></thead>
+      <tbody id="cl-tbody"></tbody>
+    </table>
+  </div>
+
+</div>
+</div>
+
+<!-- Client Lifecycle Modal -->
+<div class="modal-overlay" id="modal-client-lifecycle"><div class="modal" style="max-width:580px"><div class="modal-head"><h3 id="cl-modal-title">New Client Project</h3><button class="close-btn" onclick="closeModal('modal-client-lifecycle')">&#x2715;</button></div>
+<div class="modal-body">
+  <div class="g2"><div class="form-row"><label class="form-label">Client Name *</label><input type="text" id="cl-name" placeholder="e.g. Meredith Chen"></div>
+  <div class="form-row"><label class="form-label">Company / Brand</label><input type="text" id="cl-brand" placeholder="e.g. Nevoo Beauty"></div></div>
+  <div class="g2"><div class="form-row"><label class="form-label">Project / Formula Name *</label><input type="text" id="cl-project" placeholder="e.g. HA Serum — 1oz"></div>
+  <div class="form-row"><label class="form-label">Project Type</label><select id="cl-type"><option>Custom Formula</option><option>Private Label</option><option>Retainer</option><option>Class / Event</option><option>Consultation</option></select></div></div>
+  <div class="g2"><div class="form-row"><label class="form-label">Current Stage</label><select id="cl-stage"><option>Inquiry</option><option>Intake</option><option>Formulating</option><option>Sample Sent</option><option>Awaiting Approval</option><option>Revision</option><option>Final Formula</option><option>In Production</option><option>Delivered</option><option>Retainer</option><option>On Hold</option><option>Closed</option></select></div>
+  <div class="form-row"><label class="form-label">Priority</label><select id="cl-priority"><option>High</option><option>Medium</option><option>Low</option></select></div></div>
+  <div class="g2"><div class="form-row"><label class="form-label">Invoice Status</label><select id="cl-invoice"><option value="">None</option><option>Quoted</option><option>Invoiced</option><option>Partial</option><option>Paid</option><option>Overdue</option></select></div>
+  <div class="form-row"><label class="form-label">Invoice Amount</label><input type="text" id="cl-amount" placeholder="$0.00"></div></div>
+  <div class="g2"><div class="form-row"><label class="form-label">Last Contact</label><input type="date" id="cl-last"></div>
+  <div class="form-row"><label class="form-label">Follow-up Date</label><input type="date" id="cl-followup-date"></div></div>
+  <div class="form-row"><label class="form-label">Next Action</label><input type="text" id="cl-next-action" placeholder="e.g. Send revised sample, await pH test result…"></div>
+  <div class="form-row"><label class="form-label">Email</label><input type="email" id="cl-email" placeholder="client@email.com"></div>
+  <div class="form-row"><label class="form-label">Notes / Formula Details</label><textarea id="cl-notes" rows="3" placeholder="Formula notes, special requests, sourcing constraints…"></textarea></div>
+  <div class="form-row"><label class="form-label">Retainer ($/mo)</label><input type="text" id="cl-retainer-amt" placeholder="e.g. $500/mo — leave blank if not on retainer"></div>
+</div>
+<div style="display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border)">
+  <button class="btn" onclick="closeModal('modal-client-lifecycle')">Cancel</button>
+  <button class="btn btn-pink" onclick="saveClientLifecycle()">Save Client</button>
+</div></div></div>
 
 <!-- ══ CONTACTS ══ -->
 <div class="page" id="page-contacts">
@@ -1592,6 +1680,127 @@ function closeContactPanel(){document.getElementById('contact-panel').classList.
 function saveContact(){const name=document.getElementById('c-name').value.trim();if(!name)return;contacts.push({id:nextContactId++,name,company:document.getElementById('c-company').value,role:document.getElementById('c-role').value,email:document.getElementById('c-email').value,last:document.getElementById('c-last').value,method:document.getElementById('c-method').value,notes:document.getElementById('c-notes').value,interactions:[]});saveContacts();renderContacts();closeModal('modal-contact');['c-name','c-company','c-role','c-email','c-last','c-notes'].forEach(id=>document.getElementById(id).value='');}
 function exportContactsCSV(){const h=['Name','Company','Role','Email','Last Contact','Method','Notes'];const rows=contacts.map(c=>[c.name,c.company,c.role,c.email,c.last,c.method,c.notes].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(','));download('contacts.csv',[h.join(','),...rows].join('\n'),'text/csv');}
 renderContacts();
+
+// ── CLIENT LIFECYCLE ──
+const CL_STAGE_GROUPS={
+  inquiry:['Inquiry','Intake'],
+  formulating:['Formulating','Revision'],
+  sample:['Sample Sent','Awaiting Approval'],
+  final:['Final Formula','In Production'],
+  delivered:['Delivered'],
+  retainer:['Retainer']
+};
+const CL_STAGE_COLOR={'Inquiry':'var(--t3)','Intake':'var(--gold)','Formulating':'var(--gold)','Sample Sent':'var(--pink)','Awaiting Approval':'var(--pink)','Revision':'var(--red)','Final Formula':'var(--mint)','In Production':'var(--mint)','Delivered':'#8b5cf6','Retainer':'var(--pink)','On Hold':'var(--t3)','Closed':'var(--t3)'};
+const CL_INV_COLOR={'Quoted':'var(--t3)','Invoiced':'var(--gold)','Partial':'var(--gold)','Paid':'var(--mint)','Overdue':'var(--red)','':`var(--t3)`};
+let clients=JSON.parse(localStorage.getItem('cc-lifecycle')||'null')||[
+  {id:1,name:'Meredith',brand:'',project:'HA Serum — 1oz',type:'Custom Formula',stage:'Delivered',priority:'High',invoice:'Overdue',amount:'$1,200.00',last:'2026-05-15',followup:'2026-06-10',nextAction:'Follow up on overdue invoice',email:'',notes:'Combined 5 formula sourcing master on file.',retainer:''},
+  {id:2,name:'Molly Smith',brand:'Nevoo',project:'Olaplex Dupe — Bond Maintenance',type:'Custom Formula',stage:'Formulating',priority:'High',invoice:'Invoiced',amount:'$850.00',last:'2026-05-20',followup:'2026-06-08',nextAction:'Send revised sample after pH adjustment',email:'',notes:'Dupes sourced. pH target 4.5-5.0.',retainer:''},
+  {id:3,name:'McKernan',brand:'',project:'Custom Formulation Project',type:'Custom Formula',stage:'Awaiting Approval',priority:'Medium',invoice:'Invoiced',amount:'$2,400.00',last:'2026-05-27',followup:'2026-06-15',nextAction:'Awaiting sample feedback',email:'',notes:'',retainer:''},
+  {id:4,name:'Sip & Formulate',brand:'TCF',project:'Class — June Session',type:'Class / Event',stage:'In Production',priority:'Medium',invoice:'Paid',amount:'$640.00',last:'2026-06-01',followup:'',nextAction:'Confirm attendee count and prep kits',email:'',notes:'App launch tie-in.',retainer:''},
+];
+let nextClientId=clients.length?Math.max(...clients.map(c=>c.id))+1:1;
+let editingClientLifecycleId=null;
+function saveClientStore(){localStorage.setItem('cc-lifecycle',JSON.stringify(clients));}
+
+function openClientLifecycleModal(id){
+  editingClientLifecycleId=id||null;
+  const c=id?clients.find(x=>x.id===id)||{}:{};
+  document.getElementById('cl-modal-title').textContent=id?'Edit Client':'New Client Project';
+  document.getElementById('cl-name').value=c.name||'';
+  document.getElementById('cl-brand').value=c.brand||'';
+  document.getElementById('cl-project').value=c.project||'';
+  document.getElementById('cl-type').value=c.type||'Custom Formula';
+  document.getElementById('cl-stage').value=c.stage||'Inquiry';
+  document.getElementById('cl-priority').value=c.priority||'Medium';
+  document.getElementById('cl-invoice').value=c.invoice||'';
+  document.getElementById('cl-amount').value=c.amount||'';
+  document.getElementById('cl-last').value=c.last||new Date().toISOString().slice(0,10);
+  document.getElementById('cl-followup-date').value=c.followup||'';
+  document.getElementById('cl-next-action').value=c.nextAction||'';
+  document.getElementById('cl-email').value=c.email||'';
+  document.getElementById('cl-notes').value=c.notes||'';
+  document.getElementById('cl-retainer-amt').value=c.retainer||'';
+  openModal('modal-client-lifecycle');
+}
+function saveClientLifecycle(){
+  const name=document.getElementById('cl-name').value.trim();
+  const project=document.getElementById('cl-project').value.trim();
+  if(!name)return;
+  const obj={
+    id:editingClientLifecycleId||nextClientId++,
+    name,brand:document.getElementById('cl-brand').value,
+    project,type:document.getElementById('cl-type').value,
+    stage:document.getElementById('cl-stage').value,
+    priority:document.getElementById('cl-priority').value,
+    invoice:document.getElementById('cl-invoice').value,
+    amount:document.getElementById('cl-amount').value,
+    last:document.getElementById('cl-last').value,
+    followup:document.getElementById('cl-followup-date').value,
+    nextAction:document.getElementById('cl-next-action').value,
+    email:document.getElementById('cl-email').value,
+    notes:document.getElementById('cl-notes').value,
+    retainer:document.getElementById('cl-retainer-amt').value
+  };
+  if(editingClientLifecycleId){const i=clients.findIndex(x=>x.id===editingClientLifecycleId);if(i>-1)clients[i]=obj;else clients.unshift(obj);}
+  else clients.unshift(obj);
+  saveClientStore();renderClients();closeModal('modal-client-lifecycle');
+}
+function deleteClientLifecycle(id){if(!confirm('Delete this client?'))return;clients=clients.filter(c=>c.id!==id);saveClientStore();renderClients();}
+function quickStageUpdate(id,val){const c=clients.find(x=>x.id===id);if(!c)return;c.stage=val;c.last=new Date().toISOString().slice(0,10);saveClientStore();renderClients();}
+
+function renderClients(){
+  const today=new Date().toISOString().slice(0,10);
+  const q=(document.getElementById('cl-search').value||'').toLowerCase();
+  const fs=document.getElementById('cl-filter-stage').value;
+  const ft=document.getElementById('cl-filter-type').value;
+  const list=clients.filter(c=>
+    (!q||(c.name+c.brand+c.project+c.notes+c.nextAction).toLowerCase().includes(q))&&
+    (!fs||c.stage===fs)&&(!ft||c.type===ft));
+
+  // Scorecards
+  document.getElementById('cl-active').textContent=clients.filter(c=>!['Closed','On Hold','Delivered'].includes(c.stage)).length;
+  document.getElementById('cl-approval').textContent=clients.filter(c=>['Awaiting Approval','Sample Sent'].includes(c.stage)).length;
+  document.getElementById('cl-followup').textContent=clients.filter(c=>c.followup&&c.followup<=today&&!['Closed'].includes(c.stage)).length;
+  document.getElementById('cl-retainer').textContent=clients.filter(c=>c.stage==='Retainer'||c.retainer).length;
+
+  // Pipeline
+  const stages=Object.keys(CL_STAGE_GROUPS);
+  const pipelineEl=document.getElementById('cl-pipeline');
+  pipelineEl.innerHTML=stages.map(gk=>{
+    const stageNames=CL_STAGE_GROUPS[gk];
+    const group=clients.filter(c=>stageNames.includes(c.stage));
+    return`<div style="flex:1;min-width:110px;display:flex;flex-direction:column;gap:5px">
+      ${group.map(c=>`<div onclick="openClientLifecycleModal(${c.id})" style="background:var(--s1);border:1px solid var(--border);border-left:3px solid ${CL_STAGE_COLOR[c.stage]||'var(--border)'};border-radius:6px;padding:7px 9px;cursor:pointer;font-size:11px" onmouseenter="this.style.background='var(--s2)'" onmouseleave="this.style.background='var(--s1)'">
+        <div style="font-weight:700;color:var(--t1);margin-bottom:2px">${escH(c.name)}</div>
+        <div style="font-size:10px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escH(c.project)}</div>
+        ${c.invoice==='Overdue'?`<div style="font-size:9px;color:var(--red);font-weight:700;margin-top:3px">💸 Invoice Overdue</div>`:''}
+        ${c.followup&&c.followup<=today?`<div style="font-size:9px;color:var(--gold);font-weight:700;margin-top:3px">📅 Follow-up due</div>`:''}
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+
+  // Table
+  const invPill={Quoted:'p-dim',Invoiced:'p-gold',Partial:'p-gold',Paid:'p-mint',Overdue:'p-red','':`p-dim`};
+  const priColor={High:'var(--red)',Medium:'var(--gold)',Low:'var(--t3)'};
+  const allStages=['Inquiry','Intake','Formulating','Sample Sent','Awaiting Approval','Revision','Final Formula','In Production','Delivered','Retainer','On Hold','Closed'];
+  document.getElementById('cl-tbody').innerHTML=list.map(c=>{
+    const overdue=c.followup&&c.followup<=today&&c.stage!=='Closed';
+    const stageOpts=allStages.map(s=>`<option${s===c.stage?' selected':''}>${s}</option>`).join('');
+    return`<tr onclick="openClientLifecycleModal(${c.id})" style="cursor:pointer" onmouseenter="this.style.background='var(--s2)'" onmouseleave="this.style.background=''">
+      <td><span style="font-weight:700">${escH(c.name)}</span>${c.brand?`<div style="font-size:10px;color:var(--pink)">${escH(c.brand)}</div>`:''}</td>
+      <td style="max-width:180px"><div style="font-weight:500">${escH(c.project)}</div><div style="font-size:10px;color:var(--t3)">${c.type}</div></td>
+      <td onclick="event.stopPropagation()"><select style="font-size:10px;padding:2px 4px;border-radius:5px;border:1px solid var(--border);background:var(--s2);color:var(--t1);max-width:130px" onchange="quickStageUpdate(${c.id},this.value)">${stageOpts}</select></td>
+      <td><div style="font-size:11px;color:var(--t2);max-width:160px">${escH(c.nextAction||'—')}</div></td>
+      <td style="white-space:nowrap;color:${overdue?'var(--red)':'var(--gold)'};font-weight:${overdue?700:400}">${c.followup||'—'}${overdue?' ⚠':''}</td>
+      <td><span class="pill ${invPill[c.invoice]||'p-dim'}" style="font-size:9px">${c.invoice||'—'}</span>${c.amount?`<div style="font-size:10px;color:var(--t3)">${escH(c.amount)}</div>`:''}</td>
+      <td style="color:var(--t3);font-size:11px">${c.last||'—'}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t3);font-size:11px">${escH(c.notes||'')}</td>
+      <td onclick="event.stopPropagation()"><button class="ev-del" onclick="deleteClientLifecycle(${c.id})">&#x2715;</button></td>
+    </tr>`;
+  }).join('')||`<tr><td colspan="9" style="padding:20px;text-align:center;color:var(--t3)">No clients found. Click + New Client to add one.</td></tr>`;
+}
+function exportClientsCSV(){const h=['Client','Brand','Project','Type','Stage','Next Action','Follow-up','Invoice','Amount','Last Contact','Notes'];const rows=clients.map(c=>[c.name,c.brand,c.project,c.type,c.stage,c.nextAction,c.followup,c.invoice,c.amount,c.last,c.notes].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(','));download('clients.csv',[h.join(','),...rows].join('\n'),'text/csv');}
+renderClients();
 
 // ── FILES ──
 let driveFiles=JSON.parse(localStorage.getItem('cc-files')||'null')||[
