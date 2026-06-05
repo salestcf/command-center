@@ -2123,12 +2123,12 @@ function renderWinLog(){
 }
 
 function renderOpsHub(){
+  if(typeof aliConvos==='undefined'||typeof clients==='undefined'||typeof qbInvoices==='undefined') return;
   renderOpsMetrics();
   renderOpsRadar();
   renderWinLog();
   renderSOPs();
 }
-renderOpsHub();
 
 // ── FILES ──
 let driveFiles=JSON.parse(localStorage.getItem('cc-files')||'null')||[
@@ -2735,6 +2735,7 @@ function renderAlibaba(){
 }
 renderAlibaba();
 (function(){const t=localStorage.getItem('ali-last-checked');if(t){const el=document.getElementById('ali-last-checked');if(el)el.textContent='Last checked: '+t;}})();
+renderOpsHub(); // safe to call now — aliConvos, clients, qbInvoices all defined
 
 // ── DAILY TRACKER ──
 const SCHEDULE=[
