@@ -3864,7 +3864,7 @@ function googleConnect(){
     return !a || !a.connected;
   });
   if(unconnected){ connectAccount(unconnected); }
-  else { showPage('notion'); }
+  else { showPage('notion'); } // 'notion' page is now Settings
 }
 
 function disconnectAccount(email){
@@ -4265,6 +4265,54 @@ function importAllData(){
   input.click();
 }
 
+// ── AUTO SILENT RECONNECT ──
+// Google access tokens expire after ~1 hour. On every page load, silently
+// request a fresh token for each previously-connected account using the
+// existing browser Google session — no popup needed.
+function autoSilentReconnect(){
+  const cid = getGoogleClientId();
+  if(!cid) return;
+  if(typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) return;
+  const prevConnected = getGoogleAccounts().filter(a => a.email && a.connected);
+  if(!prevConnected.length) return;
+  let reconnected = 0;
+  prevConnected.forEach(acct => {
+    try {
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id: cid,
+        scope: GOOGLE_SCOPES,
+        hint: acct.email,
+        callback: (resp) => {
+          if(resp && resp.access_token){
+            const all = getGoogleAccounts();
+            const idx = all.findIndex(a=>a.email===acct.email);
+            const entry = { email: acct.email, token: resp.access_token, connected: true };
+            if(idx>=0) all[idx]=entry; else all.push(entry);
+            saveGoogleAccounts(all);
+            reconnected++;
+            renderGoogleSettingsUI();
+            updateGoogleBarUI();
+            // Once all accounts reconnected, kick off sync
+            if(reconnected === prevConnected.length){ syncGCal(); syncGmail(); }
+          }
+          // On failure: leave stored entry intact; next manual sync will surface the 401
+        }
+      });
+      // prompt:'' = silent — uses existing Google browser session, no consent dialog
+      client.requestAccessToken({ prompt: '' });
+    } catch(e){ /* GIS not ready yet — waitForGISAndReconnect will retry */ }
+  });
+}
+
+// Poll until GIS library has loaded, then run silent reconnect
+function waitForGISAndReconnect(){
+  if(typeof google !== 'undefined' && google.accounts && google.accounts.oauth2){
+    autoSilentReconnect();
+  } else {
+    setTimeout(waitForGISAndReconnect, 600);
+  }
+}
+
 // ── INIT GOOGLE ON PAGE LOAD ──
 (function initGoogle(){
   // Load cached GCal events
@@ -4290,6 +4338,11 @@ function importAllData(){
     const bar = document.getElementById(svc+'-connect-bar');
     if(bar) bar.style.display = 'flex';
   });
+
+  // Silent reconnect: refresh tokens for all previously connected accounts
+  waitForGISAndReconnect();
+  // Re-run every 45 min to keep tokens alive (they expire after ~1 hour)
+  setInterval(autoSilentReconnect, 45 * 60 * 1000);
 
   // Auto-sync check on load
   checkAutoSync();
