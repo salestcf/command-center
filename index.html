@@ -3274,6 +3274,8 @@ function saveClientProject(){
 }
 
 function changeStatusFromHome(id,status){const t=tasks.find(x=>x.id===id);if(!t)return;t.status=status;saveTasks();renderTasks();renderHome();}
+// Declared here so generateBriefing() can safely read it before the Google sync section initializes it
+let gcalEvents = [];
 function generateBriefing(){
   const now=new Date();
   const today=now.toISOString().slice(0,10);
@@ -3328,14 +3330,13 @@ function generateBriefing(){
   if(openInv.length) items.push({level:'mint',icon:'🧾',text:`${openInv.length} open invoice${openInv.length>1?'s':''} pending payment`,action:"showPage('quickbooks')"});
 
   // ── Calendar events today (local + Google Calendar) ──
-  const _gcal=typeof gcalEvents!=='undefined'?gcalEvents:[];
-  const todayEvts=[...(calEvents[today]||[]),..._gcal.filter(e=>e.date===today)];
+  const todayEvts=[...(calEvents[today]||[]),...gcalEvents.filter(e=>e.date===today)];
   if(todayEvts.length) items.push({level:'mint',icon:'📆',text:`${todayEvts.length} calendar event${todayEvts.length>1?'s':''} today: ${todayEvts.map(e=>e.title).join(', ')}`,action:"showPage('calendar')"});
 
   // ── Upcoming GCal events (next 3 days) ──
   const soonDate=new Date(); soonDate.setDate(soonDate.getDate()+3);
   const soonStr=soonDate.toISOString().slice(0,10);
-  const upcomingEvts=_gcal.filter(e=>e.date>today&&e.date<=soonStr);
+  const upcomingEvts=gcalEvents.filter(e=>e.date>today&&e.date<=soonStr);
   if(upcomingEvts.length) items_soon.push({level:'mint',icon:'📅',text:`${upcomingEvts.length} calendar event${upcomingEvts.length>1?'s':''} in the next 3 days`,action:"showPage('calendar')"});
 
   // ── Pending orders in transit ──
@@ -3884,7 +3885,6 @@ function handleGoogleAuthError(resp, svc, email){
 }
 
 // ── GOOGLE CALENDAR SYNC — multi-account ──
-let gcalEvents = [];
 
 async function syncGCal(){
   const connectedAccounts = getAccountTokens();
