@@ -948,7 +948,7 @@ select option { background: var(--s1); }
   </div>
   <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
     <input type="text" id="file-search" placeholder="Search by name or tag..." oninput="renderFiles()" style="flex:1">
-    <select id="file-cat-filter" onchange="renderFiles()"><option value="">All Categories</option><option>Contract</option><option>Template</option><option>Reference</option><option>Report</option><option>Correspondence</option><option>Other</option></select>
+    <select id="file-cat-filter" onchange="renderFiles()"><option value="">All Categories</option><option>Formula</option><option>Client</option><option>Operations</option><option>Finance</option><option>Strategy</option><option>Meeting Notes</option><option>SOP</option><option>Supplier</option><option>Reference</option><option>Report</option><option>Contract</option><option>Other</option></select>
     <select id="file-acct-filter" onchange="renderFiles()">
       <option value="">All Accounts</option>
       <option>office@paulyinc.com</option>
@@ -2655,6 +2655,50 @@ let driveFiles=JSON.parse(localStorage.getItem('cc-files')||'null')||[
   {name:'Molly Smith — Combined Ingredients List',type:'PDF',cat:'Formula',modified:'May 2026',owner:'sales@thecosmeticformulary.com',url:'https://drive.google.com/file/d/16sdJ1KMt-7KCNnHGUfdR9rD7Jq93xIaD/view'},
   {name:'Vitamin C Cream v7.3-THD30 — Formula',type:'PDF',cat:'Formula',modified:'May 2026',owner:'sales@thecosmeticformulary.com',url:'https://drive.google.com/file/d/1YNIFQNKBPJ2xRwoYwHuP-gKuqO7heZEh/view'},
   {name:'Guangzhou Packaging Sample Sheet',type:'Google Sheet',cat:'Supplier',modified:'May 29, 2026',owner:'design@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1zTxeYlKR2jh64OO00Gf4ELvF3vtq-hfgrb-ANVZKPjc/edit'},
+  // ── SHARED FILES (synced from Drive) ──
+  {name:'TCF Website Edits',type:'Google Doc',cat:'Operations',modified:'Jun 8, 2026',owner:'design@thecosmeticformulary.com',url:'https://docs.google.com/document/d/1ugDxlnOtRTvry0GzL4z4Gb99eN7GW-0g4wXkbe4t18I/edit'},
+  {name:'Meredith THD30 Sourcing Master',type:'Google Sheet',cat:'Formula',modified:'Jun 5, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1vqG4elGfQ1I49eMa3ZKYZyZHAUs8bz86mlamJg5Z95k/edit'},
+  {name:'Alibaba Supplier Tracker',type:'Google Sheet',cat:'Operations',modified:'Jun 3, 2026',owner:'design@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/19OsJgqryabgWUwBdoeokMaFef-ZOrRck-p4ZtsiLF6s/edit'},
+  {name:'McKernan Order with Photos',type:'Google Sheet',cat:'Client',modified:'May 29, 2026',owner:'formulary@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1SUd-mFgHWO68jfxTejvyqjNi9syrEWs5k-PI-ttgcR0/edit'},
+  {name:'Budget Audit Sheet',type:'Google Sheet',cat:'Finance',modified:'May 29, 2026',owner:'formulary@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1jUlsd_y0ewS3IbNgrzSD4AeCxTcSJ1deY_v15hPL3P4/edit'},
+  {name:'McKernan Bottle Order',type:'Google Sheet',cat:'Client',modified:'May 27, 2026',owner:'formulary@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1EckP9T3xZ6aUuq4ZwPObVKfuXoZMvRUbVcWGFXPcj98/edit'},
+  {name:'Manufacturing Reorg FlowChart',type:'Google Sheet',cat:'Operations',modified:'May 21, 2026',owner:'design@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/16DiV7S0gxmChoVmywmvrTcov-KT8IM0cxXbKSJ2PPbk/edit'},
+  {name:'Meredith SPF50 Sourcing',type:'Google Sheet',cat:'Formula',modified:'May 19, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1miMKl2uf-62yhy8UNR5yzWGOAfspj-zVj1tZgrfFtrA/edit'},
+  {name:'Salt Spa: Retail Brands',type:'Google Sheet',cat:'Strategy',modified:'May 14, 2026',owner:'design@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1wrw8RDFU0PN5LdokBEm0IcFgeKSnfj6kS2y5VDT9lX8/edit'},
+  {name:'Retail Strategy v2',type:'PDF',cat:'Strategy',modified:'May 12, 2026',owner:'formulary@thecosmeticformulary.com',url:'https://drive.google.com/file/d/1bNXP_bleLbaiS2bqT4VHoepbTKDx3a5W/view'},
+  {name:'Meeting Summary',type:'Google Doc',cat:'Meeting Notes',modified:'May 12, 2026',owner:'design@thecosmeticformulary.com',url:'https://docs.google.com/document/d/1j9eSSvakYxtucNvWHywq-ORLRRKQ4Sb7jxvjUWC7XcU/edit'},
+  {name:'Salt Spa Acquisition Briefing',type:'Google Doc',cat:'Strategy',modified:'May 11, 2026',owner:'design@thecosmeticformulary.com',url:'https://docs.google.com/document/d/11Bpc5cqJYhNlPeIkLRxeOqeQQ3LPN6ysPBngQTVO7Qs/edit'},
+  {name:'Rashell Dupe Dossier Prompt',type:'Google Doc',cat:'Formula',modified:'May 7, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://docs.google.com/document/d/1txhNyXnpOeZH6OmYMcV_FKkTt9tZz1EHd1_FCT9bJoU/edit'},
+  {name:'Sip & Formulate Master',type:'Google Sheet',cat:'Client',modified:'May 7, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1aR5twnjt7QLRjPiMVM4P3tmSf95Bd5EZ1sp_81EsWMk/edit'},
+  {name:'Body Lotion Actives Market Research',type:'Google Doc',cat:'Formula',modified:'May 5, 2026',owner:'design@thecosmeticformulary.com',url:'https://docs.google.com/document/d/1RIkl-joPyAXYNt49FtbR5GK6T-l6RggVi4G8dEllww0/edit'},
+  {name:'TCF Drive & Operations Audit',type:'Google Doc',cat:'Operations',modified:'May 5, 2026',owner:'design@thecosmeticformulary.com',url:'https://docs.google.com/document/d/17tUoZo6MpQrgjz5WYorQSJOb9QTs0quYHuK6XszLoxA/edit'},
+  {name:'TCF Operations Toolkit',type:'Google Sheet',cat:'Operations',modified:'May 5, 2026',owner:'design@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1YsoMuYqA8kyjd3BSgXJXbj7mYYcnZga9RPEAYyoi0v4/edit'},
+  {name:'Meeting Notes — Class & Retail Strategy',type:'Google Doc',cat:'Meeting Notes',modified:'May 5, 2026',owner:'design@thecosmeticformulary.com',url:'https://docs.google.com/document/d/150ipfXOeIx3FkVFXWR87fWGAzBIKp22mkyoq5VXb1Io/edit'},
+  {name:'Action Items — Class & Retail Strategy',type:'Google Doc',cat:'Meeting Notes',modified:'May 5, 2026',owner:'design@thecosmeticformulary.com',url:'https://docs.google.com/document/d/1IU3mAtJVSA1wO_xK8-3jwPlHxEe8xNWPruZgFvbXLcw/edit'},
+  {name:'Sip & Formulate Game Plan — Nicole (FINAL)',type:'Google Sheet',cat:'Client',modified:'Apr 29, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1FNv08ZAm6dB1TxndqJnjG3g515Rv2AJ2L1TUKUylqEs/edit'},
+  {name:'Sip & Formulate Game Plan — Nicole v4',type:'Google Sheet',cat:'Client',modified:'Apr 29, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/10JD4m-9uqC5-js1TsOPhzroGlB3uvf_c9M7qOzCDpns/edit'},
+  {name:'Sip & Formulate Bases',type:'Google Sheet',cat:'Client',modified:'Apr 29, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/15iEhtGWNblFdhptJD3fljWDNu_O_LRODX1H5aerReYA/edit'},
+  {name:'TCF Platform Dupes Apr 2026',type:'Folder',cat:'Formula',modified:'Apr 29, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://drive.google.com/drive/folders/1RQ87PJly_EQLTrBgvs51HYRNfRa09dkB'},
+  {name:'DUPE — Meredith Botanical Enzyme Cleansing Oil',type:'Google Sheet',cat:'Formula',modified:'Apr 27, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1HI3ALrcwTAAM-TMlyxfUYvHbdPXIgANGQTH0YVlUxno/edit'},
+  {name:'Meredith HA Serum Sourcing',type:'Google Sheet',cat:'Formula',modified:'Apr 20, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1aBXA0SSbNXsQ4FmEV2jhkyeX3Ag_Ydfv81IC0NmsK6s/edit'},
+  {name:'Items Purchased',type:'Google Sheet',cat:'Operations',modified:'Apr 15, 2026',owner:'formulary@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1e1l6_1L6L9-iCfYTdEDdbuEnDtEwkJKIzHEF9tO-Nck/edit'},
+  {name:'Meredith_THD30_Sourcing_Master',type:'Google Sheet',cat:'Formula',modified:'Apr 15, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1miMKl2uf-62yhy8UNR5yzWGOAfspj-zVj1tZgrfFtrA/edit'},
+  {name:'Meredith Gel Cleanser Sourcing',type:'Google Sheet',cat:'Formula',modified:'Apr 17, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/18Ey6wu5nKAUMcLWZfVECsbxFqJSUZZTrF0LfPv3k3fE/edit'},
+  {name:'Meredith Cream Cleanser Sourcing',type:'Google Sheet',cat:'Formula',modified:'Apr 16, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/10A_KmX58OqpOwl9H_DhyaF7C7XaWFZoHsHjmoIZh0rY/edit'},
+  {name:'Meredith Oil Cleanser Sourcing Master',type:'Google Sheet',cat:'Formula',modified:'Apr 16, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1_xr9Kqf_XJ82FebpOuPPTgaSd2jMhbxQlFF9uOiLovo/edit'},
+  {name:'Custom Things for PR',type:'Google Sheet',cat:'Operations',modified:'Apr 9, 2026',owner:'formulary@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1zZo_lG7h7Lf941i8BKzm5Y0yIJ7KLJix-5oSK9EM-QE/edit'},
+  {name:'Custom Things (Not Alibaba)',type:'Google Sheet',cat:'Operations',modified:'Apr 9, 2026',owner:'formulary@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1B7CcwLRRLcGrZFfjQ-BEIREgHQLFmHc8R0WgSkbWETo/edit'},
+  {name:'TCF Ordering Information',type:'Google Doc',cat:'Operations',modified:'Apr 7, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://docs.google.com/document/d/14_LeNn1253l5Qd9IeH3hHclkNsA2Oz6dT-Yyo1jGEyM/edit'},
+  {name:'TCF Order Information',type:'Excel (.xlsx)',cat:'Operations',modified:'Apr 7, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://drive.google.com/file/d/1eH2z9yohqjfBfxAO_TnRrg8FNeCJOt_N/view'},
+  {name:'TCF Alibaba Purchase Order',type:'Excel (.xlsx)',cat:'Operations',modified:'Apr 7, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://drive.google.com/file/d/184AwskIyeJ6cb4vOd35QPfpmhGS35WKK/view'},
+  {name:'Sip & Formulate Order List',type:'Excel (.xlsx)',cat:'Client',modified:'Apr 8, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://drive.google.com/file/d/1jLyd6Cif1FOwH4pAYA56b_ObTP1dDXu0/view'},
+  {name:'Alibaba Form — Metal Folding Tables',type:'Excel (.xlsx)',cat:'Operations',modified:'Apr 7, 2026',owner:'formulary@thecosmeticformulary.com',url:'https://drive.google.com/file/d/1unGQAPMkY8Jm8guXPJaO5_cC7WqrUeES/view'},
+  {name:'Checklist for Popup Classes',type:'Google Doc',cat:'Operations',modified:'Apr 8, 2026',owner:'formulary@thecosmeticformulary.com',url:'https://docs.google.com/document/d/1efP6SA5_YXn8MipNCMfCMBIWpQ1E9o8mnd5YJk8ShW0/edit'},
+  {name:'King Street Classes — Things to Buy',type:'Google Sheet',cat:'Operations',modified:'Mar 30, 2026',owner:'formulary@thecosmeticformulary.com',url:'https://docs.google.com/spreadsheets/d/1mDB_u-lZq-JFu_N2XvzChTi7hTYwEKWBnZF5pQNGl88/edit'},
+  {name:'The Cosmetic Formulary Universe',type:'Folder',cat:'Reference',modified:'Apr 1, 2026',owner:'pauly@thecosmeticformulary.com',url:'https://drive.google.com/drive/folders/1tX2TrKHti5mGmTpXUQDIkjrcwnqUEwW6'},
+  {name:'Nevoo Brand Assets',type:'Folder',cat:'Client',modified:'Mar 18, 2026',owner:'design@thecosmeticformulary.com',url:'https://drive.google.com/drive/folders/1Zbi5mQ8wa8UcZ0ZhcEkNol_w08GI2EhO'},
+  {name:'Website / Video Ideas',type:'Google Doc',cat:'Reference',modified:'Feb 20, 2026',owner:'design@paulyinc.com',url:'https://docs.google.com/document/d/1BMnk6EVEdKYrMu8u2pE1fDeshQ4plihbdyivVgnP_pc/edit'},
+  {name:'Brain Dump',type:'Folder',cat:'Reference',modified:'Feb 3, 2026',owner:'design@paulyinc.com',url:'https://drive.google.com/drive/folders/1PC0oyUYyKfblHw-k9keRnmry4d3TlaRv'},
 ];
 let pendingUpload=null;
 function saveFiles(){localStorage.setItem('cc-files',JSON.stringify(driveFiles));}
